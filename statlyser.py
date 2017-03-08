@@ -26,7 +26,7 @@ def main():
         line = f.readline()
 
         while line:
-            pluginManager.process_line()
+            pluginManager.process_line(line)
             line = f.readline()
 
     # output the statistic to STDOUT

@@ -7,7 +7,7 @@ import abc
 class IPlugin(metaclass=abc.ABCMeta):
     """Interface which every plugin has to implement."""
 
-    @abc.astractmethod
+    @abc.abstractmethod
     def _check_subscription(self, line):
         """Return True or False if the subscription regex matched or not."""
         pass
