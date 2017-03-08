@@ -59,13 +59,23 @@ class PluginBase(IPlugin):
 
             if hostname is not None:
                 if name != 'hostname':
-                    newName = name.replace('hostname', hostname).replace('servicename', servicename)
+                    newName = name.replace('hostname', hostname)
+
+            if 'servicename' in separateNames:
+                if newName is None:
+                    newName = name
+
+                newName = newName.replace('servicename', servicename)
 
             if newName is not None:
                 regexMatches[newName] = regexMatches.pop(name)
 
-        if regexMatches.get('hostname') is not None:
+        try:
             del regexMatches['hostname']
+        except Exception as e:
+            # if we catch an exception this means that the given
+            # dict key does not exists
+            pass
 
 
     def __extract_regex_group_names(self):

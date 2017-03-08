@@ -52,3 +52,4 @@ class PluginManager():
                 continue
 
         self.statistic.add_info(data)
+        self.statistic.increment_line_count()
