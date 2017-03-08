@@ -20,6 +20,8 @@ def main():
         print('First parameter has to be the logfile.')
         print('Currently only one logfile per run is supported.')
 
+        sys.exit(1)
+
     logfile = sys.argv[1]
 
     with open(logfile, 'r') as f:
