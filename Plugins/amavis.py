@@ -4,7 +4,7 @@ from lib.plugin_base import PluginBase
 import re
 
 
-class Dovecot(PluginBase):
+class Amavis(PluginBase):
     """Amavis statistics plugin."""
 
     def _define_subscription_regex(self):
