@@ -17,22 +17,25 @@ class Statistic():
             currLayer = self.data
             currIteration = 0
 
-            for name in separateNames:
+            for subname in separateNames:
                 currIteration += 1
 
-                if currLayer.get(name) is None:
+                if currLayer.get(subname) is None:
                     if len(separateNames) == currLayer:
-                        currLayer[name] = 1
+                        currLayer[subname] = {value: 1}
                         break
                     else:
-                        currLayer[name] = {}
-                        currLayer = currLayer[name]
+                        currLayer[subname] = {}
+                        currLayer = currLayer[subname]
                 else:
                     if len(separateNames) == currLayer:
-                        currLayer[name] += 1
+                        if currLayer[subname].get(value) is None:
+                            currLayer[subname][value] = 1
+                        else:
+                            currLayer[subname][value] += 1
                         break
                     else:
-                        currLayer = currLayer[name]
+                        currLayer = currLayer[subname]
 
     def represent(self):
         """Output the statistic to STDOUT."""
