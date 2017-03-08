@@ -6,7 +6,7 @@ This is the main (entry point) of the application.
 
 import os
 import sys
-BASEDIR = os.path.dirname(os.path.dirname(__file__))
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
 
 from lib.plugin_manager import PluginManager

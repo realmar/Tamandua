@@ -7,6 +7,9 @@ from .exceptions import NoMatch
 # used to dynamically import the plugins
 import importlib
 import pkgutil
+import inspect
+
+from os.path import join as path_join
 
 
 class PluginManager():
@@ -23,13 +26,15 @@ class PluginManager():
         """Load all plugins found in the Plugins folder and its subfolders."""
         pluginClasses = []
 
-        modules = pkgutil.walk_packages(absPluginsPath)
+        modules = pkgutil.walk_packages(path_join(absPluginsPath, '.'))
         for module in modules:
             # TODO: do not hardcode the name of main (statlyser)
-            if not module[2] and module[1] != 'statlyser':
+            if not module[2] and not (module[1].lower() == 'statlyser' or module[1].lower() == 'plugins'):
                 imp = importlib.import_module(module[1])
-                classes = [cls for name, cls in imp.__dict__.items() if isinstance(cls, type) and issubclass(cls, IPlugin)]
-                pluginClasses.extend(classes)
+
+                classes = inspect.getmembers(imp, lambda cls: isinstance(cls, type) and issubclass(cls, IPlugin))
+                # TODO: do not extract potential user defined base classes
+                pluginClasses.extend([cls for name, cls in classes if 'PluginBase' not in name])
 
         self.plugins = [cls() for cls in pluginClasses]
 

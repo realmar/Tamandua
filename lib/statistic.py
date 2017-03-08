@@ -12,23 +12,22 @@ class Statistic():
 
     def add_info(self, data):
         """Add more data to the statistic."""
-        for name, value in data:
+        for name, value in data.items():
             separateNames = name.split('_')
             currLayer = self.data
             currIteration = 0
 
             for subname in separateNames:
                 currIteration += 1
-
                 if currLayer.get(subname) is None:
-                    if len(separateNames) == currLayer:
+                    if len(separateNames) == currIteration:
                         currLayer[subname] = {value: 1}
                         break
                     else:
                         currLayer[subname] = {}
                         currLayer = currLayer[subname]
                 else:
-                    if len(separateNames) == currLayer:
+                    if len(separateNames) == currIteration:
                         if currLayer[subname].get(value) is None:
                             currLayer[subname][value] = 1
                         else:

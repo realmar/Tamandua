@@ -40,7 +40,7 @@ class PluginBase(IPlugin):
         self._define_data_regex()
 
         self.__regexGroupNames = []
-        self.__exract_regex_group_names()
+        self.__extract_regex_group_names()
 
     def __specifize_regex_group_name(self, regexMatches):
         """
@@ -51,22 +51,26 @@ class PluginBase(IPlugin):
         servicename : __class__.__name__
         """
 
-        newName = None
-        for name, value in regexMatches:
+        for name, value in regexMatches.items():
+            newName = None
             separateNames = name.split('_')
             hostname = regexMatches.get('hostname')
             servicename = self.__class__.__name__.lower()
 
             if hostname is not None:
-                newName = name.replace('hostname', hostname).replace('servicename', servicename)
+                if name != 'hostname':
+                    newName = name.replace('hostname', hostname).replace('servicename', servicename)
 
             if newName is not None:
                 regexMatches[newName] = regexMatches.pop(name)
 
+        if regexMatches.get('hostname') is not None:
+            del regexMatches['hostname']
+
 
     def __extract_regex_group_names(self):
         """Extract the group names of a regex."""
-        pattern = self.__dataRegex.pattern
+        pattern = self._dataRegex.pattern
         lastpos = 0
 
         while(True):
@@ -80,7 +84,7 @@ class PluginBase(IPlugin):
                 break
 
     def _check_subscription(self, line):
-        return self._subscriptionRegex.search(line) is None
+        return self._subscriptionRegex.search(line) is not None
 
     def gather_data(self, line):
         if not self._check_subscription(line):
