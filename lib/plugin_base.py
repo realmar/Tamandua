@@ -68,6 +68,9 @@ class PluginBase(IPlugin):
                 newName = newName.replace('servicename', servicename)
 
             if newName is not None:
+                # if we still have an empty hostname in the key we will remove it
+                newName = newName.replace('hostname_', '').replace('_hostname', '')
+
                 regexMatches[newName] = regexMatches.pop(name)
 
         try:
@@ -76,7 +79,6 @@ class PluginBase(IPlugin):
             # if we catch an exception this means that the given
             # dict key does not exists
             pass
-
 
     def __extract_regex_group_names(self):
         """Extract the group names of a regex."""
