@@ -15,7 +15,9 @@ class PluginManager():
     def __init__(self, absPluginsPath):
         """"Ctor of PluginManager."""
         self.statistic = Statistic()
-        self.plugins = self.__load_plugins(absPluginsPath)
+
+        self.plugins = None
+        self.__load_plugins(absPluginsPath)
 
     def __load_plugins(self, absPluginsPath):
         """Load all plugins found in the Plugins folder and its subfolders."""
@@ -29,7 +31,7 @@ class PluginManager():
                 classes = [cls for name, cls in imp.__dict__.items() if isinstance(cls, type) and issubclass(cls, IPlugin)]
                 pluginClasses.extend(classes)
 
-        return [cls() for cls in pluginClasses]
+        self.plugins = [cls() for cls in pluginClasses]
 
     def process_line(self, line):
         """Extract data from one logline."""

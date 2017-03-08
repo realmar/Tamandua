@@ -6,14 +6,15 @@ This is the main (entry point) of the application.
 
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+BASEDIR = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(BASEDIR)
 
 from lib.plugin_manager import PluginManager
 
 
 def main():
     """Entry point of the application."""
-    pluginManager = PluginManager()
+    pluginManager = PluginManager(os.path.join(BASEDIR, 'Plugins'))
     if len(sys.argv) > 2:
         print('ERROR:')
         print('First parameter has to be the logfile.')
