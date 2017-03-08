@@ -29,12 +29,16 @@ class PluginManager():
         modules = pkgutil.walk_packages(path_join(absPluginsPath, '.'))
         for module in modules:
             # TODO: do not hardcode the name of main (statlyser)
-            if not module[2] and not (module[1].lower() == 'statlyser' or module[1].lower() == 'plugins'):
+            if not module[2] and module[1].lower() != 'statlyser':
                 imp = importlib.import_module(module[1])
 
-                classes = inspect.getmembers(imp, lambda cls: isinstance(cls, type) and issubclass(cls, IPlugin))
+                classes = inspect.getmembers(
+                    imp, lambda cls:
+                        isinstance(cls, type) and
+                        issubclass(cls, IPlugin))
                 # TODO: do not extract potential user defined base classes
-                pluginClasses.extend([cls for name, cls in classes if 'PluginBase' not in name])
+                pluginClasses.extend(
+                    [cls for name, cls in classes if 'PluginBase' not in name])
 
         self.plugins = [cls() for cls in pluginClasses]
 
