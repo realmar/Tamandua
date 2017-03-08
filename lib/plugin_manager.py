@@ -44,8 +44,11 @@ class PluginManager():
 
     def process_line(self, line):
         """Extract data from one logline."""
+        data = []
         for plugin in self.plugins:
             try:
-                self.statistic.add_info(plugin.gather_data(line))
+                data.append(plugin.gather_data(line))
             except NoMatch as e:
                 continue
+
+        self.statistic.add_info(data)
