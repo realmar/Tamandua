@@ -1,0 +1,36 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure(2) do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://atlas.hashicorp.com/search.
+  config.vm.box = "jessie"
+
+  # The url from where the 'config.vm.box' box will be fetched if it
+  # doesn't already exist on the user's system.
+  config.vm.box_url = "https://share.phys.ethz.ch/~isg/vagrant/jessie64-core.box"
+
+  # set some fitting hostname
+  config.vm.hostname = "statlyser-dev"
+
+  # we configure a private network, so that the virtual machine is only reachable
+  # from the host machine
+  config.vm.network "private_network", ip: "192.168.33.10"
+
+  # the synced folder should contain the logs
+  config.vm.synced_folder "./shared_folder", "/var/log/mocklogs", disabled: false
+
+  # we want to automatically deploy our application using ansible
+  # config.vm.provision "ansible" do |ansible|
+  #   ansible.sudo = true
+  #   ansible.playbook = "../ansible/playbook.yml"
+  # end
+end
