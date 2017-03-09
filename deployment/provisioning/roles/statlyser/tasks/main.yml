@@ -1,0 +1,22 @@
+---
+  - name: Install dependencies
+    package:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      - python3
+      - git
+
+  - name: Creating folder in which statlyser will live
+    file:
+      path: /opt
+      state: directory
+      owner: root
+      group: root
+
+  - name: Getting git repo
+    git:
+      repo: git@gitlab.phys.ethz.ch:amartako/Statlyser.git
+      dest: /opt/statlyser
+      accept_hostkey: yes
+      clone: yes

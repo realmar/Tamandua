@@ -28,9 +28,14 @@ Vagrant.configure(2) do |config|
   # the synced folder should contain the logs
   config.vm.synced_folder "./shared_folder", "/var/log/mocklogs", disabled: false
 
+  # forwarning our agent, so that we can clone the statlyser git repo from GitLab
+  config.ssh.forward_agent = true
+
   # we want to automatically deploy our application using ansible
-  # config.vm.provision "ansible" do |ansible|
-  #   ansible.sudo = true
-  #   ansible.playbook = "../ansible/playbook.yml"
-  # end
+  config.vm.provision "ansible" do |ansible|
+    ansible.groups = {
+      "development" => [ "default" ],
+    }
+    ansible.playbook = "./provisioning/playbook.yml"
+  end
 end
