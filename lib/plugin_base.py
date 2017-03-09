@@ -49,6 +49,10 @@ class PluginBase(IPlugin):
         Those special keywords are:
         hostname    : .group('hostname')
         servicename : __class__.__name__
+
+        Logical keywords:
+        bool        : None      --> False
+                    : not None  --> True
         """
 
         for name, value in regexMatches.items():
@@ -67,9 +71,20 @@ class PluginBase(IPlugin):
 
                 newName = newName.replace('servicename', servicename)
 
+            if 'bool' in separateNames:
+                if newName is None:
+                    newName = name
+
+                if regexMatches[name] is None:
+                    regexMatches[name] = False
+                else:
+                    regexMatches[name] = True
+
+                newName = newName.replace('_bool', '').replace('_bool', '').replace('_bool_', '')
+
             if newName is not None:
                 # if we still have an empty hostname in the key we will remove it
-                newName = newName.replace('hostname_', '').replace('_hostname', '')
+                newName = newName.replace('hostname_', '').replace('_hostname', '').replace('_hostname_', '')
 
                 regexMatches[newName] = regexMatches.pop(name)
 
@@ -95,6 +110,17 @@ class PluginBase(IPlugin):
             else:
                 break
 
+    def _edit_results(self, results):
+        """
+        Provide a way for the user to edit the generated result dict.
+
+        This method can be used to add custom stats by interpreting the results,
+        eg. add additional reflected information
+
+        Overwrite this method to use it.
+        """
+        pass
+
     def _check_subscription(self, line):
         return self._subscriptionRegex.search(line) is not None
 
@@ -113,5 +139,6 @@ class PluginBase(IPlugin):
                 # to the named group
                 result[group] = None
 
+        self._edit_results(result)
         self.__specifize_regex_group_name(result)
         return result
