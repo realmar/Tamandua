@@ -55,45 +55,31 @@ class PluginBase(IPlugin):
                     : not None  --> True
         """
 
+        newRegexMatches = {}
+
         for name, value in regexMatches.items():
-            newName = None
-            separateNames = name.split('_')
+            newName = name
             hostname = regexMatches.get('hostname')
             servicename = self.__class__.__name__.lower()
 
-            if hostname is not None:
-                if name != 'hostname':
-                    newName = name.replace('hostname', hostname)
+            if name != 'hostname' and hostname is not None:
+                newName = newName.replace('hostname', hostname)
 
-            if 'servicename' in separateNames:
-                if newName is None:
-                    newName = name
+            newName = newName.replace('servicename', servicename)
 
-                newName = newName.replace('servicename', servicename)
-
-            if 'bool' in separateNames:
-                if newName is None:
-                    newName = name
-
+            if 'bool' in name:
                 if regexMatches[name] is None:
                     regexMatches[name] = False
                 else:
                     regexMatches[name] = True
 
-                newName = newName.replace('_bool', '').replace('_bool', '').replace('_bool_', '')
+            newName = newName.replace('_bool', '').replace('_bool', '').replace('_bool_', '')
+            newName = newName.replace('hostname_', '').replace('_hostname', '').replace('_hostname_', '')
 
-            if newName is not None:
-                # if we still have an empty hostname in the key we will remove it
-                newName = newName.replace('hostname_', '').replace('_hostname', '').replace('_hostname_', '')
+            if newName != name and name != 'hostname':
+                newRegexMatches[newName] = regexMatches[name]
 
-                regexMatches[newName] = regexMatches.pop(name)
-
-        try:
-            del regexMatches['hostname']
-        except Exception as e:
-            # if we catch an exception this means that the given
-            # dict key does not exists
-            pass
+        return newRegexMatches
 
     def __extract_regex_group_names(self):
         """Extract the group names of a regex."""
@@ -140,5 +126,4 @@ class PluginBase(IPlugin):
                 result[group] = None
 
         self._edit_results(result)
-        self.__specifize_regex_group_name(result)
-        return result
+        return self.__specifize_regex_group_name(result)

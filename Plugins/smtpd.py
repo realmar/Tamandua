@@ -11,7 +11,7 @@ class Smtpd(PluginBase):
         self._subscriptionRegex = re.compile(' postfix\/smtpd')
 
     def _define_data_regex(self):
-        self._dataRegex = re.compile('\/(?P<hostname>[^\s]*) postfix\/smtpd\[[^\]]*\]\: ((?P<servicename_hostname_connect>connect)|(?P<servicename_hostname_disconnect>disconnect)|(?P<queueid>[\w\d]{14}|NOQUEUE))[ :]( (?P<servicename_hostname_action>hold|reject))?(( client=|from |[^m]*m )(?P<client>[^\[]*)\[(?P<ip>[^]]*)\])?(: [^:]*:(?P<reason>[^;]*);)?(.*from=<(?P<servicename_hostname_sender>[^>]*)>)?(.*to=<(?P<servicename_hostname_recipient>[^>]*))?(, [^=]*=[^=]*=(?P<servicename_hostname_bool_saslauth>[^@]*))?')
+        self._dataRegex = re.compile('\/(?P<hostname>[^\s]*) postfix\/smtpd\[[^\]]*\]\:( ((?P<servicename_hostname_connect>connect)|(?P<servicename_hostname_disconnect>disconnect)|(?P<queueid>[\w\d]{14}|NOQUEUE))[ :]( (?P<servicename_hostname_action>hold|reject))?(( client=|from |[^m]*m )(?P<client>[^\[]*)\[(?P<ip>[^]]*)\])?(: [^:]*:(?P<reason>[^;]*);)?(.*from=<(?P<servicename_hostname_sender>[^>]*)>)?(.*to=<(?P<servicename_hostname_recipient>[^>]*))?(, [^=]*=[^=]*=(?P<servicename_hostname_bool_saslauth>[^@]*))?)?')
 
     def _edit_results(self, results):
         # we remove the stuff we are not interested about
