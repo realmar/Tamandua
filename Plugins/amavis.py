@@ -11,4 +11,6 @@ class Amavis(PluginBase):
         self._subscriptionRegex = re.compile(' amavis\[')
 
     def _define_data_regex(self):
-        self._dataRegex = [re.compile('\/(?P<hostname>[^\s]*) amavis\[[^\]]*\]: \([^\)]*\) (?P<servicename_virus>[^ ]* [^ ]*)')]
+        self._dataRegex = [
+            re.compile(r'\) (?P<servicename_virus>[\w ]*)\ ')
+        ]
