@@ -13,7 +13,11 @@ from lib.plugin_manager import PluginManager
 from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
 
 
-PREREGEX = r'\s\d{2}\s\d{2}(:\d{2}){2}\s(?P<hostname>[^\/\s]*)'
+# some hostnames come with the username prepended
+# so we have to catch this case
+# PREREGEX = r':\d{2} ([^@]*@)?(?P<hostname>[^\/\s]*)'
+
+PREREGEX = r':\d{2} (?P<hostname>[^\/\s]*)'
 
 
 def main():

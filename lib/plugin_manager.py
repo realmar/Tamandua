@@ -52,6 +52,7 @@ class PluginManager():
         data = []
         for plugin in self.plugins:
             pre = self.__pre_regex.search(line)
+
             if pre is None:
                 pre = {}
             else:
