@@ -1,13 +1,15 @@
 """This package contains the PluginManager."""
 
-from .statistic import Statistic
+from .statistics import Statistics
 from .plugin_base import IPlugin
-from .exceptions import NoMatch
 
 # used to dynamically import the plugins
 import importlib
 import pkgutil
 import inspect
+
+# used for the pre regex
+import re
 
 from os.path import join as path_join
 
@@ -15,9 +17,12 @@ from os.path import join as path_join
 class PluginManager():
     """Load, instantiate and use all plugins."""
 
-    def __init__(self, absPluginsPath):
+    def __init__(self, absPluginsPath, pattern):
         """"Ctor of PluginManager."""
-        self.statistic = Statistic()
+        self.statistics = Statistics()
+        # This regex is used to extract generic information from each
+        # log line. Eg. hostname
+        self.__pre_regex = re.compile(pattern)
 
         self.plugins = None
         self.__load_plugins(absPluginsPath)
@@ -40,16 +45,21 @@ class PluginManager():
                 pluginClasses.extend(
                     [cls for name, cls in classes if 'PluginBase' not in name])
 
-        self.plugins = [cls() for cls in pluginClasses]
+            self.plugins = [cls() for cls in pluginClasses]
 
     def process_line(self, line):
         """Extract data from one logline."""
         data = []
         for plugin in self.plugins:
-            try:
-                data.append(plugin.gather_data(line))
-            except NoMatch as e:
-                continue
+            pre = self.__pre_regex.search(line)
+            if pre is None:
+                pre = {}
+            else:
+                pre = pre.groupdict()
 
-        self.statistic.add_info(data)
-        self.statistic.increment_line_count()
+            extractedData = plugin.gather_data(line, pre)
+            if extractedData:
+                data.append(extractedData)
+
+        self.statistics.add_info(data)
+        self.statistics.increment_line_count()

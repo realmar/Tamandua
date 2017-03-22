@@ -1,6 +1,6 @@
 """Here are the base classes of every Plugin."""
 
-from .exceptions import NoMatch
+from .exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
 import abc
 
 
@@ -36,13 +36,20 @@ class PluginBase(IPlugin):
         self._subscriptionRegex = None
         self._define_subscription_regex()
 
+        # sanity check of subscription regex
+        if self._subscriptionRegex is None:
+            raise NoSubscriptionRegex()
+
         self._dataRegex = None
         self._define_data_regex()
 
-        self.__regexGroupNames = []
-        self.__extract_regex_group_names()
+        # sanity check of data regex:
+        #
+        # it has to be a list at least one item
+        if self._dataRegex is None or not isinstance(self._dataRegex, list) or len(self._dataRegex) == 0:
+            raise NoDataRegex()
 
-    def __specifize_regex_group_name(self, regexMatches):
+    def __specify_regex_group_name(self, regexMatches, metadata):
         """
         Replace special keywords in the regex match group.
 
@@ -81,21 +88,6 @@ class PluginBase(IPlugin):
 
         return newRegexMatches
 
-    def __extract_regex_group_names(self):
-        """Extract the group names of a regex."""
-        pattern = self._dataRegex.pattern
-        lastpos = 0
-
-        while(True):
-            startPos = pattern.find('?P<', lastpos)
-            if startPos != -1:
-                startPos += 3
-                endPos = pattern.find('>', startPos)
-                self.__regexGroupNames.append(pattern[startPos:endPos])
-                lastpos = endPos
-            else:
-                break
-
     def _edit_results(self, results):
         """
         Provide a way for the user to edit the generated result dict.
@@ -109,21 +101,29 @@ class PluginBase(IPlugin):
 
     def _check_subscription(self, line):
         return self._subscriptionRegex.search(line) is not None
-
-    def gather_data(self, line):
+        
+    def gather_data(self, line, metadata):
         if not self._check_subscription(line):
-            raise NoMatch()
+            return False
 
-        search = self._dataRegex.search(line)
-        result = {}
+        for regex in self._dataRegex:
+            search = regex.search(line)
+            isNone = True
 
-        for group in self.__regexGroupNames:
-            try:
-                result[group] = search.group(group)
-            except Exception as e:
-                # This means that the regex didnt match
-                # to the named group
-                result[group] = None
+            result = search
 
-        self._edit_results(result)
-        return self.__specifize_regex_group_name(result)
+            # if we did not match or every match is None
+            # then we will try the next data regex
+            if result is None:
+                continue
+
+            result = result.groupdict()
+
+            if not any(result):
+                continue
+
+            self._edit_results(result)
+            return self.__specify_regex_group_name(result, metadata)
+
+        unknown_data_name = {'servicename_hostname_unknown': None}
+        return self.__specify_regex_group_name(unknown_data_name, metadata)

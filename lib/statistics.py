@@ -3,7 +3,7 @@
 from pprint import pprint
 
 
-class Statistic():
+class Statistics():
     """Container which composes and holds the statistics."""
 
     def __init__(self):
@@ -85,5 +85,5 @@ class Statistic():
             self.data['totalunknown'] += 1
 
     def represent(self):
-        """Output the statistic to STDOUT."""
+        """Output the statistics to STDOUT."""
         pprint(self.data)

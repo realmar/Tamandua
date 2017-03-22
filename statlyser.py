@@ -10,11 +10,26 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
 
 from lib.plugin_manager import PluginManager
+from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
+
+
+PREREGEX = ''
 
 
 def main():
     """Entry point of the application."""
-    pluginManager = PluginManager(os.path.join(BASEDIR, 'Plugins'))
+    try:
+        pluginManager = PluginManager(os.path.join(BASEDIR, 'Plugins'), PREREGEX)
+    except NoSubscriptionRegex as e:
+        print(e)
+        sys.exit(1)
+    except NoDataRegex as e:
+        print(e)
+        sys.exit(2)
+    except RegexGroupsMissing as e:
+        print(e)
+        sys.exit(3)
+
     if len(sys.argv) > 2:
         print('ERROR:')
         print('First parameter has to be the logfile.')
@@ -31,8 +46,8 @@ def main():
             pluginManager.process_line(line)
             line = f.readline()
 
-    # output the statistic to STDOUT
-    pluginManager.statistic.represent()
+    # output the statistics to STDOUT
+    pluginManager.statistics.represent()
 
 
 """We only start with the executation if we are the main."""

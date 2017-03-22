@@ -11,4 +11,4 @@ class Dovecot(PluginBase):
         self._subscriptionRegex = re.compile(' dovecot\:')
 
     def _define_data_regex(self):
-        self._dataRegex = re.compile('\/(?P<hostname>[^\s]*) dovecot: (?P<servicename_login>(imap|pop3)-login)')
+        self._dataRegex = [re.compile('\/(?P<hostname>[^\s]*) dovecot: (?P<servicename_login>(imap|pop3)-login)')]
