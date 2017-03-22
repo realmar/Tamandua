@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Statlyser. Generate statistics out of information from logfiles.
 
@@ -8,6 +10,8 @@ import os
 import sys
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
+
+import argparse
 
 from lib.plugin_manager import PluginManager
 from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
@@ -22,6 +26,10 @@ PREREGEX = r':\d{2} (?P<hostname>[^\/\s]*)'
 
 def main():
     """Entry point of the application."""
+    parser = argparse.ArgumentParser(description="Statlyser generates statistics from logfile data")
+    parser.add_argument('files', nargs='+', metavar='FILE', type=str, help='Logfiles to be parsed')
+    args = parser.parse_args()
+
     try:
         pluginManager = PluginManager(os.path.join(BASEDIR, 'Plugins'), PREREGEX)
     except NoSubscriptionRegex as e:
@@ -34,21 +42,13 @@ def main():
         print(e)
         sys.exit(3)
 
-    if len(sys.argv) > 2:
-        print('ERROR:')
-        print('First parameter has to be the logfile.')
-        print('Currently only one logfile per run is supported.')
-
-        sys.exit(1)
-
-    logfile = sys.argv[1]
-
-    with open(logfile, 'r') as f:
-        line = f.readline()
-
-        while line:
-            pluginManager.process_line(line)
+    for logfile in args.files:
+        with open(logfile, 'r') as f:
             line = f.readline()
+
+            while line:
+                pluginManager.process_line(line)
+                line = f.readline()
 
     # output the statistics to STDOUT
     pluginManager.statistics.represent()
