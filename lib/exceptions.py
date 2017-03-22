@@ -1,5 +1,16 @@
 """Custom Exceptions used by the Application."""
 
-class NoMatch(Exception):
-    def __init__(self):
-        super().__init__("The given line did not match with the plugin.")
+
+class NoSubscriptionRegex(Exception):
+    def __init__(self, clsname):
+        super().__init__("No subscription regex defined in: " + clsname)
+
+
+class NoDataRegex(Exception):
+    def __init__(self, clsname):
+        super().__init__("No data regex defined in: " + clsname)
+
+
+class RegexGroupsMissing(Exception):
+    def __init__(self, clsname, pattern):
+        super().__init__("No named regex groups defined in: " + clsname + " pattern: " + pattern)
