@@ -27,7 +27,7 @@ PREREGEX = r':\d{2} (?P<hostname>[^\/\s]*)'
 def main():
     """Entry point of the application."""
     parser = argparse.ArgumentParser(description="Statlyser generates statistics from logfile data")
-    parser.add_argument('files', nargs='+', metavar='FILE', type=str, help='Logfiles to be parsed')
+    parser.add_argument('files', nargs='+', metavar='LOGFILE', type=str, help='Logfiles to be parsed')
     args = parser.parse_args()
 
     try:
@@ -44,11 +44,15 @@ def main():
 
     for logfile in args.files:
         with open(logfile, 'r') as f:
-            line = f.readline()
-
-            while line:
-                pluginManager.process_line(line)
-                line = f.readline()
+            try:
+                for line in f:
+                    pluginManager.process_line(line)
+            except UnicodeDecodeError as e:
+                print('WARNING: The encoding of ' + logfile + ' could not be determined')
+                print(logfile + ' will be (partially) omitted')
+                print(e)
+                print('\n')
+                continue
 
     # output the statistics to STDOUT
     pluginManager.statistics.represent()
