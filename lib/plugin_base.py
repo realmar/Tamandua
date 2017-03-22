@@ -38,7 +38,7 @@ class PluginBase(IPlugin):
 
         # sanity check of subscription regex
         if self._subscriptionRegex is None:
-            raise NoSubscriptionRegex()
+            raise NoSubscriptionRegex(self.__class__.__name__)
 
         self._dataRegex = None
         self._define_data_regex()
@@ -47,7 +47,11 @@ class PluginBase(IPlugin):
         #
         # it has to be a list at least one item
         if self._dataRegex is None or not isinstance(self._dataRegex, list) or len(self._dataRegex) == 0:
-            raise NoDataRegex()
+            raise NoDataRegex(self.__class__.__name__)
+
+        r, info = self.__check_data_regex_group_names()
+        if r:
+            raise RegexGroupsMissing(self.__class__.__name__, info)
 
     def __specify_regex_group_name(self, regexMatches, metadata):
         """
@@ -87,6 +91,20 @@ class PluginBase(IPlugin):
                 newRegexMatches[newName] = regexMatches[name]
 
         return newRegexMatches
+
+    def __check_data_regex_group_names(self):
+        """
+        Check if the user has any named groups defined in the regex.
+
+        return:
+        False when there are groups
+        True when there are no groups
+        """
+        for regex in self._dataRegex:
+            if '?P<' not in regex.pattern:
+                return True, regex.pattern
+
+        return False, None
 
     def _edit_results(self, results):
         """
