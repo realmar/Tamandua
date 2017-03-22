@@ -66,7 +66,7 @@ class PluginBase(IPlugin):
 
         for name, value in regexMatches.items():
             newName = name
-            hostname = regexMatches.get('hostname')
+            hostname = metadata.get('hostname')
             servicename = self.__class__.__name__.lower()
 
             if name != 'hostname' and hostname is not None:
@@ -101,7 +101,7 @@ class PluginBase(IPlugin):
 
     def _check_subscription(self, line):
         return self._subscriptionRegex.search(line) is not None
-        
+
     def gather_data(self, line, metadata):
         if not self._check_subscription(line):
             return False

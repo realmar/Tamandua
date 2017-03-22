@@ -11,4 +11,6 @@ class Spamd(PluginBase):
         self._subscriptionRegex = re.compile(' spamd\[')
 
     def _define_data_regex(self):
-        self._dataRegex = [re.compile('\/(?P<hostname>[^\s]*) spamd\[[^\]]*\](: spamd: (?P<servicename>[^\ ]* [^\ ]*) \([\d-])?')]
+        self._dataRegex = [
+            re.compile(r'spamd: (?P<servicename>(clean message|identified spam)) \(')
+            ]
