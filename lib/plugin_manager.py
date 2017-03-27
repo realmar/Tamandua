@@ -40,8 +40,8 @@ class PluginManager():
                 if '__init__' not in f and f[-3:] == '.py':
                     # append the absoulte path to it
                     modul = path_join(absolute, f)
-                    # remove the absolute Statlyser path and reformat so
-                    # that importlib can use it to import it
+                    # Remove the absolute Statlyser path and reformat it.
+                    # This will be the namespace in which the module lives
                     #
                     # eg.:
                     #
@@ -49,11 +49,16 @@ class PluginManager():
                     # -->
                     # Plugins.test.plugin
                     modul = modul.replace(absPluginsPath[:absPluginsPath.rfind('/')], '').replace('.py', '')[1:].replace('/', '.')
+                    # append a tulpe in following form:
+                    # ( namespace, absolutepath )
                     modules.append((modul, path_join(absPluginsPath, absolute, f)))
 
         for module in modules:
+            # ref: https://docs.python.org/3/library/importlib.html#importlib.util.spec_from_file_location
             spec = importlib.util.spec_from_file_location(module[0], module[1])
+            # ref: https://docs.python.org/3/library/importlib.html#importlib.util.module_from_spec
             imp = importlib.util.module_from_spec(spec)
+            # ref: https://docs.python.org/3/library/importlib.html#importlib.abc.Loader.exec_module
             spec.loader.exec_module(imp)
 
             classes = inspect.getmembers(
