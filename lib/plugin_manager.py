@@ -45,7 +45,7 @@ class PluginManager():
                 pluginClasses.extend(
                     [cls for name, cls in classes if 'PluginBase' not in name])
 
-            self.plugins = [cls() for cls in pluginClasses]
+        self.plugins = [cls() for cls in pluginClasses]
 
     def process_line(self, line):
         """Extract data from one logline."""
