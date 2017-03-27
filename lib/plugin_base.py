@@ -62,8 +62,15 @@ class PluginBase(IPlugin):
         servicename : __class__.__name__
 
         Logical keywords:
-        bool        : None      --> False
+        BOOL        : None      --> False
                     : not None  --> True
+
+        Example:
+
+        hostname_servicename_saslauth_BOOL
+        └────────┬─────────┘         └─┬─┘
+            replacement              flags
+            keywords
         """
 
         newRegexMatches = {}
@@ -78,14 +85,14 @@ class PluginBase(IPlugin):
 
             newName = newName.replace('servicename', servicename)
 
-            if 'bool' in name:
+            if 'BOOL' in name:
                 if regexMatches[name] is None:
                     regexMatches[name] = False
                 else:
                     regexMatches[name] = True
 
-            newName = newName.replace('_bool', '').replace('_bool', '').replace('_bool_', '')
-            newName = newName.replace('hostname_', '').replace('_hostname', '').replace('_hostname_', '')
+            newName = newName.replace('_BOOL', '')
+            newName = newName.replace('hostname_', '')
 
             if newName != name and name != 'hostname':
                 newRegexMatches[newName] = regexMatches[name]

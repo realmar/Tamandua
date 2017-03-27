@@ -15,7 +15,7 @@ class Smtpd(PluginBase):
             re.compile(r'(?P<servicename_hostname_connection>(dis)?connect )'),
             re.compile(r'''
                     sasl_method=(?P<servicename_hostname_saslmethod>[^,]*),\s
-                    sasl_username=(?P<servicename_hostname_bool_saslauth>[^\n]*)
+                    sasl_username=(?P<servicename_hostname_saslauth_BOOL>[^\n]*)
                     ''', re.X),
             re.compile(r'(?P<servicename_hostname_action>hold|reject):'),
         ]
