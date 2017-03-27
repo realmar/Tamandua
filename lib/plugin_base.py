@@ -94,8 +94,7 @@ class PluginBase(IPlugin):
             newName = newName.replace('_BOOL', '')
             newName = newName.replace('hostname_', '')
 
-            if newName != name and name != 'hostname':
-                newRegexMatches[newName] = regexMatches[name]
+            newRegexMatches[newName] = regexMatches[name]
 
         return newRegexMatches
 
