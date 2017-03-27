@@ -31,7 +31,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        pluginManager = PluginManager(os.path.join(BASEDIR, 'Plugins'), PREREGEX)
+        pluginManager = PluginManager(os.path.join(BASEDIR, 'plugins-enabled'), PREREGEX)
     except NoSubscriptionRegex as e:
         print(e)
         sys.exit(1)
