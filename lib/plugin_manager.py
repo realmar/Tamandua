@@ -5,6 +5,7 @@ from .plugin_base import IPlugin
 
 # used to dynamically import the plugins
 import importlib
+import importlib.util
 import inspect
 import os
 
@@ -48,10 +49,12 @@ class PluginManager():
                     # -->
                     # Plugins.test.plugin
                     modul = modul.replace(absPluginsPath[:absPluginsPath.rfind('/')], '').replace('.py', '')[1:].replace('/', '.')
-                    modules.append(modul)
+                    modules.append((modul, path_join(absPluginsPath, absolute, f)))
 
         for module in modules:
-            imp = importlib.import_module(module)
+            spec = importlib.util.spec_from_file_location(module[0], module[1])
+            imp = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(imp)
 
             classes = inspect.getmembers(
                 imp, lambda cls:
