@@ -52,7 +52,10 @@ class PluginManager():
                     # /some/dir/statlyser/Plugins/test/plugin.py
                     # -->
                     # Plugins.test.plugin
-                    modul = modul.replace(absPluginsPath[:absPluginsPath.rfind('/')], '').replace('.py', '')[1:].replace('/', '.')
+                    modul = modul.replace(
+                        absPluginsPath[: absPluginsPath.rfind('/')],
+                        '').replace('.py', '')[
+                        1:].replace('/', '.')
                     # append a tulpe in following form:
                     # ( namespace, absolutepath )
                     modules.append((modul, path_join(absPluginsPath, absolute, f)))
