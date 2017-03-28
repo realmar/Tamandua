@@ -7,17 +7,13 @@ class Statistics():
     """Container which composes and holds the statistics."""
 
     def __init__(self):
-        """Ctor of Statistic."""
+        """Constructor of Statistic."""
         self.data = {
             'totalrelevant': 0,
             'totalnonrelevant': 0,
             'totallines': 0,
             'totalunknown': 0
             }
-
-    def increment_line_count(self):
-        self.data['totallines'] += 1
-        self.data['totalnonrelevant'] = self.data['totallines'] - self.data['totalrelevant']
 
     def add_info(self, d):
         """Add more data to the statistic."""
@@ -27,8 +23,8 @@ class Statistics():
             hasData = False
             dictKeyChain = next(iter(data.keys())).split('_')[:-1]
 
-            for name, value in data.items():
-                separateNames = name.split('_')
+            for key, value in data.items():
+                separateNames = key.split('_')
                 currLayer = self.data
                 currIteration = 0
 
@@ -83,6 +79,9 @@ class Statistics():
 
         if not lineHasData and len(d) > 0:
             self.data['totalunknown'] += 1
+
+        self.data['totallines'] += 1
+        self.data['totalnonrelevant'] = self.data['totallines'] - self.data['totalrelevant']
 
     def represent(self):
         """Output the statistics to STDOUT."""

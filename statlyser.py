@@ -8,18 +8,18 @@ This is the main (entry point) of the application.
 
 import os
 import sys
+import argparse
+from json import JSONDecodeError
+
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
 
-import argparse
-
 from lib.plugin_manager import PluginManager
 from lib.config import Config
-from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
+from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, MissingConfigField
 
 
-PREREGEX = r':\d{2} (?P<hostname>[^\/\s]*)'
-CONFIGFILE = 'statlyser.conf'
+CONFIGFILE = 'statlyser.json'
 
 
 def main():
@@ -46,11 +46,17 @@ def main():
     except FileNotFoundError as e:
         print('ERROR: configfile "' + args.configfile + '" does not exists.')
         sys.exit(6)
+    except JSONDecodeError as e:
+        print('There is a syntax error in your config:')
+        print(e)
+        sys.exit(7)
+    except MissingConfigField as e:
+        print(e)
+        sys.exit(8)
 
     try:
         pluginManager = PluginManager(
             absPluginsPath=os.path.join(BASEDIR, 'plugins-enabled'),
-            preregexPattern=PREREGEX,
             config=config)
     except NoSubscriptionRegex as e:
         print(e)

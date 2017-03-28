@@ -8,11 +8,6 @@ class IPlugin(metaclass=abc.ABCMeta):
     """Interface which every plugin has to implement."""
 
     @abc.abstractmethod
-    def _check_subscription(self, line):
-        """Return True or False if the subscription regex matched or not."""
-        pass
-
-    @abc.abstractmethod
     def _define_subscription_regex(self):
         """Assign the compiled subscription regex to self."""
         pass
@@ -23,6 +18,11 @@ class IPlugin(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def _check_subscription(self, line):
+        """Return True or False if the subscription regex matched or not."""
+        pass
+
+    @abc.abstractmethod
     def gather_data(self, line):
         """Extract the data from a logline and return the results as a dict."""
         pass
@@ -30,9 +30,9 @@ class IPlugin(metaclass=abc.ABCMeta):
 
 class PluginBase(IPlugin):
     """Base class of every plugin, which contains generalized logic."""
-
+    
     def __init__(self):
-        """Ctor of PluginBase."""
+        """Constructor of PluginBase."""
         self._subscriptionRegex = None
         self._define_subscription_regex()
 
@@ -53,7 +53,24 @@ class PluginBase(IPlugin):
         if r:
             raise RegexGroupsMissing(self.__class__.__name__, info)
 
-    def __specify_regex_group_name(self, regexMatches, metadata):
+    def _check_subscription(self, line):
+        return self._subscriptionRegex.search(line) is not None
+
+    def __check_data_regex_group_names(self):
+        """
+        Check if the user has any named groups defined in the regex.
+
+        return:
+        False when there are groups
+        True when there are no groups
+        """
+        for regex in self._dataRegex:
+            if '?P<' not in regex.pattern:
+                return True, regex.pattern
+
+        return False, None
+
+    def __specify_regex_group_name(self, dataRegexMatches, preRegexMatches):
         """
         Replace special keywords in the regex match group.
 
@@ -73,44 +90,35 @@ class PluginBase(IPlugin):
             keywords
         """
 
-        newRegexMatches = {}
+        newDataRegexMatches = {}
 
-        for name, value in regexMatches.items():
-            newName = name
-            hostname = metadata.get('hostname')
+        for key, value in dataRegexMatches.items():
+            newName = key
+            hostname = preRegexMatches.get('hostname')
             servicename = self.__class__.__name__.lower()
 
-            if name != 'hostname' and hostname is not None:
+            if key != 'hostname' and hostname is not None:
                 newName = newName.replace('hostname', hostname)
 
             newName = newName.replace('servicename', servicename)
 
-            if 'BOOL' in name:
-                if regexMatches[name] is None:
-                    regexMatches[name] = False
+            if 'BOOL' in key:
+                if dataRegexMatches[key] is None:
+                    dataRegexMatches[key] = False
                 else:
-                    regexMatches[name] = True
+                    dataRegexMatches[key] = True
 
-            newName = newName.replace('_BOOL', '')
-            newName = newName.replace('hostname_', '')
+            keySplit = newName.split('_')
+            for toBeRemoved in ('hostname', 'BOOL'):
+                try:
+                    keySplit.remove(toBeRemoved)
+                except ValueError as e:
+                    pass
+            newName = '_'.join(keySplit)
 
-            newRegexMatches[newName] = regexMatches[name]
+            newDataRegexMatches[newName] = dataRegexMatches[key]
 
-        return newRegexMatches
-
-    def __check_data_regex_group_names(self):
-        """
-        Check if the user has any named groups defined in the regex.
-
-        return:
-        False when there are groups
-        True when there are no groups
-        """
-        for regex in self._dataRegex:
-            if '?P<' not in regex.pattern:
-                return True, regex.pattern
-
-        return False, None
+        return newDataRegexMatches
 
     def _edit_results(self, results):
         """
@@ -123,31 +131,25 @@ class PluginBase(IPlugin):
         """
         pass
 
-    def _check_subscription(self, line):
-        return self._subscriptionRegex.search(line) is not None
-
-    def gather_data(self, line, metadata):
+    def gather_data(self, line, preRegexMatches):
         if not self._check_subscription(line):
             return False
 
         for regex in self._dataRegex:
             search = regex.search(line)
-            isNone = True
-
-            result = search
 
             # if we did not match or every match is None
             # then we will try the next data regex
-            if result is None:
+            if search is None:
                 continue
 
-            result = result.groupdict()
+            result = search.groupdict()
 
             if not any(result):
                 continue
 
             self._edit_results(result)
-            return self.__specify_regex_group_name(result, metadata)
+            return self.__specify_regex_group_name(result, preRegexMatches)
 
         unknown_data_name = {'servicename_hostname_unknown': None}
-        return self.__specify_regex_group_name(unknown_data_name, metadata)
+        return self.__specify_regex_group_name(unknown_data_name, preRegexMatches)

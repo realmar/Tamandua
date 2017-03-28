@@ -18,8 +18,8 @@ from os.path import join as path_join
 class PluginManager():
     """Load, instantiate and use all plugins."""
 
-    def __init__(self, absPluginsPath, preregexPattern, config):
-        """"Ctor of PluginManager."""
+    def __init__(self, absPluginsPath, config):
+        """"Constructor of PluginManager."""
         self.__limitHosts = config.get('limit_hosts')
         if self.__limitHosts is None:
             self.__limitHosts = []
@@ -27,17 +27,17 @@ class PluginManager():
         self.statistics = Statistics()
         # This regex is used to extract generic information from each
         # log line. Eg. hostname
-        self.__preRegex = re.compile(preregexPattern)
+        self.__preRegex = re.compile(config.get('preregex'))
 
         self.plugins = None
         self.__load_plugins(absPluginsPath)
 
     def __load_plugins(self, absPluginsPath):
-        """Load all plugins found in the Plugins folder and its subfolders."""
+        """Load all plugins found in the plugins-enabled folder and its subfolders."""
         pluginClasses = []
 
         modules = []
-        # find all files in the Plugins subdir
+        # find all files in the plugins-enabled subdir
         for absolute, dirs, files in os.walk(absPluginsPath):
             for f in files:
                 # check if the file is an actual python modul
@@ -56,7 +56,7 @@ class PluginManager():
                         absPluginsPath[: absPluginsPath.rfind('/')],
                         '').replace('.py', '')[
                         1:].replace('/', '.')
-                    # append a tulpe in following form:
+                    # append a tuple in following form:
                     # ( namespace, absolutepath )
                     modules.append((modul, path_join(absPluginsPath, absolute, f)))
 
@@ -72,9 +72,9 @@ class PluginManager():
                 imp, lambda cls:
                     isinstance(cls, type) and
                     issubclass(cls, IPlugin))
-            # TODO: do not extract potential user defined base classes
+
             pluginClasses.extend(
-                [cls for name, cls in classes if 'PluginBase' not in name])
+                [cls for name, cls in classes if name != 'PluginBase'])
 
         self.plugins = [cls() for cls in pluginClasses]
 
@@ -98,4 +98,3 @@ class PluginManager():
                 data.append(extractedData)
 
         self.statistics.add_info(data)
-        self.statistics.increment_line_count()

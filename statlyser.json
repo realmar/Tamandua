@@ -1,0 +1,9 @@
+{
+  "limit_hosts": [
+    "phd-mxin",
+    "phd-imap",
+    "phd-mainscan",
+    "phd-maildb"
+  ],
+  "preregex": ":\\d{2} (?P<hostname>[^\/\\s]*)"
+}
