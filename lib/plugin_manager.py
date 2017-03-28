@@ -18,12 +18,16 @@ from os.path import join as path_join
 class PluginManager():
     """Load, instantiate and use all plugins."""
 
-    def __init__(self, absPluginsPath, pattern):
+    def __init__(self, absPluginsPath, preregexPattern, config):
         """"Ctor of PluginManager."""
+        self.__limitHosts = config.get('limit_hosts')
+        if self.__limitHosts is None:
+            self.__limitHosts = []
+
         self.statistics = Statistics()
         # This regex is used to extract generic information from each
         # log line. Eg. hostname
-        self.__pre_regex = re.compile(pattern)
+        self.__preRegex = re.compile(preregexPattern)
 
         self.plugins = None
         self.__load_plugins(absPluginsPath)
@@ -75,12 +79,16 @@ class PluginManager():
         """Extract data from one logline."""
         data = []
         for plugin in self.plugins:
-            pre = self.__pre_regex.search(line)
+            pre = self.__preRegex.search(line)
 
             if pre is None:
                 pre = {}
             else:
                 pre = pre.groupdict()
+
+            hostname = pre.get('hostname')
+            if hostname is not None and hostname not in self.__limitHosts:
+                break
 
             extractedData = plugin.gather_data(line, pre)
             if extractedData:

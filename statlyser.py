@@ -14,24 +14,44 @@ sys.path.append(BASEDIR)
 import argparse
 
 from lib.plugin_manager import PluginManager
+from lib.config import Config
 from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
 
 
-# some hostnames come with the username prepended
-# so we have to catch this case
-# PREREGEX = r':\d{2} ([^@]*@)?(?P<hostname>[^\/\s]*)'
-
 PREREGEX = r':\d{2} (?P<hostname>[^\/\s]*)'
+CONFIGFILE = 'statlyser.conf'
 
 
 def main():
     """Entry point of the application."""
-    parser = argparse.ArgumentParser(description="Statlyser generates statistics from logfile data")
-    parser.add_argument('files', nargs='+', metavar='LOGFILE', type=str, help='Logfiles to be parsed')
+    parser = argparse.ArgumentParser(
+        description="Statlyser generates statistics from logfile data")
+    parser.add_argument(
+        'files',
+        nargs='+',
+        metavar='LOGFILE',
+        type=str,
+        help='Logfiles to be parsed')
+    parser.add_argument(
+        '--config',
+        '-c',
+        dest="configfile",
+        default=os.path.join(BASEDIR, CONFIGFILE),
+        type=str,
+        help='Path to the configfile')
     args = parser.parse_args()
 
     try:
-        pluginManager = PluginManager(os.path.join(BASEDIR, 'plugins-enabled'), PREREGEX)
+        config = Config(args.configfile)
+    except FileNotFoundError as e:
+        print('ERROR: configfile "' + args.configfile + '" does not exists.')
+        sys.exit(6)
+
+    try:
+        pluginManager = PluginManager(
+            absPluginsPath=os.path.join(BASEDIR, 'plugins-enabled'),
+            preregexPattern=PREREGEX,
+            config=config)
     except NoSubscriptionRegex as e:
         print(e)
         sys.exit(1)
