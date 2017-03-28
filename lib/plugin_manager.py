@@ -93,8 +93,7 @@ class PluginManager():
             if hostname is not None and hostname not in self.__limitHosts:
                 break
 
-            extractedData = plugin.gather_data(line, pre)
-            if extractedData:
-                data.append(extractedData)
+            if plugin.check_subscription(line):
+                data.append(plugin.gather_data(line, pre))
 
         self.statistics.add_info(data)
