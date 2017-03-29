@@ -1,0 +1,37 @@
+Mar 28 17:00:00 phd-mxin/phd-mxin postfix/smtpd[7418]: 3vsvFX3g9yzQLg: client=phd-imap.phys-int.ethz.ch[192.0.2.26]
+Mar 28 17:00:00 phd-mxin/phd-mxin postfix/cleanup[6766]: 3vsvFX3g9yzQLg: message-id=<96877b503f8ffed590a4db817c499f4c@phys.ethz.ch>
+Mar 28 17:00:00 phd-mxin/phd-mxin postfix/qmgr[11431]: 3vsvFX3g9yzQLg: from=<john.doe@phys.ethz.ch>, size=894, nrcpt=1 (queue active)
+Mar 28 17:00:00 phd-mxin/phd-mxin postfix/smtpd[17307]: disconnect from example.com[192.0.2.10]
+Mar 28 17:00:00 phd-imap/phd-imap postfix/smtpd[26568]: connect from phd-mailscan.ethz.ch[192.168.127.2]
+Mar 28 17:03:15 phd-imap/phd-imap postfix/smtpd[29605]: 3vsvKH5fngzXLb: client=phd-mailscan.ethz.ch[192.168.127.2]
+Mar 28 17:03:15 phd-imap/phd-imap postfix/cleanup[20615]: 3vsvKH5fngzXLb: message-id=<96877b503f8ffed590a4db817c499f4c@phys.ethz.ch>
+Mar 28 17:03:15 phd-imap/phd-imap postfix/qmgr[6146]: 3vsvKH5fngzXLb: from=<john.doe@phys.ethz.ch>, size=1392, nrcpt=1 (queue active)
+Mar 28 17:03:16 phd-mailscan/phd-mailscan amavis[26001]: (26001-03-63) Passed CLEAN {RelayedInternal}, LOCAL [192.0.2.26]:48145 [192.0.2.26] <john.doe@phys.ethz.ch> -> <john.doe@phys.ethz.ch>, Queue-ID: 3vsvFX3g9yzQLg, Message-ID: <96877b503f8ffed590a4db817c499f4c@phys.ethz.ch>, mail_id: MV_c2rwoRqdz, Hits: -, size: 894, queued_as: 3vsvKH5fngzXLb, 1985 ms
+Mar 28 17:03:16 phd-mailscan/phd-mailscan spamd[26204]: spamd: processing message <96877b503f8ffed590a4db817c499f4c@phys.ethz.ch> for john.doe:9517
+Mar 28 17:03:32 phd-mailscan/phd-mailscan spamd[26204]: spamd: result: . 0 - ALL_TRUSTED,BAYES_00,RP_MATCHES_RCVD,TRACKER_ID scantime=16.4,size=1525,user=john.doe,uid=9517,required_score=5.0,rhost=phd-imap.phys-int.ethz.ch,raddr=192.0.2.26,rport=39192,mid=<96877b503f8ffed590a4db817c499f4c@phys.ethz.ch>,bayes=0.000000,autolearn=no
+206-Mar 28 17:03:32 phd-mailscan/phd-mailscan spamd[26204]: spamd: clean message (0.1/5.0) for john.doe:9517 in 16.4 seconds, 1525 bytes.
+Mar 28 17:03:16 phd-mxin/phd-mxin postfix/lmtp[10246]: 3vsvFX3g9yzQLg: to=<john.doe@phys.ethz.ch>, relay=phd-mailscan.phys-int.ethz.ch[192.168.127.2]:10024, conn_use=63, delay=196, delays=0.05/193/0.15/2.1, dsn=2.0.0, status=sent (250 2.0.0 from MTA(smtp:[192.0.2.26]:10025): 250 2.0.0 Ok: queued as 3vsvKH5fngzXLb)
+Mar 28 17:03:16 phd-mxin/phd-mxin postfix/qmgr[11431]: 3vsvFX3g9yzQLg: removed
+Mar 28 17:03:16 phd-mxin/phd-mxin postfix/smtpd[17307]: Anonymous TLS connection established from example.com[192.0.2.10]: TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits)
+Mar 28 17:03:32 phd-imap/phd-imap postfix/local[28431]: 3vsvKH5fngzXLb: to=<john.doe@phys.ethz.ch>, relay=local, delay=17, delays=0.01/0/0/17, dsn=2.0.0, status=sent (delivered to command: /usr/bin/procmail -t)
+Mar 28 17:03:32 phd-imap/phd-imap postfix/qmgr[6146]: 3vsvKH5fngzXLb: removed
+Mar 28 17:03:32 phd-mxin/phd-mxin postfix/smtpd[17303]: 3vH5w40ps0zQ9h: client=sub.example.com[192.0.2.11]
+Mar 28 17:03:32 phd-mxin/phd-mxin postfix/smtpd[17303]: disconnect from sub.example.com[192.0.2.11]
+Mar 28 17:03:32 phd-imap/phd-imap postfix/smtpd[19032]: connect from phd-mailscan.ethz.ch[192.168.127.2]
+Mar 28 17:03:32 phd-imap/phd-imap postfix/smtpd[19032]: 3vH5w42jv1zXKl: client=phd-mailscan.ethz.ch[192.168.127.2]
+Mar 28 17:03:32 phd-imap/phd-imap postfix/smtpd[19032]: disconnect from phd-mailscan.ethz.ch[192.168.127.2]
+Mar 28 17:03:32 phd-mxin/phd-mxin postfix/smtpd[16498]: lost connection after AUTH from sub1.example.com[192.0.2.12]
+Mar 28 18:30:52 phd-mailscan/phd-mailscan amavis[28323]: (28323-01-37) Passed CLEAN {RelayedInbound}, [192.0.2.20]:46641 [192.0.2.20] <alice@example.com> -> <bob@example.com>, Queue-ID: 3v448P3SzFzQMH, Message-ID: <0.0.1E.BAC.1D272561D33514E.0@messageid.example.com>, mail_id: foGysLE_OidL, Hits: -, size: 74245, queued_as: 3v44J13QPgzXL3, 6235 ms
+Jan 19 14:33:19 phd-mailscan/phd-mailscan amavis[28716]: (28716-01-19) (!)process [29370] running ClamAV-clamscan is still alive, using a bigger hammer
+Jan 19 14:33:19 phd-mailscan/phd-mailscan amavis[28716]: (28716-01-19) (!!)AV: ALL VIRUS SCANNERS FAILED
+Jan 19 16:45:37 phd-mailscan/phd-mailscan amavis[8207]: (08207-13) Passed UNCHECKED {RelayedTaggedInbound}, [192.0.2.21]:55593 [192.0.2.21] <johnny@solid.phys.ethz.ch> -> <smith@phys.ethz.ch>, Queue-ID: 3v47TY04wDzQ9D, Message-ID: <8CE9D8E3-68EE-4B73-8856-D004BB066775@solid.phys.ethz.ch>, mail_id: i9haHdz9Wg1q, Hits: -, size: 5158, queued_as: 3v47TY4WxSzXL0, 666 ms
+Jan 19 08:36:32 phd-mailscan/phd-mailscan amavis[1400]: (01400-06) Blocked INFECTED (Sanesecurity.Malware.26587.JsHeur.UNOFFICIAL) {DiscardedInbound,Quarantined}, [192.0.2.22]:58109 [192.0.2.22] <frank.capra@example.com> -> <mary.major@phys.ethz.ch>, quarantine: i/virus-iX3faHEBhxsJ, Queue-ID: 3v3wd36vhBzQ99, Message-ID: <52d4f.ce38e6fb.018737d.e515a78@messageid.example.com>, mail_id: iX3faHEBhxsJ, Hits: -, size: 20158, 138 ms
+Feb  6 13:10:23 phd-imap/phd-imap postfix/smtp[23978]: 3vH5rv1pN2zXKx: to=<richard.roe@phys.ethz.ch>, relay=phys.ethz.ch[129.132.53.172]:25, delay=0.07, delays=0.05/0/0.01/0.02, dsn=2.0.0, status=sent (250 2.0.0 Ok: queued as 3vH5rv2HT1zyD)
+Feb  6 13:11:01 phd-imap/phd-imap postfix/smtp[20714]: Untrusted TLS connection established to example.com[192.0.2.10]:25: TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits)
+Feb  6 13:11:43 phd-imap/phd-imap postfix/local[22920]: 3vH5tP1ShVzXKl: to=<roe.v.wade@phys.ethz.ch>, relay=local, delay=2.1, delays=0.01/0/0/2.1, dsn=2.0.0, status=sent (delivered to command: /usr/bin/procmail -t)
+Feb  6 13:11:49 phd-mxin/phd-mxin postfix/smtpd[16498]: 3vH5tY65pSzQ9g: client=dyn.example.com[192.0.2.25], sasl_method=PLAIN, sasl_username=joe.bloggs@phd-mxin.ethz.ch
+Feb  6 13:13:19 phd-imap/phd-imap dovecot: imap(richard.miles): Disconnected: Logged out in=93 out=849
+Feb  6 13:13:19 phd-imap/phd-imap dovecot: imap-login: Login: user=<john.doe>, method=PLAIN, rip=192.0.2.26, lip=192.0.2.26, mpid=28359, secured, session=<A3+djttH8ADAqH8z>
+Feb  6 13:13:19 phd-imap/phd-imap dovecot: imap-login: Login: user=<john.smith>, method=PLAIN, rip=192.0.2.27, lip=192.0.2.29, mpid=28360, TLS, session=<UmWdjttHzwAKAqso>
+Feb  6 13:13:19 phd-imap/phd-imap dovecot: imap(john.doe): Disconnected: Logged out in=128 out=2485
+Feb  6 13:13:18 phd-imap/phd-imap dovecot: pop3-login: Login: user=<janie.doe>, method=PLAIN, rip=192.0.2.28, lip=192.0.2.29, mpid=28336, TLS, session=<ZqeCjttHEgBQ214M>

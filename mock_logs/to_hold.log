@@ -1,0 +1,3 @@
+Feb  6 13:13:10 phd-mxin/phd-mxin postfix/smtpd[17314]: 3vH5w63jPnzQ9h: client=example.com[192.0.2.10]
+Feb  6 13:13:10 phd-mxin/phd-mxin postfix/cleanup[18015]: 3vH5w63jPnzQ9h: message-id=<538301d27fff$ff57d520$fcbdd950@info>
+Feb  6 13:13:10 phd-mxin/phd-mxin postfix/smtpd[17314]: 3vH5w63jPnzQ9h: hold: END-OF-MESSAGE from example.com[192.0.2.10]: <info@example.com>: Sender address spam; from=<info@example.com> to=<john.doe@phys.ethz.ch> proto=ESMTP helo=<example.com>

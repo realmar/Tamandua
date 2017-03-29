@@ -1,0 +1,11 @@
+Mar 28 17:06:35 phd-mxin/phd-mxin postfix/smtpd[12169]: 3vsvP76Zm9zQ6T: client=phd-imap.phys-int.ethz.ch[192.0.2.29]
+Mar 28 17:06:35 phd-mxin/phd-mxin postfix/cleanup[7427]: 3vsvP76Zm9zQ6T: message-id=<0907ab0150b4bde89e09886a7eb6498e@phys.ethz.ch>
+Mar 28 17:06:35 phd-mxin/phd-mxin postfix/qmgr[11431]: 3vsvP76Zm9zQ6T: from=<john.doe@phys.ethz.ch>, size=878, nrcpt=1 (queue active)
+Mar 28 17:06:46 phd-mailscan/phd-mailscan amavis[26819]: (26819-04) Passed CLEAN {RelayedOutbound}, LOCAL [192.0.2.29]:51962 [192.0.2.29] <john.doe@phys.ethz.ch> -> <jane.doe@example.com>, Queue-ID: 3vsvP76Zm9zQ6T, Message-ID: <0907ab0150b4bde89e09886a7eb6498e@phys.ethz.ch>, mail_id: OBmvX4g8eaGQ, Hits: -, size: 878, queued_as: 3vsvPL1JkfzXLD, 1455 ms
+Mar 28 17:06:46 phd-mxin/phd-mxin postfix/lmtp[7145]: 3vsvP76Zm9zQ6T: to=<jane.doe@example.com>, relay=phd-mailscan.phys-int.ethz.ch[192.168.127.2]:10024, delay=11, delays=0.06/0/9/1.5, dsn=2.0.0, status=sent (250 2.0.0 from MTA(smtp:[192.0.2.29]:10025): 250 2.0.0 Ok: queued as 3vsvPL1JkfzXLD)
+Mar 28 17:06:46 phd-mxin/phd-mxin postfix/qmgr[11431]: 3vsvP76Zm9zQ6T: removed
+Mar 28 17:06:46 phd-imap/phd-imap postfix/smtpd[29605]: 3vsvPL1JkfzXLD: client=phd-mailscan.ethz.ch[192.168.127.2]
+Mar 28 17:06:46 phd-imap/phd-imap postfix/cleanup[24487]: 3vsvPL1JkfzXLD: message-id=<0907ab0150b4bde89e09886a7eb6498e@phys.ethz.ch>
+Mar 28 17:06:46 phd-imap/phd-imap postfix/qmgr[6146]: 3vsvPL1JkfzXLD: from=<john.doe@phys.ethz.ch>, size=1398, nrcpt=1 (queue active)
+Mar 28 17:07:02 phd-imap/phd-imap postfix/smtp[18937]: 3vsvPL1JkfzXLD: to=<jane.doe@example.com>, relay=mail.example.com[88.198.74.122]:25, delay=16, delays=0.07/0/15/0.55, dsn=2.0.0, status=sent (250 2.0.0 Ok: queued as 3vsvPn3zSGz5wbm)
+Mar 28 17:07:02 phd-imap/phd-imap postfix/qmgr[6146]: 3vsvPL1JkfzXLD: removed
