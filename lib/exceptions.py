@@ -19,3 +19,10 @@ class RegexGroupsMissing(Exception):
 class MissingConfigField(Exception):
     def __init__(self, field):
         super().__init__("The following field is missing from the config: " + field)
+
+
+class MultipleDataSetsUnknown(Exception):
+    def __init__(self, clsname):
+        super().__init__(clsname + """ has received multiple datasets for
+        unknown data. This is either a bug, or you have a custom PluginBase
+        class which does something wrong in gather_data. """)

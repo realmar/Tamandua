@@ -1,7 +1,7 @@
 """Here are the base classes of every Plugin."""
 
-from .exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
 import abc
+from .exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
 
 
 class IPlugin(metaclass=abc.ABCMeta):
@@ -146,7 +146,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
                 continue
 
             self._edit_results(result)
-            return self.__specify_regex_group_name(result, preRegexMatches)
+            return (True, self.__specify_regex_group_name(result, preRegexMatches))
 
-        unknown_data_name = {'servicename_hostname_unknown': None}
-        return self.__specify_regex_group_name(unknown_data_name, preRegexMatches)
+        unknown_data_name = {'servicename_hostname': 'unknown'}
+        return (False, self.__specify_regex_group_name(unknown_data_name, preRegexMatches))

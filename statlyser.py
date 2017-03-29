@@ -16,7 +16,7 @@ sys.path.append(BASEDIR)
 
 from lib.plugin_manager import PluginManager
 from lib.config import Config
-from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, MissingConfigField
+from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, MissingConfigField, MultipleDataSetsUnknown
 
 
 CONFIGFILE = 'config.json'
@@ -79,6 +79,10 @@ def main():
                 print(e)
                 print('\n')
                 continue
+            except MultipleDataSetsUnknown as e:
+                print('ERROR:')
+                print(e)
+                sys.exit(9)
 
     # output the statistics to STDOUT
     pluginManager.statistics.represent()

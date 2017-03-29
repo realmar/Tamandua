@@ -1,6 +1,7 @@
 """Here are the statistics composed and stored."""
 
 from pprint import pprint
+from .exceptions import MultipleDataSetsUnknown
 
 
 class Statistics():
@@ -9,79 +10,66 @@ class Statistics():
     def __init__(self):
         """Constructor of Statistic."""
         self.data = {
-            'totalrelevant': 0,
-            'totalnonrelevant': 0,
-            'totallines': 0,
-            'totalunknown': 0
+            'total_relevant': 0,
+            'total_irrelevant': 0,
+            'total': 0,
+            'total_unknown': 0
             }
 
     def add_info(self, d):
         """Add more data to the statistic."""
         lineHasData = False
+        setHasData = True
 
-        for data in d:
-            hasData = False
-            dictKeyChain = next(iter(data.keys())).split('_')[:-1]
+        for hasData, data in d:
+            if not hasData:
+                if len(data) > 1:
+                    raise MultipleDataSetsUnknown(self.__class__.__name__)
+
+                setHasData = False
 
             for key, value in data.items():
                 separateNames = key.split('_')
                 currLayer = self.data
                 currIteration = 0
 
+                if value is not None:
+                    lineHasData = True
+
                 for subname in separateNames:
                     currIteration += 1
                     if currLayer.get(subname) is None:
-                        if len(separateNames) == currIteration:
-                            if value is not None:
-                                lineHasData = True
-                                hasData = True
-
-                                currLayer[subname] = {value: 1, 'total': 1}
-
-                            break
-                        else:
-                            currLayer[subname] = {}
+                            tmp = {'total': 1}
+                            if not hasData or len(separateNames) == currIteration:
+                                tmp[value] = 1
+                            currLayer[subname] = tmp
                             currLayer = currLayer[subname]
                     else:
+                        def incrementValue(cl):
+                            if cl.get(value) is None:
+                                cl[value] = 1
+                            else:
+                                cl[value] += 1
+
+                        if currIteration > 1:
+                            currLayer['total'] += 1
+                            if not hasData:
+                                incrementValue(currLayer)
+
                         if len(separateNames) == currIteration:
-                            if value is not None:
-                                lineHasData = True
-                                hasData = True
+                            currLayer[subname]['total'] += 1
+                            incrementValue(currLayer[subname])
 
-                                if currLayer[subname].get(value) is None:
-                                    currLayer[subname][value] = 1
-                                else:
-                                    currLayer[subname][value] += 1
-
-                                currLayer[subname]['total'] += 1
-
-                            break
-                        else:
-                            currLayer = currLayer[subname]
-
-            currLayer = self.data
-            for key in dictKeyChain:
-                currLayer = currLayer[key]
-
-                if currLayer.get('total') is None:
-                    currLayer['total'] = 1
-                else:
-                    currLayer['total'] += 1
-
-                if not hasData:
-                    if currLayer.get('unknown') is None:
-                        currLayer['unknown'] = 1
-                    else:
-                        currLayer['unknown'] += 1
+                        currLayer = currLayer[subname]
 
         if len(d) > 0:
-            self.data['totalrelevant'] += 1
+            self.data['total_relevant'] += 1
 
-        if not lineHasData and len(d) > 0:
-            self.data['totalunknown'] += 1
+        if (not lineHasData or not setHasData) and len(d) > 0:
+            self.data['total_unknown'] += 1
 
-        self.data['totallines'] += 1
-        self.data['totalnonrelevant'] = self.data['totallines'] - self.data['totalrelevant']
+        self.data['total'] += 1
+        self.data['total_irrelevant'] = self.data['total'] - self.data['total_relevant']
 
     def represent(self):
         """Output the statistics to STDOUT."""
