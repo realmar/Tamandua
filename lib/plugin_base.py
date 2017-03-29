@@ -8,17 +8,7 @@ class IPlugin(metaclass=abc.ABCMeta):
     """Interface which every plugin has to implement."""
 
     @abc.abstractmethod
-    def _define_subscription_regex(self):
-        """Assign the compiled subscription regex to self."""
-        pass
-
-    @abc.abstractmethod
-    def _define_data_regex(self):
-        """Assign the compiled data regex to self."""
-        pass
-
-    @abc.abstractmethod
-    def _check_subscription(self, line):
+    def check_subscription(self, line):
         """Return True or False if the subscription regex matched or not."""
         pass
 
@@ -28,9 +18,9 @@ class IPlugin(metaclass=abc.ABCMeta):
         pass
 
 
-class PluginBase(IPlugin):
+class PluginBase(IPlugin, metaclass=abc.ABCMeta):
     """Base class of every plugin, which contains generalized logic."""
-    
+
     def __init__(self):
         """Constructor of PluginBase."""
         self._subscriptionRegex = None
@@ -53,7 +43,17 @@ class PluginBase(IPlugin):
         if r:
             raise RegexGroupsMissing(self.__class__.__name__, info)
 
-    def _check_subscription(self, line):
+    @abc.abstractmethod
+    def _define_subscription_regex(self):
+        """Assign the compiled subscription regex to self."""
+        pass
+
+    @abc.abstractmethod
+    def _define_data_regex(self):
+        """Assign the compiled data regex to self."""
+        pass
+
+    def check_subscription(self, line):
         return self._subscriptionRegex.search(line) is not None
 
     def __check_data_regex_group_names(self):
@@ -132,9 +132,6 @@ class PluginBase(IPlugin):
         pass
 
     def gather_data(self, line, preRegexMatches):
-        if not self._check_subscription(line):
-            return False
-
         for regex in self._dataRegex:
             search = regex.search(line)
 
