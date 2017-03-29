@@ -2,10 +2,16 @@
 
 
 # used to dynamically import the plugins
-import importlib
-import importlib.util
 import inspect
 import os
+import sys
+
+# for an explanation please refer to the comments in __loadPlugin
+if sys.version_info[1] < 5:
+    import importlib.machinery
+else:
+    import importlib
+    import importlib.util
 
 # used for the pre regex
 import re
@@ -62,12 +68,20 @@ class PluginManager():
                     modules.append((modul, path_join(absPluginsPath, absolute, f)))
 
         for module in modules:
-            # ref: https://docs.python.org/3/library/importlib.html#importlib.util.spec_from_file_location
-            spec = importlib.util.spec_from_file_location(module[0], module[1])
-            # ref: https://docs.python.org/3/library/importlib.html#importlib.util.module_from_spec
-            imp = importlib.util.module_from_spec(spec)
-            # ref: https://docs.python.org/3/library/importlib.html#importlib.abc.Loader.exec_module
-            spec.loader.exec_module(imp)
+            if sys.version_info[1] < 5:
+                # ref: https://docs.python.org/3/library/importlib.html#importlib.machinery.SourceFileLoader
+                # Depricated since 3.6
+                imp = importlib.machinery.SourceFileLoader(module[0], module[1]).load_module()
+            else:
+                # ref: https://docs.python.org/3/library/importlib.html#importlib.util.spec_from_file_location
+                # new in python 3.4
+                spec = importlib.util.spec_from_file_location(module[0], module[1])
+                # ref: https://docs.python.org/3/library/importlib.html#importlib.util.module_from_spec
+                # new in python 3.5
+                imp = importlib.util.module_from_spec(spec)
+                # ref: https://docs.python.org/3/library/importlib.html#importlib.abc.Loader.exec_module
+                # new in python 3.4
+                spec.loader.exec_module(imp)
 
             classes = inspect.getmembers(
                 imp, lambda cls:
@@ -96,5 +110,5 @@ class PluginManager():
 
             if plugin.check_subscription(line):
                 data.append(plugin.gather_data(line, pre))
-                
+
         self.statistics.add_info(data)
