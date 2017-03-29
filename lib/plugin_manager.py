@@ -1,7 +1,5 @@
 """This package contains the PluginManager."""
 
-from .statistics import Statistics
-from .plugin_base import IPlugin
 
 # used to dynamically import the plugins
 import importlib
@@ -13,6 +11,9 @@ import os
 import re
 
 from os.path import join as path_join
+
+from .statistics import Statistics
+from .plugin_base import IPlugin
 
 
 class PluginManager():
@@ -95,5 +96,5 @@ class PluginManager():
 
             if plugin.check_subscription(line):
                 data.append(plugin.gather_data(line, pre))
-
+                
         self.statistics.add_info(data)

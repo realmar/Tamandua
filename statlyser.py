@@ -19,7 +19,7 @@ from lib.config import Config
 from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, MissingConfigField
 
 
-CONFIGFILE = 'statlyser.json'
+CONFIGFILE = 'config.json'
 
 
 def main():
