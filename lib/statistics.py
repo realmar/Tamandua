@@ -29,7 +29,7 @@ class Statistics():
                 setHasData = False
 
             for key, value in data.items():
-                def incrementValue(cl):
+                def increment_value(cl):
                     if cl.get(value) is None:
                         cl[value] = 1
                     else:
@@ -39,7 +39,7 @@ class Statistics():
                 currLayer = self.data
                 currIteration = 0
 
-                def isLast():
+                def is_last():
                     return len(separateNames) == currIteration
 
                 if value is not None:
@@ -56,26 +56,26 @@ class Statistics():
                     if currIteration > 1:
                         currLayer['total'] += 1
                         if not hasData:
-                            incrementValue(currLayer)
+                            increment_value(currLayer)
 
                     if currLayer.get(subname) is None:
                         v = 0
-                        if isLast():
+                        if is_last():
                             v = 1
 
                         tmp = {'total': v}
 
-                        if not hasData or isLast():
+                        if not hasData or is_last():
                             tmp[value] = v
 
                         currLayer[subname] = tmp
 
-                        if isLast():
+                        if is_last():
                             break
 
-                    if isLast():
+                    if is_last():
                         currLayer[subname]['total'] += 1
-                        incrementValue(currLayer[subname])
+                        increment_value(currLayer[subname])
                         break
 
                     currLayer = currLayer[subname]
