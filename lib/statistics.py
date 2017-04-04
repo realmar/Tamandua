@@ -29,38 +29,56 @@ class Statistics():
                 setHasData = False
 
             for key, value in data.items():
+                def incrementValue(cl):
+                    if cl.get(value) is None:
+                        cl[value] = 1
+                    else:
+                        cl[value] += 1
+
                 separateNames = key.split('_')
                 currLayer = self.data
                 currIteration = 0
 
+                def isLast():
+                    return len(separateNames) == currIteration
+
                 if value is not None:
                     lineHasData = True
+                else:
+                    # if the value we want to add is None
+                    # then we ignore it and continue with the next
+                    continue
+
 
                 for subname in separateNames:
                     currIteration += 1
+
+                    if currIteration > 1:
+                        currLayer['total'] += 1
+                        if not hasData:
+                            incrementValue(currLayer)
+
                     if currLayer.get(subname) is None:
-                            tmp = {'total': 1}
-                            if not hasData or len(separateNames) == currIteration:
-                                tmp[value] = 1
-                            currLayer[subname] = tmp
-                            currLayer = currLayer[subname]
-                    else:
-                        def incrementValue(cl):
-                            if cl.get(value) is None:
-                                cl[value] = 1
-                            else:
-                                cl[value] += 1
+                        v = 0
+                        if isLast():
+                            v = 1
 
-                        if currIteration > 1:
-                            currLayer['total'] += 1
-                            if not hasData:
-                                incrementValue(currLayer)
+                        tmp = {'total': v}
 
-                        if len(separateNames) == currIteration:
-                            currLayer[subname]['total'] += 1
-                            incrementValue(currLayer[subname])
+                        if not hasData or isLast():
+                            tmp[value] = v
 
-                        currLayer = currLayer[subname]
+                        currLayer[subname] = tmp
+
+                        if isLast():
+                            break
+
+                    if isLast():
+                        currLayer[subname]['total'] += 1
+                        incrementValue(currLayer[subname])
+                        break
+
+                    currLayer = currLayer[subname]
 
         if len(d) > 0:
             self.data['total_relevant'] += 1
