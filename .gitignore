@@ -1,3 +1,9 @@
+# Build
 *.pyc
+
+# Logs
 # *.log
 logdump/*
+
+# IDE
+.idea/*
