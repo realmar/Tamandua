@@ -4,7 +4,7 @@ import json
 from .exceptions import MissingConfigField
 
 class Config():
-    """Store and validate the statlyser config."""
+    """Store and validate the tamandua config."""
 
     def __init__(self, configpath):
         """Load config as YAML into memory."""

@@ -7,7 +7,7 @@
       - python3
       - git
 
-  - name: Creating folder in which statlyser will live
+  - name: Creating folder in which tamandua will live
     file:
       path: /opt
       state: directory
@@ -16,7 +16,7 @@
 
   - name: Getting git repo
     git:
-      repo: git@gitlab.phys.ethz.ch:amartako/Statlyser.git
-      dest: /opt/statlyser
+      repo: git@gitlab.phys.ethz.ch:amartako/Tamandua.git
+      dest: /opt/tamandua
       accept_hostkey: yes
       clone: yes

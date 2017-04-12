@@ -51,12 +51,12 @@ class PluginManager():
                 if '__init__' not in f and f[-3:] == '.py':
                     # append the absoulte path to it
                     modul = path_join(absolute, f)
-                    # Remove the absolute Statlyser path and reformat it.
+                    # Remove the absolute Tamandua path and reformat it.
                     # This will be the namespace in which the module lives
                     #
                     # eg.:
                     #
-                    # /some/dir/statlyser/Plugins/test/plugin.py
+                    # /some/dir/tamandua/Plugins/test/plugin.py
                     # -->
                     # Plugins.test.plugin
                     modul = modul.replace(

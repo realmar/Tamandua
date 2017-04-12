@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Statlyser. Generate statistics out of information from logfiles.
+Tamandua. Generate statistics out of information from logfiles.
 
 This is the main (entry point) of the application.
 """
@@ -25,7 +25,7 @@ CONFIGFILE = 'config.json'
 def main():
     """Entry point of the application."""
     parser = argparse.ArgumentParser(
-        description="Statlyser generates statistics from logfile data")
+        description="Tamandua generates statistics from logfile data")
     parser.add_argument(
         'files',
         nargs='+',
