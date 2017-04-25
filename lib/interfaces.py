@@ -28,7 +28,7 @@ class IDataContainer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def add_info(self, data: list) -> None:
+    def add_info(self, data: dict) -> None:
         """Add data to the container."""
         pass
 
@@ -42,7 +42,7 @@ class ISerializable(metaclass=ABCMeta):
     """Every class which can be serialized has to implement this interface."""
 
     @abstractmethod
-    def get_data(self) -> object:
+    def get_serializable_data(self) -> object:
         """Get the data which should be serialized."""
         pass
 
