@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 """
-Tamandua. Generate statistics out of information from logfiles.
+Tamandua. Aggregate information from logfiles.
 
-This is the main (entry point) of the application.
+This is the main (entry point) of the parser.
 """
 
 import os
@@ -16,7 +16,6 @@ sys.path.append(BASEDIR)
 
 from lib.plugin_manager import PluginManager
 from lib.config import Config
-from lib.exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, MissingConfigField, MultipleDataSetsUnknown
 
 
 CONFIGFILE = 'config.json'
@@ -25,7 +24,7 @@ CONFIGFILE = 'config.json'
 def main():
     """Entry point of the application."""
     parser = argparse.ArgumentParser(
-        description="Tamandua generates statistics from logfile data")
+        description="Tamandua parser aggregates from logfile data")
     parser.add_argument(
         'files',
         nargs='+',
@@ -50,7 +49,7 @@ def main():
         print('There is a syntax error in your config:')
         print(e)
         sys.exit(7)
-    except MissingConfigField as e:
+    except Exception as e:
         print(e)
         sys.exit(8)
 
@@ -58,15 +57,9 @@ def main():
         pluginManager = PluginManager(
             absPluginsPath=os.path.join(BASEDIR, 'plugins-enabled'),
             config=config)
-    except NoSubscriptionRegex as e:
+    except Exception as e:
         print(e)
         sys.exit(1)
-    except NoDataRegex as e:
-        print(e)
-        sys.exit(2)
-    except RegexGroupsMissing as e:
-        print(e)
-        sys.exit(3)
 
     for logfile in args.files:
         with open(logfile, 'r') as f:
@@ -79,15 +72,16 @@ def main():
                 print(e)
                 print('\n')
                 continue
-            except MultipleDataSetsUnknown as e:
+            except Exception as e:
                 print('ERROR:')
                 print(e)
                 sys.exit(9)
 
-    # output the statistics to STDOUT
-    pluginManager.statistics.represent()
-
-
+    # print data to stdout
+    for container in pluginManager.dataReceiver.containers:
+        container.represent()
+        print('-' * 60)
+        
 """We only start with the executation if we are the main."""
 if __name__ == '__main__':
     main()
