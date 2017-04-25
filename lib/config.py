@@ -1,7 +1,7 @@
 """Config model."""
 
 import json
-from .exceptions import MissingConfigField
+from .exceptions import MissingConfigField, InvalidConfigField
 
 class Config():
     """Store and validate the tamandua config."""
@@ -15,8 +15,13 @@ class Config():
 
     def __validate(self):
         """Validate the config and raise exceptions."""
-        if self.__config.get('preregex') is None:
-            raise MissingConfigField('preregex')
+        for name in ('preregex', 'store_type', 'store_path'):
+            if self.__config.get(name) is None:
+                raise MissingConfigField(name)
+
+        availableSerializationMethods = ('json', 'store_path')
+        if self.__config.get('store_type') not in availableSerializationMethods:
+            raise InvalidConfigField('store_type', availableSerializationMethods)
 
     def get(self, key):
         """Get a config attribute."""

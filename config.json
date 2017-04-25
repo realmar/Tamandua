@@ -5,5 +5,7 @@
     "phd-mailscan",
     "phd-maildb"
   ],
-  "preregex": ":\\d{2} (?P<hostname>[^\/\\s]*)"
+  "preregex": ":\\d{2} (?P<hostname>[^\/\\s]*)",
+  "store_type": "json",
+  "store_path": "store.dump"
 }
