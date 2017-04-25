@@ -14,20 +14,6 @@ class MailContainer(IDataContainer, ISerializable):
         self._map_qid_imap = {}
         self._map_msgid = {}
 
-        """
-        self._data = []
-        self._incomplete_data = []
-
-        # caches for runtime optimization
-
-        self._qidMxinCache = {}
-        self._qidImapCache = {}
-        self._msgidCache = {}
-
-        self._incompleteQidImapCache = {}
-        self._incompleteMsgidCache = {}
-        """
-
     @property
     def subscribedFolder(self) -> str:
         return "mail-aggregation"
@@ -99,98 +85,6 @@ class MailContainer(IDataContainer, ISerializable):
                 except Exception as e:
                     # TODO: handle
                     pass
-
-
-
-
-
-    """
-    def _merge_data(self, d1: dict, d2: dict) -> dict:
-        pass
-
-    def _aggregate(self, cache, data, key):
-        cache[key] = self._merge_data(
-            cache[key],
-            data
-        )
-
-    def add_info(self, data: dict) -> None:
-        pregexdata = data['pregexdata']
-
-        for hasData, d in data['data']:
-            if not hasData:
-                continue
-
-            mxin_qid = d.get(constants.PHD_MXIN_QID)
-            imap_qid = d.get(constants.PHD_IMAP_QID)
-            messageid = d.get(constants.MESSAGEID)
-
-            # TODO: retroactively add qid imap and msgid to caches
-            # TODO: store logline with data
-
-
-            def update_caches():
-                if imap_qid is not None:
-                    if self._incompleteQidImapCache.get(imap_qid) is not None:
-                        self._aggregate(self._qidMxinCache, self._incompleteQidImapCache[imap_qid], mxin_qid)
-
-                        # WARNING: Currently the data will not be deleted from the incomplete-caches --> too costly
-                        # self._incomplete_data.remove(self._incompleteQidImapCache[imap_qid])
-                        del self._incompleteQidImapCache[imap_qid]
-
-                    self._qidImapCache[imap_qid] = self._qidMxinCache[mxin_qid]
-
-                if messageid is not None:
-                    if self._msgidCache.get(messageid) is not None:
-                        self._aggregate(self._qidMxinCache, self._msgidCache[messageid], mxin_qid)
-
-                        # do not delete the stored Mail in the msgid cache
-                        # as it may be needed for other Mails
-
-                    if not isinstance(self._msgidCache[messageid], list):
-                        self._msgidCache[messageid] = [self._qidMxinCache[mxin_qid]]
-                    else:
-                        alreadyContainsMail = False
-                        for mail in self._msgidCache[messageid]:
-                            if mail is self._qidMxinCache[mxin_qid]:
-                                alreadyContainsMail = True
-
-                        if not alreadyContainsMail:
-                            self._msgidCache[messageid].append(self._qidMxinCache[mxin_qid])
-
-            if mxin_qid is not None:
-                if self._qidMxinCache.get(mxin_qid) is not None:
-                    self._aggregate(self._qidMxinCache, d, mxin_qid)
-                else:
-                    self._data.append(d)
-                    self._qidMxinCache[mxin_qid] = d
-
-                update_caches()
-
-            elif imap_qid is not None:
-                if self._qidImapCache.get(imap_qid) is not None:
-                    self._aggregate(self._qidImapCache, d, imap_qid)
-                else:
-                    if self._incompleteQidImapCache.get(imap_qid) is not None:
-                        self._aggregate(self._incompleteQidImapCache)
-                    else:
-                        self._incomplete_data.append(d)
-                        self._incompleteQidImapCache[imap_qid] = d
-
-            elif messageid is not None:
-                if self._msgidCache is not None:
-                    self._aggregate(self._msgidCache, d, messageid)
-                else:
-                    if self._incompleteMsgidCache.get(messageid) is not None:
-                        self._aggregate(self._incompleteMsgidCache, d, messageid)
-                    else:
-                        self._incomplete_data.append(d)
-                        self._incompleteMsgidCache[messageid] = d
-            else:
-                # Not good. This should never happen ... handle this!
-                pass
-    """
-
 
     def represent(self) -> None:
         for d in self._map_qid_mxin:
