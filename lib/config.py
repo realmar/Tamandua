@@ -19,7 +19,7 @@ class Config():
             if self.__config.get(name) is None:
                 raise MissingConfigField(name)
 
-        availableSerializationMethods = ('json', 'store_path')
+        availableSerializationMethods = ('json', 'pyobj-store')
         if self.__config.get('store_type') not in availableSerializationMethods:
             raise InvalidConfigField('store_type', availableSerializationMethods)
 

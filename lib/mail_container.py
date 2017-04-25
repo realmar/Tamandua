@@ -100,13 +100,13 @@ class MailContainer(IDataContainer, ISerializable):
                     pass
 
     def represent(self) -> None:
-        for d in self._map_qid_mxin.values():
+        for qid, d in self._map_qid_mxin.items():
             print('\n==== MAIL: ====\n')
 
             def print_title(key, value):
                 print('---- ' + key + ': ' +
                       colorama.Style.BRIGHT +
-                      value +
+                      str(value) +
                       colorama.Style.NORMAL +
                       ' ----')
 
@@ -118,7 +118,7 @@ class MailContainer(IDataContainer, ISerializable):
                     print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
 
 
-            print_title('Queue-ID phd-mxin', d.get(constants.PHD_MXIN_QID))
+            print_title('Queue-ID phd-mxin', qid)
             print_content(d)
 
             if d.get(constants.PHD_IMAP_QID) is not None:

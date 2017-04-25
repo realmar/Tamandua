@@ -16,6 +16,7 @@ sys.path.append(BASEDIR)
 
 from lib.plugin_manager import PluginManager
 from lib.config import Config
+from lib.serialization.serializer import Serializer
 
 
 CONFIGFILE = 'config.json'
@@ -80,7 +81,11 @@ def main():
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
         container.represent()
-        print('-' * 60)
+        print('-' * 60)\
+
+    # serialize data
+    serializer = Serializer(config)
+    serializer.store(pluginManager.dataReceiver)
         
 """We only start with the executation if we are the main."""
 if __name__ == '__main__':
