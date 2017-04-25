@@ -2,33 +2,37 @@
 
 from pprint import pprint
 from .exceptions import MultipleDataSetsUnknown
+from .interfaces import IDataContainer
 
 
-class Statistics():
+class Statistics(IDataContainer):
     """Container which composes and holds the statistics."""
 
     def __init__(self):
         """Constructor of Statistic."""
-        self.data = {
+        self._data = {
             'total_relevant': 0,
             'total_irrelevant': 0,
             'total': 0,
             'total_unknown': 0
             }
 
-    def add_info(self, d):
+    def subscribedFolder(self) -> str:
+        return "statistics"
+
+    def add_info(self, data: list) -> None:
         """Add more data to the statistic."""
         lineHasData = False
         setHasData = True
 
-        for hasData, data in d:
+        for hasData, d in data:
             if not hasData:
-                if len(data) > 1:
+                if len(d) > 1:
                     raise MultipleDataSetsUnknown(self.__class__.__name__)
 
                 setHasData = False
 
-            for key, value in data.items():
+            for key, value in d.items():
                 def increment_value(cl):
                     if cl.get(value) is None:
                         cl[value] = 1
@@ -36,7 +40,7 @@ class Statistics():
                         cl[value] += 1
 
                 separateNames = key.split('_')
-                currLayer = self.data
+                currLayer = self._data
                 currIteration = 0
 
                 def is_last():
@@ -80,15 +84,15 @@ class Statistics():
 
                     currLayer = currLayer[subname]
 
-        if len(d) > 0:
-            self.data['total_relevant'] += 1
+        if len(data) > 0:
+            self._data['total_relevant'] += 1
 
-        if (not lineHasData or not setHasData) and len(d) > 0:
-            self.data['total_unknown'] += 1
+        if (not lineHasData or not setHasData) and len(data) > 0:
+            self._data['total_unknown'] += 1
 
-        self.data['total'] += 1
-        self.data['total_irrelevant'] = self.data['total'] - self.data['total_relevant']
+        self._data['total'] += 1
+        self._data['total_irrelevant'] = self._data['total'] - self._data['total_relevant']
 
-    def represent(self):
+    def represent(self) -> None:
         """Output the statistics to STDOUT."""
-        pprint(self.data)
+        pprint(self._data)
