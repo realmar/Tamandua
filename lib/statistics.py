@@ -17,6 +17,7 @@ class Statistics(IDataContainer):
             'total_unknown': 0
             }
 
+    @property
     def subscribedFolder(self) -> str:
         return "statistics"
 

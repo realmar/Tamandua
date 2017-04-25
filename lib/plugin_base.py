@@ -80,7 +80,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
         False when there are groups
         True when there are no groups
         """
-        for regex in self._dataRegex:
+        for regex, flags in self._dataRegex:
             if '?P<' not in regex.pattern:
                 return True, regex.pattern
 
@@ -158,7 +158,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
 
             result = search.groupdict()
 
-            if not any(result):
+            if not any(v is not None for v in result.values()):
                 continue
 
             self._edit_results(result)

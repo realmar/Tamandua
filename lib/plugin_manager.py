@@ -17,6 +17,7 @@ else:
 import re
 
 from os.path import join as path_join
+from os.path import split as path_split
 
 from .data_receiver import DataReceiver
 from .plugin_base import IPlugin
@@ -45,7 +46,7 @@ class PluginManager():
 
         modules = []
         # find all files in the plugins-enabled subdir
-        for absolute, dirs, files in os.walk(absPluginsPath):
+        for absolute, dirs, files in os.walk(absPluginsPath, followlinks=True):
             for f in files:
                 # check if the file is an actual python modul
                 if '__init__' not in f and f[-3:] == '.py':
@@ -65,9 +66,11 @@ class PluginManager():
                         1:].replace('/', '.')
                     # append a tuple in following form:
                     # ( namespace, absolutepath )
-                    pluginGroupName = absPluginsPath.replace(absPluginsPath, '')
-                    split = pluginGroupName.split()
-                    if split[0] == '':
+                    pluginGroupName = absolute.replace(absPluginsPath, '')
+                    split = path_split(pluginGroupName)
+                    #    linux               windows
+                    #      v                    v
+                    if split[0] == '/' or split[0] == '\\':
                         pluginGroupName = split[1]
                     else:
                         pluginGroupName = split[0]
