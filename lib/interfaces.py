@@ -51,11 +51,11 @@ class ISerializationMethod(metaclass=ABCMeta):
     """Every serialization method has to implement this interface, eg. JSON or PyObjStore."""
 
     @abstractmethod
-    def save(self, data: object, name: str) -> None:
+    def save(self, data: object) -> None:
         """Serialize data."""
         pass
 
     @abstractmethod
-    def load(self, name: str) -> object:
+    def load(self) -> object:
         """Deserialize data and return it."""
         pass
