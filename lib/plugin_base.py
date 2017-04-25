@@ -158,7 +158,12 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
                 continue
 
             # remove leading and trailing whitspaces from values
-            result = {key: value.strip() for key, value in search.groupdict().items()}
+            def strip(v):
+                if isinstance(v, str):
+                    return v.strip()
+                else:
+                    return v
+            result = {key: strip(value) for key, value in search.groupdict().items()}
 
             if not any(v is not None for v in result.values()):
                 continue

@@ -115,17 +115,19 @@ class MailContainer(IDataContainer, ISerializable):
                     return
 
                 for key, value in data.items():
-                    print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + value)
+                    print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
 
 
             print_title('Queue-ID phd-mxin', d.get(constants.PHD_MXIN_QID))
             print_content(d)
 
             if d.get(constants.PHD_IMAP_QID) is not None:
+                print('\n')
                 print_title('Queue-ID phd-imap', d.get(constants.PHD_IMAP_QID))
                 print_content(self._map_qid_imap.get(d.get(constants.PHD_IMAP_QID)))
 
             if d.get(constants.MESSAGEID) is not None:
+                print('\n')
                 print_title('Message-ID', d.get(constants.MESSAGEID))
                 print_content(self._map_msgid.get(d.get(constants.MESSAGEID)))
 
