@@ -47,6 +47,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
 
                     newDataRegex.append((dataRegex[0], ()))
                     continue
+
                 for flag in dataRegex[1]:
                     if not isinstance(flag, RegexFlags):
                         raise InvalidRegexFlag(self.__class__.__name__, dataRegex[0].pattern)
@@ -86,7 +87,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
 
         return False, None
 
-    def __specify_regex_group_name(self, dataRegexMatches, preRegexMatches):
+    def _specify_regex_group_name(self, dataRegexMatches, preRegexMatches):
         """
         Replace special keywords in the regex match group.
 
@@ -156,13 +157,14 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
             if search is None:
                 continue
 
-            result = search.groupdict()
+            # remove leading and trailing whitspaces from values
+            result = {key: value.strip() for key, value in search.groupdict().items()}
 
             if not any(v is not None for v in result.values()):
                 continue
 
             self._edit_results(result)
-            return (True, flags, self.__specify_regex_group_name(result, preRegexMatches))
+            return (True, flags, self._specify_regex_group_name(result, preRegexMatches))
 
         unknown_data_name = {'servicename_hostname': 'unknown'}
-        return (False, (), self.__specify_regex_group_name(unknown_data_name, preRegexMatches))
+        return (False, (), self._specify_regex_group_name(unknown_data_name, preRegexMatches))

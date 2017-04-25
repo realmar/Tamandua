@@ -99,7 +99,7 @@ class PluginManager():
                     issubclass(cls, IPlugin))
 
             pluginClasses.extend(
-                [(module[2], cls) for name, cls in classes if name != 'PluginBase'])
+                [(module[2], cls) for name, cls in classes if name != 'PluginBase' and name != 'SimplePlugin'])
 
         self.plugins = [(info[0], info[1]()) for info in pluginClasses]
 

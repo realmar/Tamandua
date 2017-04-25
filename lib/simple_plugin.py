@@ -5,7 +5,7 @@ class SimplePlugin(PluginBase):
     def _format_hostname(self, hostname: str) -> str:
         return hostname.replace('-', '')
 
-    def __specify_regex_group_name(self, dataRegexMatches, preRegexMatches):
+    def _specify_regex_group_name(self, dataRegexMatches, preRegexMatches):
         newDataRegexMatches = {}
 
         hostname = self._format_hostname(preRegexMatches.get('hostname'))

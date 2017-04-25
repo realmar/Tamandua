@@ -19,7 +19,20 @@ class MailContainer(IDataContainer, ISerializable):
         return "mail-aggregation"
 
     def _merge_data(self, d1: dict, d2: dict) -> None:
-        pass
+        for key, value in d2.items():
+            if value is None:
+                continue
+
+            d1[key] = value
+
+            """
+            # propably needs some sanity checks ...
+            if d1.get(key) is None:
+                d1[key] = value
+            else:
+                if d1.key != value:
+                    pass   # handle??
+            """
 
     def _aggregate(self, id: str, target: dict, data: dict) -> None:
         if target.get(id) is not None:
@@ -69,7 +82,7 @@ class MailContainer(IDataContainer, ISerializable):
                 if len(day) == 1:
                     day = '0' + day
 
-                dtStr = '{month} {day} {time}'.format(month, day, time)
+                dtStr = '{month} {day} {time}'.format(month=month, day=day, time=time)
                 dt = datetime.strptime(dtStr, '%b %d %H:%M:%S')
 
                 # set year to year today (This information is not visible on the logline)
@@ -87,10 +100,8 @@ class MailContainer(IDataContainer, ISerializable):
                     pass
 
     def represent(self) -> None:
-        for d in self._map_qid_mxin:
-            print('===============')
-            print('==== MAIL: ====')
-            print('===============\n')
+        for d in self._map_qid_mxin.values():
+            print('\n==== MAIL: ====\n')
 
             def print_title(key, value):
                 print('---- ' + key + ': ' +
