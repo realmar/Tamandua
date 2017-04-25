@@ -23,7 +23,7 @@ class MissingConfigField(Exception):
 
 class InvalidConfigField(Exception):
     def __init__(self, field, allowedValues):
-        super().__init__("The following field in the config is wrong: " + field + " allowed values are following: " str(allowedValues))
+        super().__init__("The following field in the config is wrong: " + field + " allowed values are following: " + str(allowedValues))
 
 
 class MultipleDataSetsUnknown(Exception):
