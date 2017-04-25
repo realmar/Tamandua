@@ -18,7 +18,7 @@ import re
 
 from os.path import join as path_join
 
-from .statistics import Statistics
+from .data_receiver import DataReceiver
 from .plugin_base import IPlugin
 
 
@@ -31,7 +31,7 @@ class PluginManager():
         if self.__limitHosts is None:
             self.__limitHosts = []
 
-        self.statistics = Statistics()
+        self.dataReceiver = DataReceiver()
         # This regex is used to extract generic information from each
         # log line. Eg. hostname
         self.__preRegex = re.compile(config.get('preregex'))
@@ -65,7 +65,14 @@ class PluginManager():
                         1:].replace('/', '.')
                     # append a tuple in following form:
                     # ( namespace, absolutepath )
-                    modules.append((modul, path_join(absPluginsPath, absolute, f)))
+                    pluginGroupName = absPluginsPath.replace(absPluginsPath, '')
+                    split = pluginGroupName.split()
+                    if split[0] == '':
+                        pluginGroupName = split[1]
+                    else:
+                        pluginGroupName = split[0]
+
+                    modules.append((modul, path_join(absPluginsPath, absolute, f), pluginGroupName))
 
         for module in modules:
             if sys.version_info[1] < 5:
@@ -89,26 +96,34 @@ class PluginManager():
                     issubclass(cls, IPlugin))
 
             pluginClasses.extend(
-                [cls for name, cls in classes if name != 'PluginBase'])
+                [(module[2], cls) for name, cls in classes if name != 'PluginBase'])
 
-        self.plugins = [cls() for cls in pluginClasses]
+        self.plugins = [(info[0], info[1]()) for info in pluginClasses]
 
     def process_line(self, line):
         """Extract data from one logline."""
-        data = []
-        for plugin in self.plugins:
-            pre = self.__preRegex.search(line)
+        folderToData = {}
 
-            if pre is None:
-                pre = {}
-            else:
-                pre = pre.groupdict()
+        pre = self.__preRegex.search(line)
 
-            hostname = pre.get('hostname')
-            if hostname is not None and hostname not in self.__limitHosts:
-                break
+        if pre is None:
+            # pre = {}
+            return
+        else:
+            pre = pre.groupdict()
 
+        hostname = pre.get('hostname')
+        if hostname is not None and hostname not in self.__limitHosts or hostname is None:
+            return
+
+        for folderName, plugin in self.plugins:
             if plugin.check_subscription(line):
-                data.append(plugin.gather_data(line, pre))
+                if folderToData.get(folderName) is None:
+                    folderToData[folderName] = {
+                        'pregexdata': pre,
+                        'data': []
+                    }
 
-        self.statistics.add_info(data)
+                folderToData[folderName]['data'].append(plugin.gather_data(line, pre))
+
+        self.dataReceiver.add_info(folderToData)

@@ -20,12 +20,12 @@ class Statistics(IDataContainer):
     def subscribedFolder(self) -> str:
         return "statistics"
 
-    def add_info(self, data: list) -> None:
+    def add_info(self, data: dict) -> None:
         """Add more data to the statistic."""
         lineHasData = False
         setHasData = True
 
-        for hasData, d in data:
+        for hasData, flags, d in data['data']:
             if not hasData:
                 if len(d) > 1:
                     raise MultipleDataSetsUnknown(self.__class__.__name__)

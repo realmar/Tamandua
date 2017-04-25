@@ -13,7 +13,7 @@ class IPlugin(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def gather_data(self, line: str) -> dict:
+    def gather_data(self, line: str, preRegexMatches: dict) -> dict:
         """Extract the data from a logline and return the results as a dict."""
         pass
 

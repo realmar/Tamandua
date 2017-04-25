@@ -26,3 +26,8 @@ class MultipleDataSetsUnknown(Exception):
         super().__init__(clsname + """ has received multiple datasets for
         unknown data. This is either a bug, or you have a custom PluginBase
         class which does something wrong in gather_data. """)
+
+
+class InvalidRegexFlag(Exception):
+    def __init__(self, clsname, pattern):
+        super().__init__("Invalid regex-flag in: " + clsname + " pattern: " + pattern)

@@ -103,7 +103,7 @@ class MailContainer(IDataContainer, ISerializable):
                 if data is None:
                     return
 
-                for key, value in data:
+                for key, value in data.items():
                     print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + value)
 
 
