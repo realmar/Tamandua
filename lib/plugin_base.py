@@ -1,21 +1,13 @@
 """Here are the base classes of every Plugin."""
 
 import abc
-from .exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing
+from enum import Enum
+from .exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
+from .interfaces import IPlugin
 
 
-class IPlugin(metaclass=abc.ABCMeta):
-    """Interface which every plugin has to implement."""
-
-    @abc.abstractmethod
-    def check_subscription(self, line):
-        """Return True or False if the subscription regex matched or not."""
-        pass
-
-    @abc.abstractmethod
-    def gather_data(self, line):
-        """Extract the data from a logline and return the results as a dict."""
-        pass
+class RegexFlags(Enum):
+    STORETIME = 1
 
 
 class PluginBase(IPlugin, metaclass=abc.ABCMeta):
@@ -38,6 +30,30 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
         # it has to be a list at least one item
         if self._dataRegex is None or not isinstance(self._dataRegex, list) or len(self._dataRegex) == 0:
             raise NoDataRegex(self.__class__.__name__)
+
+        # check content of this list
+        newDataRegex = []
+        for dataRegex in self._dataRegex:
+            if not isinstance(dataRegex, tuple):
+                newDataRegex.append((dataRegex, ()))
+                continue
+            else:
+                if len(dataRegex) != 2:
+                    # testing interface of regex
+                    try:
+                        m = dataRegex[0].search
+                    except Exception as e:
+                        raise NoDataRegex(self.__class__.__name__)
+
+                    newDataRegex.append((dataRegex[0], ()))
+                    continue
+                for flag in dataRegex[1]:
+                    if not isinstance(flag, RegexFlags):
+                        raise InvalidRegexFlag(self.__class__.__name__, dataRegex[0].pattern)
+
+            newDataRegex.append(dataRegex)
+        self._dataRegex = newDataRegex
+
 
         r, info = self.__check_data_regex_group_names()
         if r:
@@ -132,7 +148,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
         pass
 
     def gather_data(self, line, preRegexMatches):
-        for regex in self._dataRegex:
+        for regex, flags in self._dataRegex:
             search = regex.search(line)
 
             # if we did not match or every match is None
@@ -146,7 +162,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
                 continue
 
             self._edit_results(result)
-            return (True, self.__specify_regex_group_name(result, preRegexMatches))
+            return (True, flags, self.__specify_regex_group_name(result, preRegexMatches))
 
         unknown_data_name = {'servicename_hostname': 'unknown'}
-        return (False, self.__specify_regex_group_name(unknown_data_name, preRegexMatches))
+        return (False, (), self.__specify_regex_group_name(unknown_data_name, preRegexMatches))
