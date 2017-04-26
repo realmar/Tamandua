@@ -2,8 +2,8 @@
 
 import abc
 from enum import Enum
-from .exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
-from .interfaces import IPlugin
+from ..exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
+from ..interfaces import IPlugin
 
 
 class RegexFlags(Enum):

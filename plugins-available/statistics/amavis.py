@@ -1,6 +1,6 @@
 """Amavis statistics plugin."""
 
-from lib.plugin_base import PluginBase
+from lib.plugins.plugin_base import PluginBase
 import re
 
 

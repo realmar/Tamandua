@@ -2,7 +2,7 @@
 
 import re
 
-from lib.simple_plugin import SimplePlugin
+from lib.plugins.simple_plugin import SimplePlugin
 from lib import constants
 
 

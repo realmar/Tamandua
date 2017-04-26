@@ -2,9 +2,9 @@ from datetime import datetime
 import colorama
 colorama.init(autoreset=True)
 
-from .interfaces import IDataContainer, ISerializable
-from . import constants
-from .plugin_base import RegexFlags
+from ..interfaces import IDataContainer, ISerializable
+from .. import constants
+from ..plugins.plugin_base import RegexFlags
 
 class MailContainer(IDataContainer, ISerializable):
     """Container which aggregates and stores mail objects. This container is optimized for reduced runtime."""

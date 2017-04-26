@@ -2,8 +2,8 @@
 
 import re
 
-from lib.simple_plugin import SimplePlugin
-from lib.plugin_base import RegexFlags
+from lib.plugins.simple_plugin import SimplePlugin
+from lib.plugins.plugin_base import RegexFlags
 from lib import constants
 
 

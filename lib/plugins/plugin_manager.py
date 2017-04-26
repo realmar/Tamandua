@@ -19,7 +19,7 @@ import re
 from os.path import join as path_join
 from os.path import split as path_split
 
-from .data_receiver import DataReceiver
+from ..containers.data_receiver import DataReceiver
 from .plugin_base import IPlugin
 
 

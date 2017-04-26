@@ -14,7 +14,7 @@ from json import JSONDecodeError
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
 
-from lib.plugin_manager import PluginManager
+from lib.plugins.plugin_manager import PluginManager
 from lib.config import Config
 from lib.serialization.serializer import Serializer
 
