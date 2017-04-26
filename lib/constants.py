@@ -32,6 +32,8 @@ MESSAGEID = 'messageid'
 PHD_MXIN_TIME = PHD_MXIN + '_time'
 PHD_IMAP_TIME = PHD_IMAP + '_time'
 
+TIME_FORMAT = '%Y/%m/%d %H:%M:%S'
+
 HOSTNAME_TIME_MAP = {
     PHD_MXIN: PHD_MXIN_TIME,
     PHD_IMAP: PHD_IMAP_TIME

@@ -143,7 +143,7 @@ class MailContainer(IDataContainer, ISerializable):
                 dt = dt.replace(year=datetime.today().year)
 
                 # bring datetime in a portable format
-                newDtStr = dt.strftime('%Y/%m/%d %H:%M:%S')
+                newDtStr = dt.strftime(constants.TIME_FORMAT)
                 try:
                     targetData[targetKey][
                         constants.HOSTNAME_TIME_MAP[
