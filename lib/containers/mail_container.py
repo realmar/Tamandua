@@ -24,6 +24,7 @@ class MailContainer(IDataContainer, ISerializable):
         return "mail-aggregation"
 
     def _merge_data(self, target: dict, origin: dict) -> None:
+        """Generic merge method."""
         for key, value in origin.items():
             if value is None:
                 continue
@@ -34,22 +35,38 @@ class MailContainer(IDataContainer, ISerializable):
                 if target[key] != value:
                     if not isinstance(target[key], list):
                         if isinstance(value, list):
-                            #                            unpack values in value
-                            #                               v
-                            target[key] = [target[key], *value]
+                            # make items uniq
+                            value = list(set(value))
+
+                            if target[key] not in value:
+                                #                            unpack values in value
+                                #                               v
+                                target[key] = [target[key], *value]
                         else:
                             target[key] = [target[key], value]
                     else:
                         if isinstance(value, list):
-                            target[key].extend(value)
+                            # make items uniq
+                            value = list(set(value))
+
+                            uniqList = []
+
+                            # filter uniq items
+                            for v in value:
+                                if v not in target[key]:
+                                    uniqList.append(v)
+
+                            # only append uniq items
+                            target[key].extend(uniqList)
                         else:
-                            target[key].append(value)
+                            if value not in target[key]:
+                                target[key].append(value)
                 else:
                     continue
 
     def _aggregate(self, id: str, target: dict, data: dict, logline: str) -> None:
         if id == constants.NOQUEUE:
-            data[constants.LOGLINES] = logline
+            data[constants.LOGLINES] = [logline]
 
             if not isinstance(target.get(id), list):
                 target[id] = [data]
@@ -216,7 +233,7 @@ class MailContainer(IDataContainer, ISerializable):
                     mail[constants.COMPLETE] = True
 
             deliverystatus = mail.get('deliverystatus')
-            if deliverystatus is not None and 'sent' in deliverystatus.lower():
+            if deliverystatus is not None and 'sent' in deliverystatus:
                 mail[constants.COMPLETE] = True
                 mail[constants.DESTINATION] = constants.DESTINATION_DELIVERED
 
@@ -250,8 +267,9 @@ class MailContainer(IDataContainer, ISerializable):
         for qid, mail in self._map_qid_mxin.items():
             if isinstance(mail, list):
                 # rejected mails, which have the same qid (NOQUEUE)
-                mail[constants.COMPLETE] = True
-                mail[constants.DESTINATION] = constants.DESTINATION_REJECT
+                for m in mail:
+                    m[constants.COMPLETE] = True
+                    m[constants.DESTINATION] = constants.DESTINATION_REJECT
 
                 self._final_data.append(mail)
             else:
@@ -260,30 +278,50 @@ class MailContainer(IDataContainer, ISerializable):
                 msgid = mail.get(constants.MESSAGEID)
                 qid_imap = mail.get(constants.PHD_IMAP_QID)
 
-                data_imap = self._map_qid_imap.get(qid_imap)
+                # it may be possible to have multiple queueids which map to the same mail on phd-mxin
+                # this is when a user sends a mail to multiple persons at the same time.
+                #
+                # we solve that by always assuming multiple queueids on phd-imap which map to one
+                # queueid on phd-mxin --> if there is only one qid then we will just put it into
+                # a list (where this qid is the only item)
 
-                # collect data for corresponding queueid on phd-imap
-
-                if data_imap is not None:
-                    known_qids_imap[qid_imap] = None
-
-                    if msgid is None:
-                        msgid = data_imap.get(constants.MESSAGEID)
-
-                    self._merge_data(finalMail, data_imap)
+                if not isinstance(qid_imap, list):
+                    qids_imap = [qid_imap]
                 else:
-                    if msgid is None:
-                        self._integrity_stats['only_mxin_qid'] += 1
+                    qids_imap = qid_imap
 
-                # collect data for corresponding messageid
+                for qid_imap in qids_imap:
+                    data_imap = self._map_qid_imap.get(qid_imap)
 
-                if msgid is not None:
-                    known_msgids[msgid] = None
+                    # collect data for corresponding queueid on phd-imap
 
-                    data_msgid = self._map_msgid.get(msgid)
+                    if qid_imap is not None:
+                        known_qids_imap[qid_imap] = True
 
-                    if data_msgid is not None:
-                        self._merge_data(finalMail, data_msgid)
+                    if data_imap is not None:
+                        if msgid is None:
+                            msgid = data_imap.get(constants.MESSAGEID)
+
+                        self._merge_data(finalMail, data_imap)
+                    else:
+                        if msgid is None:
+                            self._integrity_stats['only_mxin_qid'] += 1
+
+                    # collect data for corresponding messageid
+
+                    if msgid is not None:
+                        if isinstance(msgid, list):
+                            msgids = msgid
+                        else:
+                            msgids = [msgid]
+
+                        for msgid in msgids:
+                            known_msgids[msgid] = True
+
+                            data_msgid = self._map_msgid.get(msgid)
+
+                            if data_msgid is not None:
+                                self._merge_data(finalMail, data_msgid)
 
                 # determine destination and verify integrity
 
@@ -316,7 +354,7 @@ class MailContainer(IDataContainer, ISerializable):
 
 
                 if msgid_imap is not None:
-                    known_msgids_imap[msgid_imap] = None
+                    known_msgids_imap[msgid_imap] = True
                     msgid_mail = self._map_msgid.get(msgid_imap)
 
                     if msgid_mail is not None:
