@@ -1,1 +1,5 @@
+# Mail Parser
 colorama
+
+# Web-App: Backend
+Flask
