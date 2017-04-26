@@ -14,6 +14,9 @@ class MailContainer(IDataContainer, ISerializable):
         self._map_qid_imap = {}
         self._map_msgid = {}
 
+        self._final_data = []
+        self._final_incomplete_data = []
+
     @property
     def subscribedFolder(self) -> str:
         return "mail-aggregation"
@@ -118,7 +121,15 @@ class MailContainer(IDataContainer, ISerializable):
                     # TODO: handle
                     pass
 
+    def build_final(self) -> None:
+        pass
+
     def represent(self) -> None:
+        pass
+
+        # uncomment the following if you want to print the dicts used for data collection
+        # (and not the final aggregated and integrity checked lists)
+        """    
         for qid, d in self._map_qid_mxin.items():
             print('\n==== MAIL: ====\n')
 
@@ -178,12 +189,13 @@ class MailContainer(IDataContainer, ISerializable):
                     inner_represent(entry)
             else:
                 inner_represent(d)
+    """
 
-
+    def print_integrity_report(self) -> None:
+        pass
 
     def get_serializable_data(self) -> object:
         return {
-            constants.PHD_MXIN_QID: self._map_qid_mxin,
-            constants.PHD_IMAP_QID: self._map_qid_imap,
-            constants.MESSAGEID: self._map_msgid
+            'complete': self._final_data,
+            'incomplete': self._final_incomplete_data
         }

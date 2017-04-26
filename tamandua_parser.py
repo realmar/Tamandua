@@ -80,8 +80,14 @@ def main():
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
-        container.represent()
-        print('-' * 60)\
+        container.build_final()                 # build final data
+
+        container.represent()                   # represent data
+        container.print_integrity_report()      # print integrity stats
+
+        print('\n')
+        print('-' * 60)
+        print('\n')
 
     # serialize data
     serializer = Serializer(config)

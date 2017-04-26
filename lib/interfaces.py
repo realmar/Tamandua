@@ -33,10 +33,24 @@ class IDataContainer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def build_final(self) -> None:
+        """Aggregate data into final lists and check the data integrity at the same time."""
+        pass
+
+    @abstractmethod
     def represent(self) -> None:
         """Print container to STDOUT."""
         pass
 
+    @abstractmethod
+    def print_integrity_report(self) -> None:
+        """
+        Prints an integrity report.
+        
+        Requires build_final() to be run first, in order
+        to generate the integrity report.
+        """
+        pass
 
 class ISerializable(metaclass=ABCMeta):
     """Every class which can be serialized has to implement this interface."""

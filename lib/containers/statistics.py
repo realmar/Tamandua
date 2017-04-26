@@ -94,6 +94,14 @@ class Statistics(IDataContainer):
         self._data['total'] += 1
         self._data['total_irrelevant'] = self._data['total'] - self._data['total_relevant']
 
+    def build_final(self) -> None:
+        """Does nothing ATM, needed for interface."""
+        pass
+
     def represent(self) -> None:
         """Output the statistics to STDOUT."""
         pprint(self._data)
+
+    def print_integrity_report(self) -> None:
+        """Does nothing ATM, needed for interface."""
+        pass
