@@ -34,3 +34,7 @@ HOSTNAME_TIME_MAP = {
     PHD_MXIN: PHD_MXIN_TIME,
     PHD_IMAP: PHD_IMAP_TIME
 }
+
+# Log
+
+LOGLINES = 'loglines'

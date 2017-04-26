@@ -34,13 +34,20 @@ class MailContainer(IDataContainer, ISerializable):
                     pass   # handle??
             """
 
-    def _aggregate(self, id: str, target: dict, data: dict) -> None:
+    def _aggregate(self, id: str, target: dict, data: dict, logline: str) -> None:
         if target.get(id) is not None:
             self._merge_data(target[id], data)
         else:
             target[id] = data
 
+        if not isinstance(target[id].get(constants.LOGLINES), list):
+            target[id][constants.LOGLINES] = [ logline ]
+        else:
+            target[id][constants.LOGLINES].append(logline)
+
     def add_info(self, data: dict) -> None:
+        logline = data['raw_logline']
+
         for hasData, flags, d in data['data']:
             if not hasData:
                 continue
@@ -50,11 +57,11 @@ class MailContainer(IDataContainer, ISerializable):
             messageid = d.get(constants.MESSAGEID)
 
             if mxin_qid is not None:
-                self._aggregate(mxin_qid, self._map_qid_mxin, d)
+                self._aggregate(mxin_qid, self._map_qid_mxin, d, logline)
             elif imap_qid is not None:
-                self._aggregate(imap_qid, self._map_qid_imap, d)
+                self._aggregate(imap_qid, self._map_qid_imap, d, logline)
             elif messageid is not None:
-                self._aggregate(messageid, self._map_msgid, d)
+                self._aggregate(messageid, self._map_msgid, d, logline)
 
             if RegexFlags.STORETIME in flags:
                 pregexdata = data['pregexdata']
@@ -112,8 +119,18 @@ class MailContainer(IDataContainer, ISerializable):
 
             def print_content(data):
                 for key, value in data.items():
-                    print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
+                    if key is not constants.LOGLINES:
+                        print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
 
+                if isinstance(data.get(constants.LOGLINES), list):
+                    print('\n-- ' +
+                          colorama.Style.BRIGHT +
+                          'corresponding loglines:' +
+                          colorama.Style.NORMAL +
+                          ' --')
+
+                    for line in data.get(constants.LOGLINES):
+                        print(colorama.Fore.LIGHTBLACK_EX + line.strip())
 
             print_title('Queue-ID phd-mxin', qid)
             print_content(d)

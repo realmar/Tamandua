@@ -124,7 +124,8 @@ class PluginManager():
                 if folderToData.get(folderName) is None:
                     folderToData[folderName] = {
                         'pregexdata': pre,
-                        'data': []
+                        'data': [],
+                        'raw_logline': line
                     }
 
                 folderToData[folderName]['data'].append(plugin.gather_data(line, pre))
