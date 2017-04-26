@@ -92,7 +92,7 @@ class MailContainer(IDataContainer, ISerializable):
                 newDtStr = dt.strftime('%Y/%m/%d %H:%M:%S')
                 try:
                     targetData[targetKey][
-                        constants.TIME_HOSTNAME_MAP[
+                        constants.HOSTNAME_TIME_MAP[
                             hostname
                         ]] = newDtStr
                 except Exception as e:
@@ -111,9 +111,6 @@ class MailContainer(IDataContainer, ISerializable):
                       ' ----')
 
             def print_content(data):
-                if data is None:
-                    return
-
                 for key, value in data.items():
                     print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
 
@@ -122,14 +119,20 @@ class MailContainer(IDataContainer, ISerializable):
             print_content(d)
 
             if d.get(constants.PHD_IMAP_QID) is not None:
-                print('\n')
-                print_title('Queue-ID phd-imap', d.get(constants.PHD_IMAP_QID))
-                print_content(self._map_qid_imap.get(d.get(constants.PHD_IMAP_QID)))
+                data = self._map_qid_imap.get(d.get(constants.PHD_IMAP_QID))
 
-            if d.get(constants.MESSAGEID) is not None:
-                print('\n')
-                print_title('Message-ID', d.get(constants.MESSAGEID))
-                print_content(self._map_msgid.get(d.get(constants.MESSAGEID)))
+                if data is not None and len(data) > 0:
+                    print('\n')
+                    print_title('Queue-ID phd-imap', d.get(constants.PHD_IMAP_QID))
+                    print_content(data)
+
+            if d.get(constants.MESSAGEID) is not None and len(d.get(constants.MESSAGEID)) > 0:
+                data = self._map_msgid.get(d.get(constants.MESSAGEID))
+
+                if data is not None and len(data) > 0:
+                    print('\n')
+                    print_title('Message-ID', d.get(constants.MESSAGEID))
+                    print_content(data)
 
     def get_serializable_data(self) -> object:
         return {
