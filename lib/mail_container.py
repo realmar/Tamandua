@@ -32,7 +32,7 @@ class MailContainer(IDataContainer, ISerializable):
                     else:
                         target[key].append(value)
                 else:
-                    return
+                    continue
 
     def _aggregate(self, id: str, target: dict, data: dict, logline: str) -> None:
         if target.get(id) is not None:
