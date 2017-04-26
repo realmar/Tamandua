@@ -6,12 +6,13 @@ from .exceptions import MissingConfigField, InvalidConfigField
 class Config():
     """Store and validate the tamandua config."""
 
-    def __init__(self, configpath):
+    def __init__(self, configpath, basepath):
         """Load config as YAML into memory."""
         with open(configpath, 'r') as f:
             self.__config = json.load(f)
 
         self.__validate()
+        self.__config['basepath'] = basepath
 
     def __validate(self):
         """Validate the config and raise exceptions."""

@@ -52,3 +52,7 @@ DESTINATION_HOLD = 'hold'
 DESTINATION_VIRUS = 'virus'
 DESTINATION_OTHER = 'other'
 DESTINATION_UNKOWN = 'unknown'
+
+# config
+
+CONFIGFILE = 'config.json'

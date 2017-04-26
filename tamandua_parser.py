@@ -17,9 +17,7 @@ sys.path.append(BASEDIR)
 from lib.plugins.plugin_manager import PluginManager
 from lib.config import Config
 from lib.serialization.serializer import Serializer
-
-
-CONFIGFILE = 'config.json'
+from lib.constants import CONFIGFILE
 
 
 def main():
@@ -42,7 +40,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        config = Config(args.configfile)
+        config = Config(args.configfile, BASEDIR)
     except FileNotFoundError as e:
         print('ERROR: configfile "' + args.configfile + '" does not exists.')
         sys.exit(6)
