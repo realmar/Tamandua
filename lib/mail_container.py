@@ -35,6 +35,18 @@ class MailContainer(IDataContainer, ISerializable):
                     continue
 
     def _aggregate(self, id: str, target: dict, data: dict, logline: str) -> None:
+        if id == constants.NOQUEUE:
+            data[constants.LOGLINES] = logline
+
+            if not isinstance(target.get(id), list):
+                target[id] = [data]
+            else:
+                target[id].append(data)
+
+            return
+
+        # else: if the queue is not NOQUEUE
+
         if target.get(id) is not None:
             self._merge_data(target[id], data)
         else:
@@ -118,38 +130,56 @@ class MailContainer(IDataContainer, ISerializable):
                       ' ----')
 
             def print_content(data):
-                for key, value in data.items():
-                    if key is not constants.LOGLINES:
-                        print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
+                def inner_print(d):
+                    for key, value in d.items():
+                        if key is not constants.LOGLINES:
+                            print(colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
 
-                if isinstance(data.get(constants.LOGLINES), list):
-                    print('\n-- ' +
-                          colorama.Style.BRIGHT +
-                          'corresponding loglines:' +
-                          colorama.Style.NORMAL +
-                          ' --')
+                    if isinstance(d.get(constants.LOGLINES), list):
+                        print('\n-- ' +
+                              colorama.Style.BRIGHT +
+                              'corresponding loglines:' +
+                              colorama.Style.NORMAL +
+                              ' --')
 
-                    for line in data.get(constants.LOGLINES):
-                        print(colorama.Fore.LIGHTBLACK_EX + line.strip())
+                        for line in d.get(constants.LOGLINES):
+                            print(colorama.Fore.LIGHTBLACK_EX + line.strip())
+
+                if isinstance(data, list):
+                    for entry in data:
+                        inner_print(entry)
+                        print('\n')
+                else:
+                    inner_print(data)
+
 
             print_title('Queue-ID phd-mxin', qid)
             print_content(d)
 
-            if d.get(constants.PHD_IMAP_QID) is not None:
-                data = self._map_qid_imap.get(d.get(constants.PHD_IMAP_QID))
+            def inner_represent(d):
+                if d.get(constants.PHD_IMAP_QID) is not None:
+                    data = self._map_qid_imap.get(d.get(constants.PHD_IMAP_QID))
 
-                if data is not None and len(data) > 0:
-                    print('\n')
-                    print_title('Queue-ID phd-imap', d.get(constants.PHD_IMAP_QID))
-                    print_content(data)
+                    if data is not None and len(data) > 0:
+                        print('\n')
+                        print_title('Queue-ID phd-imap', d.get(constants.PHD_IMAP_QID))
+                        print_content(data)
 
-            if d.get(constants.MESSAGEID) is not None and len(d.get(constants.MESSAGEID)) > 0:
-                data = self._map_msgid.get(d.get(constants.MESSAGEID))
+                if d.get(constants.MESSAGEID) is not None and len(d.get(constants.MESSAGEID)) > 0:
+                    data = self._map_msgid.get(d.get(constants.MESSAGEID))
 
-                if data is not None and len(data) > 0:
-                    print('\n')
-                    print_title('Message-ID', d.get(constants.MESSAGEID))
-                    print_content(data)
+                    if data is not None and len(data) > 0:
+                        print('\n')
+                        print_title('Message-ID', d.get(constants.MESSAGEID))
+                        print_content(data)
+
+            if isinstance(d, list):
+                for entry in d:
+                    inner_represent(entry)
+            else:
+                inner_represent(d)
+
+
 
     def get_serializable_data(self) -> object:
         return {

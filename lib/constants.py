@@ -21,6 +21,8 @@ PHD_IMAP_QID = PHD_IMAP + '_qid'
 
 HOSTNAME_QID = 'hostname_qid'
 
+NOQUEUE = 'NOQUEUE'
+
 # Message ID
 
 MESSAGEID = 'messageid'
