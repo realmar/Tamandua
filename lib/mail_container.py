@@ -18,21 +18,21 @@ class MailContainer(IDataContainer, ISerializable):
     def subscribedFolder(self) -> str:
         return "mail-aggregation"
 
-    def _merge_data(self, d1: dict, d2: dict) -> None:
-        for key, value in d2.items():
+    def _merge_data(self, target: dict, origin: dict) -> None:
+        for key, value in origin.items():
             if value is None:
                 continue
 
-            d1[key] = value
-
-            """
-            # propably needs some sanity checks ...
-            if d1.get(key) is None:
-                d1[key] = value
+            if target.get(key) is None:
+                target[key] = value
             else:
-                if d1.key != value:
-                    pass   # handle??
-            """
+                if target[key] != value:
+                    if not isinstance(target[key], list):
+                        target[key] = [target[key], value]
+                    else:
+                        target[key].append(value)
+                else:
+                    return
 
     def _aggregate(self, id: str, target: dict, data: dict, logline: str) -> None:
         if target.get(id) is not None:
