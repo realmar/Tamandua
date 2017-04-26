@@ -25,7 +25,7 @@ class Smtpd(SimplePlugin):
 
             (re.compile(r':\s(?P<' + constants.HOSTNAME_QID + r'>[^:]*):\sclient'), (RegexFlags.STORETIME,)),
 
-            # hold
+            # reject
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>NOQUEUE):\s
                             (?P<action>reject).+?
                             Recipient\saddress\srejected:\s
