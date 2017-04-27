@@ -85,7 +85,7 @@
                             <div class="form-control cursor-default add-margin-bottom" disabled>From</div>
                         </div>
 
-                        <div class="dt-search-mask" style="display: none">
+                        <div id="dt-from-search-mask" class="dt-search-mask" style="display: none">
                             <div class="col-xs-7 col-md-7 padding-0-left padding-1-right">
                                 <div class="form-group">
                                     <div class='input-group date' id='dt-from-picker'>
@@ -111,7 +111,7 @@
                             <p class="form-control cursor-default" disabled>To</p>
                         </div>
 
-                        <div class="dt-search-mask" style="display: none">
+                        <div id="dt-to-search-mask" class="dt-search-mask" style="display: none">
                             <div class="col-xs-7 col-md-7 padding-0-left padding-1-right">
                                 <div class="form-group">
                                     <div class='input-group date' id='dt-to-picker'>
@@ -151,7 +151,7 @@
                 <hr>
             </div>
             <p class="remove">Here are the results shown.</p>
-            <table id="result-table" data-paging="true" data-filtering="true" data-sorting="true"></table>
+            <div id="result-container"></div>
         </div>
     </div>
 </main>

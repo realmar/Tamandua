@@ -22,10 +22,12 @@ var api = {
  */
 
 function setup_selectizer(item) {
-    item.selectize({
+    var $select = item.selectize({
         create: true,
         sortField: 'text'
     });
+
+    return $select[0].selectize;
 }
 
 function setup_datetimepicker(item) {
@@ -43,20 +45,31 @@ function add_expression_line() {
     }
 
     var newExp = expressionLineTemplate.clone();
-
     newExp.appendTo("#expression-container");
-    setup_selectizer(newExp.find(".expression-select"));
+
+    instance = setup_selectizer(newExp.find(".expression-select"));
+
     newExp.find(".expression-remove-button").click(function () {
         remove_expression_line($(this).parent().parent());
     });
 
-    expressionLines.push(newExp);
+    expressionLines.push([newExp, instance]);
 }
 
 function remove_expression_line(item) {
-    var index = expressionLines.indexOf(item);
-    expressionLines.splice(index, 1);
+    for(i in expressionLines) {
+        if(expressionLines[i][0][0] === item[0]) {
+            expressionLines.splice(i, 1);
+        }
+    }
+
     item.remove();
+}
+
+function reset_result_table() {
+    $("#results").find(".remove").each(function () { $(this).remove(); });
+    $("#result-container").empty();
+    $("#result-container").html("<table id=\"result-table\" data-paging=\"true\" data-filtering=\"true\" data-sorting=\"true\"></table>");
 }
 
 /*
@@ -71,7 +84,7 @@ function on_add_expression_line_button_click() {
     // Check if an expression doesn't have any value
     // if so, then we will not create a new expression line (return)
     $.each(expressionLines, function () {
-        expInput = $(this).find(".expression-input");
+        expInput = $(this[0]).find(".expression-input");
         if(!expInput.val()) {
             addLine = false;
         }
@@ -100,10 +113,20 @@ function on_remove_dt_button_click(item) {
 /* API */
 
 function get_json(route, data) {
-    $("#results").find(".remove").each(function () { $(this).remove(); });
+    reset_result_table();
 
-    $.getJSON(route, data)
+    $.ajax({
+        url: route,
+        type: "POST",
+        data: JSON.stringify(data),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json"
+    })
         .done(function (data) {
+            if(data['columns'] === undefined || data['rows'] === undefined) {
+                return;
+            }
+
             $('#result-table').footable(data)
         })
         .fail(function (jqxhr, textStatus, error) {
@@ -121,6 +144,64 @@ function on_get_all_button_click() {
 
 function on_search_button_click() {
 
+    /*
+     * Validate Fields
+     */
+
+    // TODO: validate fields
+
+    if(expressionLines === null) {
+        return;
+    }
+
+    if(expressionLines.length === 0) {
+        return;
+    }
+
+    /*
+     * Build Expression
+     */
+
+    var expression = {
+        "fields": [],
+        "datetime": {
+            "start": "",
+            "end": ""
+        }
+    };
+
+    $.each(expressionLines, function () {
+        var jq = this[0];
+        var s = this[1];
+
+        var key = s.getValue();
+        var value = jq.find(".expression-input").val();
+
+        var h = {};
+        h[key] = value;
+
+        expression.fields.push(h);
+    });
+
+    var getDT = function (root, item) {
+        if(root.is(":visible")) {
+            try {
+                return item.datetimepicker('date').format("YYYY/mm/DD HH:mm:ss");
+            } catch (e) {
+                // console.log(e);
+                return "";
+            }
+        }else{
+            return "";
+        }
+    };
+
+    expression.datetime.start = getDT($("#dt-from-search-mask"), $("#dt-from-picker"));
+    expression.datetime.end = getDT($("#dt-to-search-mask"), $("#dt-to-picker"));
+
+    // console.log(expression);
+
+    get_json(api.search, expression);
 }
 
 /*

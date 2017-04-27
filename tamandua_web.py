@@ -33,9 +33,10 @@ def home():
 
 # API
 
-@app.route('/api/search')
+@app.route('/api/search', methods=['POST'])
 def search():
     expression = request.get_json()
+
     if expression is None:
         return jsonify({})
 
