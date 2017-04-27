@@ -30,6 +30,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
 
+    <!-- footable -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-footable/3.1.4/footable.bootstrap.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-footable/3.1.4/footable.min.js"></script>
+
     <!-- tamandua specific -->
     <link href="/static/tamandua.css" rel="stylesheet" />
     <script src="/static/tamandua.js"></script>
@@ -136,7 +140,7 @@
                     <button id="get-all-button" type="button" class="btn btn-default">Get All</button>
                 </div>
                 <div class="btn-group" role="group" aria-label="...">
-                    <button id="search-button" type="button" class="btn btn-default">Search</button>
+                    <button id="search-button" type="button" class="btn btn-primary">Search</button>
                 </div>
             </div>
         </div>
@@ -146,7 +150,8 @@
                 <h4>Results</h4>
                 <hr>
             </div>
-            <p>Here are the results shown.</p>
+            <p class="remove">Here are the results shown.</p>
+            <table id="result-table" data-paging="true" data-filtering="true" data-sorting="true"></table>
         </div>
     </div>
 </main>

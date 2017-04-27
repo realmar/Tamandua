@@ -83,3 +83,7 @@ hr {
 .border-right {
     border-right: 1px solid #eee;
 }
+
+.form-group {
+    margin-bottom: 0;
+}

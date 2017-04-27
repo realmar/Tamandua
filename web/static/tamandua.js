@@ -5,6 +5,19 @@ var expressionLineTemplate = null;
 var expressionLines = [];
 
 /*
+ * API Routes
+ */
+
+var api = {
+    'get': {
+        'sample': '/api/get/sample',
+        'all': '/api/get/all'
+    },
+
+    'search': '/api/search'
+};
+
+/*
  * Setup Functions
  */
 
@@ -86,12 +99,24 @@ function on_remove_dt_button_click(item) {
 
 /* API */
 
-function on_get_sample_button_click() {
+function get_json(route, data) {
+    $("#results").find(".remove").each(function () { $(this).remove(); });
 
+    $.getJSON(route, data)
+        .done(function (data) {
+            $('#result-table').footable(data)
+        })
+        .fail(function (jqxhr, textStatus, error) {
+            console.log("Error in async operation: " + [jqxhr, textStatus, error]);
+        });
+}
+
+function on_get_sample_button_click() {
+    get_json(api.get.sample, {});
 }
 
 function on_get_all_button_click() {
-
+    get_json(api.get.all, {});
 }
 
 function on_search_button_click() {
