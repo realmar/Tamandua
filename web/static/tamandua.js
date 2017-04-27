@@ -17,6 +17,11 @@ var api = {
     'search': '/api/search'
 };
 
+var methods = {
+    'post': 'POST',
+    'get': 'GET'
+};
+
 /*
  * Setup Functions
  */
@@ -112,12 +117,12 @@ function on_remove_dt_button_click(item) {
 
 /* API */
 
-function get_json(route, data) {
+function get_json(route, data, method) {
     reset_result_table();
 
     $.ajax({
         url: route,
-        type: "POST",
+        type: method,
         data: JSON.stringify(data),
         contentType: "application/json; charset=utf-8",
         dataType: "json"
@@ -127,7 +132,7 @@ function get_json(route, data) {
                 return;
             }
 
-            $('#result-table').footable(data)
+            $("#result-table").footable(data);
         })
         .fail(function (jqxhr, textStatus, error) {
             console.log("Error in async operation: " + [jqxhr, textStatus, error]);
@@ -135,11 +140,11 @@ function get_json(route, data) {
 }
 
 function on_get_sample_button_click() {
-    get_json(api.get.sample, {});
+    get_json(api.get.sample, {}, methods.get);
 }
 
 function on_get_all_button_click() {
-    get_json(api.get.all, {});
+    get_json(api.get.all, {}, methods.get);
 }
 
 function on_search_button_click() {
@@ -151,10 +156,6 @@ function on_search_button_click() {
     // TODO: validate fields
 
     if(expressionLines === null) {
-        return;
-    }
-
-    if(expressionLines.length === 0) {
         return;
     }
 
@@ -201,7 +202,7 @@ function on_search_button_click() {
 
     // console.log(expression);
 
-    get_json(api.search, expression);
+    get_json(api.search, expression, methods.post);
 }
 
 /*
@@ -231,7 +232,7 @@ function main() {
     register_event_handlers();
     setup_datetimepicker($("#dt-from-picker"));
     setup_datetimepicker($("#dt-to-picker"));
-    add_expression_line();
+    // add_expression_line();
 }
 
 $(document).ready(main);
