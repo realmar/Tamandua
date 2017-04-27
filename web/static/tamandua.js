@@ -186,7 +186,7 @@ function on_search_button_click() {
     var getDT = function (root, item) {
         if(root.is(":visible")) {
             try {
-                return item.datetimepicker('date').format("YYYY/mm/DD HH:mm:ss");
+                return item.datetimepicker('date').format("YYYY/MM/DD HH:mm:ss");
             } catch (e) {
                 // console.log(e);
                 return "";
