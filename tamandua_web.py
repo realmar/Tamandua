@@ -42,9 +42,9 @@ def search():
     """
     # for debugging
     expression = {
-        'fields' : {
-            'sender': 'lionel'
-        },
+        'fields' : [
+            { 'sender': 'lionel' }
+        ],
 
         "datetime": {
             "start": "2017/01/19 22:51:45",

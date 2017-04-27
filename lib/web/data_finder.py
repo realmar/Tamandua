@@ -63,11 +63,11 @@ class DataFinder():
         Description of an expression:
         
         {
-            "fields": {
-                "field1": "value1",
-                "field2": "value2"
+            "fields": [
+                { "field1": "value1" },
+                { "field2": "value2" }
                 ...
-            },
+            ],
             
             "datetime": {
                 "start": "time-str",
@@ -81,6 +81,8 @@ class DataFinder():
         
         This is not a generic solution, although still one that provides the user with great flexibility.
         """
+
+        # TODO: more validation of the expression
 
         if expression.get('fields') is None:
             # raise
@@ -108,10 +110,14 @@ class DataFinder():
         for data in self._data:
             mismatch = False
 
-            for key, value in fields.items():
-                fieldData = data.get(key)
-                if fieldData is None or value not in fieldData:
-                    mismatch = True
+            for field in fields:
+                for key, value in field.items():
+                    fieldData = data.get(key)
+                    if fieldData is None or str(value) not in fieldData:
+                        mismatch = True
+                        break
+
+                if mismatch:
                     break
 
             if mismatch:
