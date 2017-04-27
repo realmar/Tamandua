@@ -12,25 +12,7 @@ class DataFinder():
 
         self.load_data()
 
-    def __deflate_data(self, data: list) -> None:
-        needsDeflating = []
-        pos = []
-
-        for i, r in enumerate(data):
-            if isinstance(r, list):
-                pos.append(i)
-                needsDeflating.append(r)
-
-        pos.sort(reverse=True)
-        for i in pos:
-            del data[i]
-
-        for r in needsDeflating:
-            data.extend(r)
-
     def __generate_table_data_structure(self, columns: list, rows: list) -> dict:
-        self.__deflate_data(rows)
-
         for r in rows:
             try:
                 del r['loglines']
@@ -47,17 +29,10 @@ class DataFinder():
 
         tmpAvailableFields = {}
 
-        def inner_analise(data):
+        for data in inputData:
             for key, value in data.items():
                 if tmpAvailableFields.get(key) is None:
                     tmpAvailableFields[key] = True
-
-        for data in inputData:
-            if isinstance(data, list):
-                for d in data:
-                    inner_analise(d)
-            else:
-                inner_analise(data)
 
         return sorted(tmpAvailableFields.keys())
 
@@ -134,9 +109,6 @@ class DataFinder():
             mismatch = False
 
             for key, value in fields.items():
-                if isinstance(data, list):
-                    self.__deflate_data(data)
-
                 fieldData = data.get(key)
                 if fieldData is None or value not in fieldData:
                     mismatch = True
