@@ -120,10 +120,16 @@ function on_remove_dt_button_click(item) {
 function get_json(route, data, method) {
     reset_result_table();
 
+    data['only_important'] = $("#only-important-checkbox").prop("checked");
+
+    if(method === methods.post) {
+        data = JSON.stringify(data)
+    }
+
     $.ajax({
         url: route,
         type: method,
-        data: JSON.stringify(data),
+        data: data,
         contentType: "application/json; charset=utf-8",
         dataType: "json"
     })

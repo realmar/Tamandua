@@ -13,12 +13,6 @@ class DataFinder():
         self.load_data()
 
     def __generate_table_data_structure(self, columns: list, rows: list) -> dict:
-        for r in rows:
-            try:
-                del r['loglines']
-            except Exception as e:
-                pass
-
         return {
             'columns': [{'name': x, 'title': x} for x in columns],
             'rows': rows
@@ -48,6 +42,35 @@ class DataFinder():
         """
 
         self.availableFields = self._get_keys(self._data)
+
+    def filter_important(self, data: dict) -> dict:
+        """Removes unwanted fields from data."""
+
+        allowedFields = [
+            constants.PHD_MXIN_QID,
+            constants.PHD_IMAP_QID,
+            constants.PHD_MXIN_TIME,
+            constants.PHD_IMAP_TIME,
+            'action',
+            'holdreason',
+            'sender',
+            'recipient',
+            'virusresult',
+            'spamscore'
+        ]
+
+        newData = []
+
+        for d in data['rows']:
+            newDict = {}
+            for field in allowedFields:
+                if d.get(field) is not None:
+                    newDict[field] = d[field]
+
+            if len(newDict) > 0:
+                newData.append(newDict)
+
+        return self.__generate_table_data_structure(self._get_keys(newData), newData)
 
     def get_all(self) -> dict:
         return self.__generate_table_data_structure(self.availableFields, self._data)
@@ -166,7 +189,3 @@ class DataFinder():
             filteredData.append(data)
 
         return self.__generate_table_data_structure(self._get_keys(filteredData), filteredData)
-
-
-
-

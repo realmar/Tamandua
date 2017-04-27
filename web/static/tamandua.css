@@ -111,6 +111,12 @@ td {
     border-right: 1px solid #eee;
 }
 
+.border-right-checkbox {
+    border-right: 1px solid #eee;
+    padding-right: 1em;
+    margin-right: 1em;
+}
+
 .form-group {
     margin-bottom: 0;
 }

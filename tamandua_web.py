@@ -27,6 +27,20 @@ app = Flask(
 config = Config(os.path.join(BASEDIR, CONFIGFILE), BASEDIR)
 dataFinder = DataFinder(config)
 
+
+def final_filter(data : dict, d: dict) -> dict:
+    onlyImportant = d.get('only_important')
+
+    if isinstance(onlyImportant, str):
+        onlyImportant = onlyImportant.lower() in ('yes', 'true', '1')
+    else:
+        onlyImportant = False
+
+    if onlyImportant:
+        return dataFinder.filter_important(data)
+
+    return data
+
 @app.route('/')
 def home():
     return render_template('index.html', fieldnames=dataFinder.availableFields)
@@ -51,21 +65,23 @@ def search():
             "start": "2017/01/19 22:51:45",
             "end": "2017/01/19 22:55:50"
         }
+        
+        "only_important": "true|false"
     }
     """
 
     data = dataFinder.search(expression)
-    return jsonify(data)
+    return jsonify(final_filter(data, expression))
 
 @app.route('/api/get/all')
 def get_all():
     data = dataFinder.get_all()
-    return jsonify(data)
+    return jsonify(final_filter(data, request.args))
 
 @app.route('/api/get/sample')
 def get_sample():
     data = dataFinder.get_sample()
-    return jsonify(data)
+    return jsonify(final_filter(data, request.args))
 
 if __name__ == "__main__":
     app.run(host='localhost', port=8080, debug=True)

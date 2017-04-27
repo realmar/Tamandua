@@ -34,6 +34,9 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-footable/3.1.4/footable.bootstrap.min.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-footable/3.1.4/footable.min.js"></script>
 
+    <!-- awesome-bootstrap-checkbox -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/awesome-bootstrap-checkbox/0.3.7/awesome-bootstrap-checkbox.min.css" />
+
     <!-- tamandua specific -->
     <link href="/static/tamandua.css" rel="stylesheet" />
     <script src="/static/tamandua.js"></script>
@@ -135,6 +138,12 @@
             </div>
             <hr class="margin-top-1">
             <div class="pull-right margin-bottom-1">
+                <div class="btn-group border-right-checkbox" role="group" aria-label="...">
+                    <div class="checkbox checkbox-primary">
+                        <input id="only-important-checkbox" class="styled" type="checkbox" checked="true">
+                        <label for="only-important-checkbox">only important</label>
+                    </div>
+                </div>
                 <div class="btn-group" role="group" aria-label="...">
                     <button id="get-sample-button" type="button" class="btn btn-default">Get Sample Data</button>
                     <button id="get-all-button" type="button" class="btn btn-default">Get All</button>
