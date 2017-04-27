@@ -135,8 +135,11 @@ class DataFinder():
 
             for field in fields:
                 for key, value in field.items():
+                    if str(value).strip() == '':
+                        continue
+
                     fieldData = data.get(key)
-                    if fieldData is None or str(value) not in fieldData:
+                    if fieldData is None or str(value).strip() not in fieldData:
                         mismatch = True
                         break
 

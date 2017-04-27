@@ -34,7 +34,8 @@ def final_filter(data : dict, d: dict) -> dict:
     if isinstance(onlyImportant, str):
         onlyImportant = onlyImportant.lower() in ('yes', 'true', '1')
     else:
-        onlyImportant = False
+        if not isinstance(onlyImportant, bool):
+            onlyImportant = False
 
     if onlyImportant:
         return dataFinder.filter_important(data)
