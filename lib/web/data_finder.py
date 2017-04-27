@@ -12,16 +12,38 @@ class DataFinder():
 
         self.load_data()
 
-    def load_data(self):
-        self._data = Serializer(self._config).load()['MailContainer']
-        self.analise_data()
+    def __deflate_data(self, data: list) -> None:
+        needsDeflating = []
+        pos = []
 
-    def analise_data(self) -> None:
-        """
-        Analise the data.
-        
-        This will generate the availableFields. This method is called from load_data.
-        """
+        for i, r in enumerate(data):
+            if isinstance(r, list):
+                pos.append(i)
+                needsDeflating.append(r)
+
+        pos.sort(reverse=True)
+        for i in pos:
+            del data[i]
+
+        for r in needsDeflating:
+            data.extend(r)
+
+    def __generate_table_data_structure(self, columns: list, rows: list) -> dict:
+        self.__deflate_data(rows)
+
+        for r in rows:
+            try:
+                del r['loglines']
+            except Exception as e:
+                pass
+
+        return {
+            'columns': [{'name': x, 'title': x} for x in columns],
+            'rows': rows
+        }
+
+    def _get_keys(self, inputData: list) -> list:
+        """Return a list of all uniq keys."""
 
         tmpAvailableFields = {}
 
@@ -30,24 +52,36 @@ class DataFinder():
                 if tmpAvailableFields.get(key) is None:
                     tmpAvailableFields[key] = True
 
-        for data in self._data:
+        for data in inputData:
             if isinstance(data, list):
                 for d in data:
                     inner_analise(d)
             else:
                 inner_analise(data)
 
-        self.availableFields = sorted(tmpAvailableFields.keys())
+        return sorted(tmpAvailableFields.keys())
 
+    def load_data(self):
+        self._data = Serializer(self._config).load()['MailContainer']
+        self.analise_data()
 
-    def get_all(self) -> list:
-        return self._data
+    def analise_data(self) -> None:
+        """
+        Analise the data.
+        
+        Uses _get_keys to get all keys in _data. This method is called from load_data.
+        """
 
-    def get_sample(self) -> list:
-        # return sorted(self._data, key=lambda x: len(x) > 10 and len(x) < 20)
-        return self._data[:20]
+        self.availableFields = self._get_keys(self._data)
 
-    def search(self, expression: dict) -> list:
+    def get_all(self) -> dict:
+        return self.__generate_table_data_structure(self.availableFields, self._data)
+
+    def get_sample(self) -> dict:
+        data = self._data[0:20]
+        return self.__generate_table_data_structure(self._get_keys(data), data)
+
+    def search(self, expression: dict) -> dict:
         """Search for specific mails."""
 
         """
@@ -100,10 +134,8 @@ class DataFinder():
             mismatch = False
 
             for key, value in fields.items():
-                # TODO: handle this correctly
                 if isinstance(data, list):
-                    mismatch = True
-                    break
+                    self.__deflate_data(data)
 
                 fieldData = data.get(key)
                 if fieldData is None or value not in fieldData:
@@ -155,7 +187,7 @@ class DataFinder():
 
             filteredData.append(data)
 
-        return filteredData
+        return self.__generate_table_data_structure(self._get_keys(filteredData), filteredData)
 
 
 
