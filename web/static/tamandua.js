@@ -50,6 +50,8 @@ function remove_expression_line(item) {
  * Event Handlers
  */
 
+/* expression builder */
+
 function on_add_expression_line_button_click() {
     var addLine = true;
 
@@ -67,21 +69,22 @@ function on_add_expression_line_button_click() {
     }
 }
 
-function on_add_from_dt_button_click() {
+/* datetime */
+
+function on_add_dt_button_click(item) {
+    var parent = $(this).parent().parent();
+    parent.find(".dt-add").hide();
+    parent.find(".dt-search-mask").show();
 
 }
 
-function on_remove_from_dt_button_click() {
-
+function on_remove_dt_button_click(item) {
+    var parent = $(this).parent().parent().parent();
+    parent.find(".dt-search-mask").hide();
+    parent.find(".dt-add").show();
 }
 
-function on_add_to_dt_button_click() {
-
-}
-
-function on_remove_to_dt_button_click() {
-
-}
+/* API */
 
 function on_get_sample_button_click() {
 
@@ -104,11 +107,14 @@ function init_global_variables() {
 }
 
 function register_event_handlers() {
+    /* expression builder */
     $("#add-expression-line-button").click(on_add_expression_line_button_click);
-    $("#add-from-dt-button").click(on_add_from_dt_button_click);
-    $("#remove-from-dt-button").click(on_remove_from_dt_button_click);
-    $("#add-to-dt-button").click(on_add_to_dt_button_click);
-    $("#remove-to-dt-button").click(on_remove_to_dt_button_click);
+
+    /* datetime */
+    $(".add-dt-button").click(on_add_dt_button_click);
+    $(".remove-dt-button").click(on_remove_dt_button_click);
+
+    /* API */
     $("#get-sample-button").click(on_get_sample_button_click);
     $("#get-all-button").click(on_get_all_button_click);
     $("#search-button").click(on_search_button_click);
