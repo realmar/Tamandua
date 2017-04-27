@@ -29,7 +29,7 @@ dataFinder = DataFinder(config)
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('index.html', fieldnames=dataFinder.availableFields)
 
 # API
 

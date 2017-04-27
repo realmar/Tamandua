@@ -8,11 +8,37 @@ class DataFinder():
     def __init__(self, config) -> None:
         self._config = config
         self._data = []
+        self.availableFields = []
 
         self.load_data()
 
     def load_data(self):
         self._data = Serializer(self._config).load()['MailContainer']
+        self.analise_data()
+
+    def analise_data(self) -> None:
+        """
+        Analise the data.
+        
+        This will generate the availableFields. This method is called from load_data.
+        """
+
+        tmpAvailableFields = {}
+
+        def inner_analise(data):
+            for key, value in data.items():
+                if tmpAvailableFields.get(key) is None:
+                    tmpAvailableFields[key] = True
+
+        for data in self._data:
+            if isinstance(data, list):
+                for d in data:
+                    inner_analise(d)
+            else:
+                inner_analise(data)
+
+        self.availableFields = sorted(tmpAvailableFields.keys())
+
 
     def get_all(self) -> list:
         return self._data
