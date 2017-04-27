@@ -1,7 +1,19 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin: 0 0 10em;
+}
+
 footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
     height: 10em;
+    margin-top: 10px;
     background-color: #607D8B;
-    padding-top: 1em;
 }
 
 footer > div > p {
