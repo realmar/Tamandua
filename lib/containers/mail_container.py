@@ -35,7 +35,7 @@ class MailContainer(IDataContainer, ISerializable):
                 if target[key] != value:
                     if not isinstance(target[key], list):
                         if isinstance(value, list):
-                            # make items uniq
+                            # make items unique
                             value = list(set(value))
 
                             if target[key] not in value:
@@ -271,7 +271,7 @@ class MailContainer(IDataContainer, ISerializable):
                     m[constants.COMPLETE] = True
                     m[constants.DESTINATION] = constants.DESTINATION_REJECT
 
-                self._final_data.append(mail)
+                    self._final_data.append(m)
             else:
                 finalMail = copy.deepcopy(mail)
 
@@ -392,24 +392,10 @@ class MailContainer(IDataContainer, ISerializable):
 
             print(finalStr)
 
-        def inner_print_content(data):
-            def print_list(key, value):
-                print('    ' + colorama.Style.BRIGHT + key)
-                for v in value:
-                    print('        ' + v.strip())
-
-            for key, value in sorted(data.items(), key=lambda x: x[0]):
-                if key == constants.LOGLINES:
-                    continue
-
-                if isinstance(value, list):
-                    print_list(key, value)
-                else:
-                    print('    ' + colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
-
-            loglines = data.get(constants.LOGLINES)
-            if loglines is not None:
-                print_list(constants.LOGLINES, loglines)
+        def print_list(key, value):
+            print('    ' + colorama.Style.BRIGHT + key)
+            for v in value:
+                print('        ' + v.strip())
 
         print('\n========' + colorama.Style.BRIGHT + ' List of collected Mails ' +
               colorama.Style.NORMAL + '========')
@@ -421,30 +407,35 @@ class MailContainer(IDataContainer, ISerializable):
             print(colorama.Back.LIGHTMAGENTA_EX + '>>>>' * 4 + colorama.Style.BRIGHT + ' Mail ' +
                   colorama.Style.NORMAL + '<<<<' * 4)
 
-            if isinstance(mail, list):
-                # now we have a list of mails without a queueid, or rather NOQUEUE
+            mxin_qid = mail.get(constants.PHD_MXIN_QID)
+            imap_qid = mail.get(constants.PHD_IMAP_QID)
+            msgid = mail.get(constants.MESSAGEID)
 
-                print_title(**{'No Queue-ID': 'NOQUEUE'})
-                for m in mail:
-                    inner_print_content(m)
-            else:
-                mxin_qid = mail.get(constants.PHD_MXIN_QID)
-                imap_qid = mail.get(constants.PHD_IMAP_QID)
-                msgid = mail.get(constants.MESSAGEID)
+            d = {}
 
-                d = {}
+            if imap_qid is not None:
+                d['Queue-ID phd-imap'] = imap_qid
 
-                if imap_qid is not None:
-                    d['Queue-ID phd-imap'] = imap_qid
+            if mxin_qid is not None:
+                d['Queue-ID phd-mxin'] = mxin_qid
 
-                if mxin_qid is not None:
-                    d['Queue-ID phd-mxin'] = mxin_qid
+            if msgid is not None:
+                d['Message-ID'] = msgid
 
-                if msgid is not None:
-                    d['Message-ID'] = msgid
+            print_title(**d)
 
-                print_title(**d)
-                inner_print_content(mail)
+            for key, value in sorted(mail.items(), key=lambda x: x[0]):
+                if key == constants.LOGLINES:
+                    continue
+
+                if isinstance(value, list):
+                    print_list(key, value)
+                else:
+                    print('    ' + colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
+
+            loglines = mail.get(constants.LOGLINES)
+            if loglines is not None:
+                print_list(constants.LOGLINES, loglines)
 
     def print_integrity_report(self) -> None:
         print('\n========' + colorama.Style.BRIGHT + ' Integrity Report ' + colorama.Style.NORMAL + '========')
