@@ -24,7 +24,7 @@ Vagrant.configure(2) do |config|
       "vagrant" => [ "default" ],
     }
     ansible.sudo = true
-    ansible.playbook = "./site.yml"
+    ansible.playbook = "./tamandua_deployment.yml"
     #ansible.verbose = "vvv"
   end
 end

@@ -7,3 +7,6 @@ logdump/*
 
 # IDE
 .idea/*
+
+# Deployment
+*/.vagrant/*
