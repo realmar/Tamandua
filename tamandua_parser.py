@@ -39,10 +39,16 @@ def main():
     parser.add_argument(
         '--config',
         '-c',
-        dest="configfile",
+        dest='configfile',
         default=os.path.join(BASEDIR, CONFIGFILE),
         type=str,
         help='Path to the configfile')
+    parser.add_argument(
+        '--no-print',
+        dest='noprint',
+        default=False,
+        action='store_true',
+        help='Do not print results to stdout')
     args = parser.parse_args()
 
     try:
@@ -86,12 +92,13 @@ def main():
     for container in pluginManager.dataReceiver.containers:
         container.build_final()                 # build final data
 
-        container.represent()                   # represent data
-        container.print_integrity_report()      # print integrity stats
+        if not args.noprint:
+            container.represent()                   # represent data
+            container.print_integrity_report()      # print integrity stats
 
-        print('\n')
-        print('-' * 60)
-        print('\n')
+            print('\n')
+            print('-' * 60)
+            print('\n')
 
     # serialize data
     serializer = Serializer(config)
