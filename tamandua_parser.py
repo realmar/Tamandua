@@ -119,8 +119,15 @@ def main():
             print('\n')
 
     # serialize data
-    serializer = Serializer(config)
-    serializer.store(pluginManager.dataReceiver)
+    try:
+        serializer = Serializer(config)
+    except Exception as e:
+        print_exception(e, "Trying to create an instance of Serializer", "Discard serialization")
+    else:
+        try:
+            serializer.store(pluginManager.dataReceiver)
+        except Exception as e:
+            print_exception(e, "Trying to serialize the collected data", "Discard serialization")
         
 """We only start with the executation if we are the main."""
 if __name__ == '__main__':
