@@ -9,10 +9,16 @@ This is the main (entry point) of the parser.
 import os
 import sys
 import argparse
-from json import JSONDecodeError
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
+
+# JSONDecodeError exists from python 3.5 and onwards
+# As Debian Jessie only has python 3.4 we need this workaround
+if sys.version_info[1] < 5:
+    JSONDecodeError = ValueError
+else:
+    from json import JSONDecodeError
 
 from lib.plugins.plugin_manager import PluginManager
 from lib.config import Config
