@@ -3,6 +3,7 @@
 
 from .statistics import Statistics
 from .mail_container import MailContainer
+from ..exceptions import print_warning
 
 class DataReceiver():
     def __init__(self):
@@ -22,7 +23,12 @@ class DataReceiver():
 
     def add_info(self, folderToData: dict) -> None:
         for folder, data in folderToData.items():
+            foundContainer = False
             for container in self.containers:
                 if folder == container.subscribedFolder:
                     container.add_info(data)
+                    foundContainer = True
                     break
+
+            if not foundContainer:
+                print_warning('Did not find matching data container for identifier: ' + folder)

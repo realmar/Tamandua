@@ -66,3 +66,7 @@ def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, d
             print(colorama.Style.BRIGHT + 'Function: ' + colorama.Style.NORMAL + str(trace[3]))
     except Exception as e:
         pass
+
+
+def print_warning(msg):
+    print(colorama.Style.BRIGHT + 'Warning: ' + colorama.Style.NORMAL + msg)
