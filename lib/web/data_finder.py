@@ -4,9 +4,12 @@ from ..serialization.serializer import Serializer
 from .. import constants
 from .exceptions import ExpressionInvalid
 
+# used in annotation
+from ..config import Config
+
 
 class DataFinder():
-    def __init__(self, config) -> None:
+    def __init__(self, config: Config) -> None:
         self._config = config
         self._data = []
         self.availableFields = []
@@ -31,7 +34,7 @@ class DataFinder():
 
         return sorted(tmpAvailableFields.keys())
 
-    def load_data(self):
+    def load_data(self) -> None:
         self._data = Serializer(self._config).load()['MailContainer']
         self.analise_data()
 
