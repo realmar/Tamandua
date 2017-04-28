@@ -97,6 +97,10 @@ function setup_datetimepicker(item) {
     item.datetimepicker();
 }
 
+function setup_checkbox(item) {
+    item.checkboxpicker();
+}
+
 /*
  * Creational/Destructional Functions
  */
@@ -336,6 +340,7 @@ function main() {
     register_event_handlers();
     setup_datetimepicker($("#dt-from-picker"));
     setup_datetimepicker($("#dt-to-picker"));
+    setup_checkbox($("#only-important-checkbox"))
     // add_expression_line();
 }
 
