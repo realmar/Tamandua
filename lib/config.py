@@ -2,6 +2,7 @@
 
 import json
 from .exceptions import MissingConfigField, InvalidConfigField
+from .serialization.factory import SerializationFactory
 
 class Config():
     """Store and validate the tamandua config."""
@@ -20,9 +21,8 @@ class Config():
             if self.__config.get(name) is None:
                 raise MissingConfigField(name)
 
-        availableSerializationMethods = ('json', 'pyobj-store')
-        if self.__config.get('store_type') not in availableSerializationMethods:
-            raise InvalidConfigField('store_type', availableSerializationMethods)
+        if self.__config.get('store_type') not in SerializationFactory.get_methods():
+            raise InvalidConfigField('store_type', SerializationFactory.get_methods())
 
     def get(self, key):
         """Get a config attribute."""
