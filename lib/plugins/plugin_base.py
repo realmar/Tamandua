@@ -61,19 +61,19 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
             raise RegexGroupsMissing(self.__class__.__name__, info)
 
     @abc.abstractmethod
-    def _define_subscription_regex(self):
+    def _define_subscription_regex(self) -> None:
         """Assign the compiled subscription regex to self."""
         pass
 
     @abc.abstractmethod
-    def _define_data_regex(self):
+    def _define_data_regex(self) -> None:
         """Assign the compiled data regex to self."""
         pass
 
-    def check_subscription(self, line):
+    def check_subscription(self, line: str) -> bool:
         return self._subscriptionRegex.search(line) is not None
 
-    def __check_data_regex_group_names(self):
+    def __check_data_regex_group_names(self) -> tuple:
         """
         Check if the user has any named groups defined in the regex.
 
@@ -87,7 +87,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
 
         return False, None
 
-    def _specify_regex_group_name(self, dataRegexMatches, preRegexMatches):
+    def _specify_regex_group_name(self, dataRegexMatches: dict, preRegexMatches: dict) -> dict:
         """
         Replace special keywords in the regex match group.
 
@@ -137,7 +137,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
 
         return newDataRegexMatches
 
-    def _edit_results(self, results):
+    def _edit_results(self, results: dict) -> None:
         """
         Provide a way for the user to edit the generated result dict.
 
@@ -148,7 +148,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
         """
         pass
 
-    def gather_data(self, line, preRegexMatches):
+    def gather_data(self, line: str, preRegexMatches: dict) -> tuple:
         for regex, flags in self._dataRegex:
             search = regex.search(line)
 
@@ -169,7 +169,7 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
                 continue
 
             self._edit_results(result)
-            return (True, flags, self._specify_regex_group_name(result, preRegexMatches))
+            return True, flags, self._specify_regex_group_name(result, preRegexMatches)
 
         unknown_data_name = {'servicename_hostname': 'unknown'}
-        return (False, (), self._specify_regex_group_name(unknown_data_name, preRegexMatches))
+        return False, (), self._specify_regex_group_name(unknown_data_name, preRegexMatches)
