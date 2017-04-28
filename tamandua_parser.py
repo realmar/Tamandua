@@ -108,15 +108,29 @@ def main():
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
-        container.build_final()                 # build final data
+        try:
+            container.build_final()                 # build final data
+        except Exception as e:
+            print_exception(
+                e,
+                'Aggregating the data and building integrity stats',
+                'Discarding aggregation and exiting application',
+                fatal=True)
+            sys.exit(10)
 
         if not args.noprint:
-            container.represent()                   # represent data
-            container.print_integrity_report()      # print integrity stats
+            try:
+                container.represent()                   # represent data
+                container.print_integrity_report()      # print integrity stats
 
-            print('\n')
-            print('-' * 60)
-            print('\n')
+                print('\n')
+                print('-' * 60)
+                print('\n')
+            except Exception as e:
+                print_exception(
+                    e,
+                    'Printing container to stdout: ' + container.__class__.__name__,
+                    'ignoring current container')
 
     # serialize data
     try:

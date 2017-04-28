@@ -58,6 +58,9 @@ def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, d
             # if the python version is greater than 3.5
             # we can provide the user with more precise
             # information where the exception took place
+            #
+            # Why >= 3.5?
+            # Because in
 
             trace = inspect.trace()[0]
 
@@ -69,4 +72,7 @@ def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, d
 
 
 def print_warning(msg):
-    print(colorama.Style.BRIGHT + 'Warning: ' + colorama.Style.NORMAL + msg)
+    print(
+        colorama.Style.BRIGHT + colorama.Fore.YELLOW +
+        'Warning: ' +
+        colorama.Fore.RESET + colorama.Style.RESET_ALL + msg)
