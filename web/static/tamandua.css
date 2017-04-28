@@ -25,14 +25,14 @@ hr {
     margin-bottom: 1em;
 }
 
-th {
+.footable-header > th {
   word-wrap: break-word;
 
   min-width: 5em;
   max-width: 11em;
 }
 
-td {
+#result-table > tbody > tr > td {
   word-wrap: break-word;
 }
 

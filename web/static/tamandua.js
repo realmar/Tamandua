@@ -4,8 +4,6 @@
 var expressionLineTemplate = null;
 var expressionLines = [];
 
-var messageShowDuration = 20000;
-
 /*
  * API Routes
  */
