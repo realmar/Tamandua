@@ -2,6 +2,7 @@ from datetime import datetime
 
 from ..serialization.serializer import Serializer
 from .. import constants
+from .exceptions import ExpressionInvalid
 
 
 class DataFinder():
@@ -105,28 +106,64 @@ class DataFinder():
         This is not a generic solution, although still one that provides the user with great flexibility.
         """
 
-        # TODO: more validation of the expression
+        """
+        Validation of fields
+        """
 
-        if expression.get('fields') is None:
-            # raise
-            pass
+        if not isinstance(expression.get('fields'), list):
+            fields = []
+        else:
+            counter = 0
+            for f in expression['fields']:
+                currField = 'fields.' + str(counter) + ' '
 
-        if not isinstance(expression['fields'], dict):
-            # raise
-            pass
+                if not isinstance(f, dict):
+                    raise ExpressionInvalid(currField + 'is not a dict')
+                else:
+                    if len(f) > 1:
+                        raise ExpressionInvalid(currField + 'has more than 1 key value pair')
+
+                counter += 1
 
         fields = expression['fields']
 
-        # The exception handling with the time conversion should be more fleshed out
-        try:
-            start = datetime.strptime(expression['datetime']['start'], constants.TIME_FORMAT)
-        except Exception as e:
-            start = None
+        """
+        Validation of datetime strings
+        """
 
-        try:
-            end = datetime.strptime(expression['datetime']['end'], constants.TIME_FORMAT)
-        except Exception as e:
-            end = None
+        datetimeRaw = expression.get('datetime')
+        startTimeRaw = None
+        endTimeRaw = None
+
+        start = None
+        end = None
+
+        if datetimeRaw is not None:
+            startTimeRaw = datetimeRaw.get('start')
+            endTimeRaw = datetimeRaw.get('end')
+
+            if not isinstance(startTimeRaw, str) or startTimeRaw.strip() == "":
+                startTimeRaw = None
+
+            if not isinstance(endTimeRaw, str) or endTimeRaw.strip() == "":
+                endTimeRaw = None
+
+        if startTimeRaw is not None:
+            try:
+                start = datetime.strptime(startTimeRaw, constants.TIME_FORMAT)
+            except Exception as e:
+                raise ExpressionInvalid("From datetime format is invalid: " + str(startTimeRaw))
+
+        if endTimeRaw is not None:
+            try:
+                end = datetime.strptime(endTimeRaw, constants.TIME_FORMAT)
+            except Exception as e:
+                raise ExpressionInvalid("To datetime format is invalid: " + str(endTimeRaw))
+
+
+        """
+        Datafiltering
+        """
 
         filteredData = []
 

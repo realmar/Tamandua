@@ -198,6 +198,16 @@ function get_json(route, data, method) {
         dataType: "json"
     })
         .done(function (data) {
+            if("exception" in data) {
+                show_message(
+                    uiresponses.errors.searcherror,
+                    "An error on the server occured:<br>" +
+                    "<span class=\"bold\">Type: </span>" + data["exception"]["type"] + "<br>" +
+                    "<span class=\"bold\">Message: </span>" + data["exception"]["message"]);
+
+                return;
+            }
+
             if(
                 !("columns" in data)            ||
                 !("rows" in data)               ||
@@ -293,10 +303,8 @@ function on_search_button_click() {
         expression.fields.push(h);
     });
 
-    expression.datetime.start = getFromDT;
+    expression.datetime.start = getFromDT();
     expression.datetime.end = getToDT();
-
-    // console.log(expression);
 
     get_json(api.search, expression, methods.post);
 }

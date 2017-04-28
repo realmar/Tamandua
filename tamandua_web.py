@@ -42,6 +42,16 @@ def final_filter(data : dict, d: dict) -> dict:
 
     return data
 
+
+def build_portable_exception_object(e: Exception) -> dict:
+    return {
+        'exception': {
+            'type': e.__class__.__name__,
+            'message': str(e)
+        }
+    }
+
+
 @app.route('/')
 def home():
     return render_template('index.html', fieldnames=dataFinder.availableFields)
@@ -71,17 +81,29 @@ def search():
     }
     """
 
-    data = dataFinder.search(expression)
+    try:
+        data = dataFinder.search(expression)
+    except Exception as e:
+        return jsonify(build_portable_exception_object(e))
+
     return jsonify(final_filter(data, expression))
 
 @app.route('/api/get/all')
 def get_all():
-    data = dataFinder.get_all()
+    try:
+        data = dataFinder.get_all()
+    except Exception as e:
+        return jsonify(build_portable_exception_object(e))
+
     return jsonify(final_filter(data, request.args))
 
 @app.route('/api/get/sample')
 def get_sample():
-    data = dataFinder.get_sample()
+    try:
+        data = dataFinder.get_sample()
+    except Exception as e:
+        return jsonify(build_portable_exception_object(e))
+
     return jsonify(final_filter(data, request.args))
 
 if __name__ == "__main__":
