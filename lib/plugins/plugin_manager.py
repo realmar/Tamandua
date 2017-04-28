@@ -21,12 +21,16 @@ from os.path import split as path_split
 
 from ..containers.data_receiver import DataReceiver
 from .plugin_base import IPlugin
+from ..exceptions import print_exception
+
+# used in annotation
+from ..config import Config
 
 
 class PluginManager():
     """Load, instantiate and use all plugins."""
 
-    def __init__(self, absPluginsPath, config):
+    def __init__(self, absPluginsPath: str, config: Config):
         """"Constructor of PluginManager."""
         self.__limitHosts = config.get('limit_hosts')
         if self.__limitHosts is None:
@@ -40,10 +44,9 @@ class PluginManager():
         self.plugins = None
         self.__load_plugins(absPluginsPath)
 
-    def __load_plugins(self, absPluginsPath):
+    def __load_plugins(self, absPluginsPath: str) -> None:
         """Load all plugins found in the plugins-enabled folder and its subfolders."""
         pluginClasses = []
-
         modules = []
         # find all files in the plugins-enabled subdir
         for absolute, dirs, files in os.walk(absPluginsPath, followlinks=True):
@@ -103,7 +106,7 @@ class PluginManager():
 
         self.plugins = [(info[0], info[1]()) for info in pluginClasses]
 
-    def process_line(self, line):
+    def process_line(self, line: str) -> None:
         """Extract data from one logline."""
         folderToData = {}
 
@@ -128,6 +131,16 @@ class PluginManager():
                         'raw_logline': line
                     }
 
-                folderToData[folderName]['data'].append(plugin.gather_data(line, pre))
+                try:
+                    data = plugin.gather_data(line, pre)
+                except Exception as e:
+                    print_exception(
+                        e,
+                        "Gathering data from logfile line using plugin: " + plugin.__class__.__name__,
+                        "Continue with next plugin",
+                        description="You may need to check the mentioned plugin for errors")
+                    continue
+                else:
+                    folderToData[folderName]['data'].append(data)
 
         self.dataReceiver.add_info(folderToData)

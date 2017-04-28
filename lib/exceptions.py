@@ -1,6 +1,8 @@
 """Custom Exceptions used by the Application."""
 
 import colorama
+import inspect
+import sys
 
 
 class NoSubscriptionRegex(Exception):
@@ -50,3 +52,17 @@ def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, d
     print(colorama.Style.BRIGHT + 'Message: ' + colorama.Style.NORMAL + str(e))
     print(colorama.Style.BRIGHT + 'Description: ' + colorama.Style.NORMAL + description)
     print(colorama.Style.BRIGHT + 'Measure: ' + colorama.Style.NORMAL + measure)
+
+    try:
+        if sys.version_info[1] >= 5:
+            # if the python version is greater than 3.5
+            # we can provide the user with more precise
+            # information where the exception took place
+
+            trace = inspect.trace()[0]
+
+            print(colorama.Style.BRIGHT + 'File: ' + colorama.Style.NORMAL + str(trace[1]))
+            print(colorama.Style.BRIGHT + 'Line: ' + colorama.Style.NORMAL + str(trace[2]))
+            print(colorama.Style.BRIGHT + 'Function: ' + colorama.Style.NORMAL + str(trace[3]))
+    except Exception as e:
+        pass
