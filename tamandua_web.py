@@ -18,6 +18,7 @@ from flask import Flask, render_template, jsonify, request
 from lib.web.data_finder import DataFinder
 from lib.config import Config
 from lib.constants import CONFIGFILE
+from lib.exceptions import print_exception
 
 app = Flask(
     __name__,
@@ -25,7 +26,12 @@ app = Flask(
     static_folder='web/static')
 
 config = Config(os.path.join(BASEDIR, CONFIGFILE), BASEDIR)
-dataFinder = DataFinder(config)
+
+try:
+    dataFinder = DataFinder(config)
+except Exception as e:
+    print_exception(e, "Trying to create an instance of DataFinder", fatal=True)
+    sys.exit(1)
 
 
 def final_filter(data : dict, d: dict) -> dict:

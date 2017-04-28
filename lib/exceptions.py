@@ -1,5 +1,7 @@
 """Custom Exceptions used by the Application."""
 
+import colorama
+
 
 class NoSubscriptionRegex(Exception):
     def __init__(self, clsname):
@@ -36,3 +38,13 @@ class MultipleDataSetsUnknown(Exception):
 class InvalidRegexFlag(Exception):
     def __init__(self, clsname, pattern):
         super().__init__("Invalid regex-flag in: " + clsname + " pattern: " + pattern)
+
+
+def print_exception(e: Exception, cause: str, fatal: bool=False) -> None:
+    preStr = ''
+    if fatal:
+        preStr = 'Fatal'
+
+    print(colorama.Fore.RED + preStr + ' Exception happened:')
+    print(colorama.Style.BRIGHT + 'Cause: ' + colorama.Style.NORMAL + cause)
+    print(colorama.Style.BRIGHT + 'Message: ' + colorama.Style.NORMAL + str(e))
