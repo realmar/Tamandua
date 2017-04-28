@@ -33,6 +33,10 @@ uiresponses = {
         "info": {
             "name": "info",
             "id": "#result-info"
+        },
+        "error": {
+            "name": "error",
+            "id": "#search-error"
         }
     },
 
@@ -41,14 +45,26 @@ uiresponses = {
             "type": "info",
             "id": "#result-info-no-results"
         }
-    }
+    },
+    "errors": {
+        "searcherror": {
+            "type": "error",
+            "id": "#search-error-generic"
+        }
+    },
+
+    "none": ""
 };
 
-function show_message(msg) {
+function show_message(msg, data) {
     var box = $(uiresponses.types[msg.type].id);
     box.each(function () {
         $(this).hide();
     });
+
+    if(data !== "") {
+        $(msg.id).html(data);
+    }
 
     $(msg.id).show();
     box.show();
@@ -56,6 +72,12 @@ function show_message(msg) {
 
 function remove_messages_of_type(t) {
     $(t.id).hide();
+}
+
+function remove_all_messages() {
+    for(var t in uiresponses.types) {
+        remove_messages_of_type(uiresponses.types[t]);
+    }
 }
 
 /*
@@ -108,7 +130,7 @@ function remove_expression_line(item) {
 }
 
 function reset_result_table() {
-    remove_messages_of_type(uiresponses.types.info);
+    remove_all_messages();
     $("#results").find(".remove").each(function () { $(this).remove(); });
     $("#result-container").empty();
     $("#result-container").html("<table id=\"result-table\" data-paging=\"true\" data-filtering=\"true\" data-sorting=\"true\"></table>");
@@ -177,7 +199,7 @@ function get_json(route, data, method) {
                 data["columns"].length === 0    ||
                 data["rows"].length === 0
             ) {
-                show_message(uiresponses.messages.noresults);
+                show_message(uiresponses.messages.noresults, uiresponses.none);
                 return;
             }
 
@@ -185,6 +207,7 @@ function get_json(route, data, method) {
         })
         .fail(function (jqxhr, textStatus, error) {
             console.log("Error in async operation: " + [jqxhr, textStatus, error]);
+            show_message(uiresponses.errors.searcherror, "Failed to get data from server: " + textStatus);
         });
 }
 

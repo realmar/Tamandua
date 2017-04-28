@@ -136,20 +136,36 @@
                     </div>
                 </div>
             </div>
-            <hr class="margin-top-1">
-            <div class="pull-right margin-bottom-1">
-                <div class="btn-group border-right-checkbox" role="group" aria-label="...">
-                    <div class="checkbox checkbox-primary">
-                        <input id="only-important-checkbox" class="styled" type="checkbox" checked="true">
-                        <label for="only-important-checkbox">only important</label>
+
+            <div class="row">
+                <div class="col-xs-12 col-md-12 col-ld-12">
+                    <hr class="margin-top-1">
+                    <div class="pull-right margin-bottom-1">
+                        <div class="btn-group border-right-checkbox" role="group" aria-label="...">
+                            <div class="checkbox checkbox-primary">
+                                <input id="only-important-checkbox" class="styled" type="checkbox" checked="true">
+                                <label for="only-important-checkbox">only important</label>
+                            </div>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="...">
+                            <button id="get-sample-button" type="button" class="btn btn-default">Get Sample Data</button>
+                            <button id="get-all-button" type="button" class="btn btn-default">Get All</button>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="...">
+                            <button id="search-button" type="button" class="btn btn-primary">Search</button>
+                        </div>
                     </div>
                 </div>
-                <div class="btn-group" role="group" aria-label="...">
-                    <button id="get-sample-button" type="button" class="btn btn-default">Get Sample Data</button>
-                    <button id="get-all-button" type="button" class="btn btn-default">Get All</button>
-                </div>
-                <div class="btn-group" role="group" aria-label="...">
-                    <button id="search-button" type="button" class="btn btn-primary">Search</button>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 col-md-12 col-ld-12">
+                    <div style="display: none;" id="search-error">
+                        <hr class="margin-top-1">
+                        <div  class="alert alert-danger">
+                            <p style="display: none;" id="search-error-generic"></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
