@@ -40,11 +40,13 @@ class InvalidRegexFlag(Exception):
         super().__init__("Invalid regex-flag in: " + clsname + " pattern: " + pattern)
 
 
-def print_exception(e: Exception, cause: str, fatal: bool=False) -> None:
+def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, description: str="Not available") -> None:
     preStr = ''
     if fatal:
-        preStr = 'Fatal'
+        preStr = 'Fatal '
 
-    print(colorama.Fore.RED + preStr + ' Exception happened:')
+    print(colorama.Fore.RED + preStr + 'Exception happened:')
     print(colorama.Style.BRIGHT + 'Cause: ' + colorama.Style.NORMAL + cause)
     print(colorama.Style.BRIGHT + 'Message: ' + colorama.Style.NORMAL + str(e))
+    print(colorama.Style.BRIGHT + 'Description: ' + colorama.Style.NORMAL + description)
+    print(colorama.Style.BRIGHT + 'Measure: ' + colorama.Style.NORMAL + measure)

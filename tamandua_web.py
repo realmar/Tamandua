@@ -30,7 +30,7 @@ config = Config(os.path.join(BASEDIR, CONFIGFILE), BASEDIR)
 try:
     dataFinder = DataFinder(config)
 except Exception as e:
-    print_exception(e, "Trying to create an instance of DataFinder", fatal=True)
+    print_exception(e, "Trying to create an instance of DataFinder", "Exiting application", fatal=True)
     sys.exit(1)
 
 

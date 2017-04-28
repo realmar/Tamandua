@@ -24,6 +24,7 @@ from lib.plugins.plugin_manager import PluginManager
 from lib.config import Config
 from lib.serialization.serializer import Serializer
 from lib.constants import CONFIGFILE
+from lib.exceptions import print_exception
 
 
 def main():
@@ -54,14 +55,24 @@ def main():
     try:
         config = Config(args.configfile, BASEDIR)
     except FileNotFoundError as e:
-        print('ERROR: configfile "' + args.configfile + '" does not exists.')
+        print_exception(
+            e,
+            "Trying to read the config",
+            "Exiting application",
+            description="The configfile was not found",
+            fatal=True)
         sys.exit(6)
     except JSONDecodeError as e:
-        print('There is a syntax error in your config:')
+        print_exception(
+            e,
+            "Trying to parse the config",
+            "Exiting application",
+            description="Syntax error in the configfile",
+            fatal=True)
         print(e)
         sys.exit(7)
     except Exception as e:
-        print(e)
+        print_exception(e, "Trying to read the config", "Exiting application", fatal=True)
         sys.exit(8)
 
     try:
@@ -69,7 +80,11 @@ def main():
             absPluginsPath=os.path.join(BASEDIR, 'plugins-enabled'),
             config=config)
     except Exception as e:
-        print(e)
+        print_exception(
+            e,
+            "Trying to create an instance of PluginManager",
+            "Exiting Application",
+            fatal=True)
         sys.exit(1)
 
     for logfile in args.files:
@@ -78,14 +93,17 @@ def main():
                 for line in f:
                     pluginManager.process_line(line)
             except UnicodeDecodeError as e:
-                print('WARNING: The encoding of ' + logfile + ' could not be determined')
-                print(logfile + ' will be (partially) omitted')
-                print(e)
-                print('\n')
+                print_exception(
+                    e,
+                    "Trying to read a line from the given logfile.",
+                    "Continue with the next line")
                 continue
             except Exception as e:
-                print('ERROR:')
-                print(e)
+                print_exception(
+                    e,
+                    "Trying to read a line from the given logfile",
+                    "Quit application",
+                    fatal=True)
                 sys.exit(9)
 
     # print data to stdout
