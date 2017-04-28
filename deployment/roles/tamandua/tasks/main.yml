@@ -14,11 +14,6 @@
     accept_hostkey: yes
     clone: yes
 
-#- name: copy mock log files into opt
-#  copy:
-#    src: mock.log
-#    dest: /opt
-
 - name: run tamandua mail parser
   command: /opt/Tamandua/tamandua_parser.py /opt/Tamandua/mock_logs/extern-intern_to_intern.log --no-print creates=/opt/Tamandua/mails.data
 
