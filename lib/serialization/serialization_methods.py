@@ -7,11 +7,15 @@ from ..interfaces import ISerializationMethod
 
 
 class BaseSerialization(ISerializationMethod):
+    """Base class of all serialization methods."""
+
     def __init__(self, path):
         self.path = path
 
 
 class JSONSerialization(BaseSerialization):
+    """Serializes data to and from JSON."""
+
     def save(self, data: object) -> None:
         """Serialize data."""
         with open(self.path, 'w') as f:
@@ -24,6 +28,8 @@ class JSONSerialization(BaseSerialization):
 
 
 class PickleSerialization(BaseSerialization):
+    """Serializes data to and from a python object store using pickle."""
+
     def save(self, data: object) -> None:
         """Serialize data."""
         with open(self.path, 'wb') as f:

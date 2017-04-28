@@ -1,3 +1,6 @@
+"""Module which contains the serialization factory."""
+
+
 from os.path import join as path_join
 
 from .serialization_methods import JSONSerialization, PickleSerialization, ISerializationMethod
@@ -5,6 +8,8 @@ from .exceptions import SerializationMethodNotAvailable
 
 
 class SerializationFactory():
+    """SerializationFactory creates serialization methods."""
+
     _serializationMethods = {
         'json': JSONSerialization,
         'pyobj-store': PickleSerialization
@@ -12,10 +17,12 @@ class SerializationFactory():
 
     @classmethod
     def get_methods(cls):
+        """Return a list of all serialization methods as strings."""
         return list(cls._serializationMethods.keys())
 
     @classmethod
     def get_serializer(cls, config):
+        """Return an instance of a serialization method."""
         path = path_join(config.get('basepath'), config.get('store_path'))
 
         method = cls\

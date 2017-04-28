@@ -1,3 +1,6 @@
+"""Module which contains the DataContainer class."""
+
+
 from datetime import datetime
 import copy
 import colorama
@@ -7,8 +10,9 @@ from ..interfaces import IDataContainer, ISerializable
 from .. import constants
 from ..plugins.plugin_base import RegexFlags
 
+
 class MailContainer(IDataContainer, ISerializable):
-    """Container which aggregates and stores mail objects. This container is optimized for reduced runtime."""
+    """Container which aggregates and stores mail objects."""
 
     def __init__(self):
         self._map_qid_mxin = {}
@@ -21,6 +25,7 @@ class MailContainer(IDataContainer, ISerializable):
 
     @property
     def subscribedFolder(self) -> str:
+        """Return the folder name from which we want the plugin data."""
         return "mail-aggregation"
 
     def _merge_data(self, target: dict, origin: dict) -> None:
@@ -74,6 +79,7 @@ class MailContainer(IDataContainer, ISerializable):
                     continue
 
     def _aggregate(self, id: str, target: dict, data: dict, logline: str) -> None:
+        """Aggregate data."""
         if id == constants.NOQUEUE:
             data[constants.LOGLINES] = [logline]
 
@@ -97,6 +103,8 @@ class MailContainer(IDataContainer, ISerializable):
             target[id][constants.LOGLINES].append(logline)
 
     def add_info(self, data: dict) -> None:
+        """Add data to the container."""
+
         # if we add new data but have already generate some integrity stats
         # then we need to erase them, as those stats become out dated
         if len(self._integrity_stats) > 0:
@@ -392,6 +400,8 @@ class MailContainer(IDataContainer, ISerializable):
         self._integrity_stats['total_mxin'] = len(self._map_qid_mxin)
 
     def represent(self) -> None:
+        """Print the contents of this container in a human readable format to stdout."""
+
         def print_title(**kv):
             finalStr = '---- '
             for k, v in kv.items():
@@ -447,6 +457,7 @@ class MailContainer(IDataContainer, ISerializable):
                 print_list(constants.LOGLINES, loglines)
 
     def print_integrity_report(self) -> None:
+        """Print the integrity report to stdout."""
         print('\n========' + colorama.Style.BRIGHT + ' Integrity Report ' + colorama.Style.NORMAL + '========')
 
         if len(self._integrity_stats) == 0:

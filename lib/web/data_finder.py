@@ -1,3 +1,5 @@
+"""Module used by the webapp: backend to search the data."""
+
 from datetime import datetime
 
 from ..serialization.serializer import Serializer
@@ -9,6 +11,8 @@ from ..config import Config
 
 
 class DataFinder():
+    """DataFinder searches given data by fields and/or time."""
+
     def __init__(self, config: Config) -> None:
         self._config = config
         self._data = []

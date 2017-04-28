@@ -1,7 +1,12 @@
+"""Module which contains the base plugin for all mail-aggregation plugins."""
+
+
 from .plugin_base import PluginBase
 
 
 class SimplePlugin(PluginBase):
+    """Simplifies the implementation of PluginBase."""
+
     def _format_hostname(self, hostname: str) -> str:
         return hostname.replace('-', '')
 

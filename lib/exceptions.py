@@ -43,6 +43,8 @@ class InvalidRegexFlag(Exception):
 
 
 def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, description: str="Not available") -> None:
+    """Prints an exception and additional information."""
+
     preStr = ''
     if fatal:
         preStr = 'Fatal '
@@ -72,6 +74,8 @@ def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, d
 
 
 def print_warning(msg):
+    """Prints a warning."""
+
     print(
         colorama.Style.BRIGHT + colorama.Fore.YELLOW +
         'Warning: ' +
