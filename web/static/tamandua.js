@@ -142,19 +142,24 @@ function reset_result_table() {
 
 /* expression builder */
 
-function on_add_expression_line_button_click() {
-    var addLine = true;
+function has_empty_expression_fields() {
+    var hasEmptyFields = false;
 
-    // Check if an expression doesn't have any value
-    // if so, then we will not create a new expression line (return)
     $.each(expressionLines, function () {
-        expInput = $(this[0]).find(".expression-input");
+        var expInput = $(this[0]).find(".expression-input");
         if(!expInput.val()) {
-            addLine = false;
+            hasEmptyFields = true;
         }
     });
 
-    if(addLine) {
+    return hasEmptyFields;
+}
+
+function on_add_expression_line_button_click() {
+    // Check if an expression doesn't have any value
+    // if so, then we will not create a new expression line (return)
+
+    if(!has_empty_expression_fields()) {
         add_expression_line();
     }
 }
@@ -220,12 +225,44 @@ function on_get_all_button_click() {
 }
 
 function on_search_button_click() {
+    /*
+     * useful clojures for this function
+     */
+
+    var getDT = function (root, item) {
+        if(root.is(":visible")) {
+            try {
+                return item.datetimepicker('date').format("YYYY/MM/DD HH:mm:ss");
+            } catch (e) {
+                // console.log(e);
+                return "";
+            }
+        }else{
+            return "";
+        }
+    };
+
+    var getFromDT = function () {
+        return getDT($("#dt-from-search-mask"), $("#dt-from-picker"));
+    };
+
+    var getToDT = function () {
+        return getDT($("#dt-to-search-mask"), $("#dt-to-picker"));
+    };
 
     /*
      * Validate Fields
      */
 
-    // TODO: validate fields
+    if(has_empty_expression_fields()) {
+        show_message(uiresponses.errors.searcherror, "Some Field Values are empty, please delete them or fill in content.");
+        return;
+    }
+
+    if(expressionLines.length === 0 && !getFromDT() && !getToDT()) {
+        show_message(uiresponses.errors.searcherror, "The searchmask is empty. Specify some search criteria.");
+        return;
+    }
 
     if(expressionLines === null) {
         return;
@@ -256,21 +293,8 @@ function on_search_button_click() {
         expression.fields.push(h);
     });
 
-    var getDT = function (root, item) {
-        if(root.is(":visible")) {
-            try {
-                return item.datetimepicker('date').format("YYYY/MM/DD HH:mm:ss");
-            } catch (e) {
-                // console.log(e);
-                return "";
-            }
-        }else{
-            return "";
-        }
-    };
-
-    expression.datetime.start = getDT($("#dt-from-search-mask"), $("#dt-from-picker"));
-    expression.datetime.end = getDT($("#dt-to-search-mask"), $("#dt-to-picker"));
+    expression.datetime.start = getFromDT;
+    expression.datetime.end = getToDT();
 
     // console.log(expression);
 
