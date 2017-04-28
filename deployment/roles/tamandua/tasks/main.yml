@@ -1,2 +1,34 @@
+- name: clone tamandua git repository into opt
+  git:
+    repo: git@gitlab.phys.ethz.ch:amartako/Tamandua.git
+    dest: /opt
+    accept_hostkey: yes
+    clone: yes
+
+- name: copy mock log files into opt
+  copy:
+    src: mock.log
+    dest: /opt
+
+- name: run tamandua mail parser
+  command: /opt/Tamandua/tamandua_parser.py /opt/mock.log creates=/opt/Tamandua/mails.data
+
 - name: install apache2 package
-  apt: pkg=apache2
+  package:
+    name: apache2
+    state: latest
+
+- name: populate apache2 config
+  copy:
+    src: tamandua.conf
+    dest: /etc/apache2/sites-available/tamandua.conf
+
+- name: enable wsgi apache2 module
+  apache2_module:
+    name: wsgi
+    state: present
+
+- name: enable tamandua apache2 site
+  command: a2ensite tamandua.conf creates=/etc/apache2/sites-enabled/tamandua.conf
+  notify:
+    - restart apache2

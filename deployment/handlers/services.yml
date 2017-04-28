@@ -1,4 +1,5 @@
 - name: restart apache2
   service: name=apache2 state=restarted
+
 - name: restart ssh
   service: name=ssh state=restarted
