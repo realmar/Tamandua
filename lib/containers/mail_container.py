@@ -39,9 +39,18 @@ class MailContainer(IDataContainer, ISerializable):
                             value = list(set(value))
 
                             if target[key] not in value:
+                                # WARNING: incompatible with python 3.4:
+                                # SyntaxError: can use starred expression only as assignment target
+                                #
                                 #                            unpack values in value
                                 #                               v
-                                target[key] = [target[key], *value]
+                                # target[key] = [target[key], *value]
+
+                                # following is compatible for python 3.4 and onwards
+                                tmp = [target[key]]
+                                tmp.extend(value)
+
+                                target[key] = tmp
                         else:
                             target[key] = [target[key], value]
                     else:
