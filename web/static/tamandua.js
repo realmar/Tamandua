@@ -79,6 +79,18 @@ function remove_all_messages() {
 }
 
 /*
+ * UI Loading
+ */
+
+function show_loading_spinner() {
+    $("#search-loading").show();
+}
+
+function hide_loading_spinner() {
+    $("#search-loading").hide();
+}
+
+/*
  * Setup Functions
  */
 
@@ -192,6 +204,8 @@ function get_json(route, data, method) {
         data = JSON.stringify(data)
     }
 
+    show_loading_spinner();
+
     $.ajax({
         url: route,
         type: method,
@@ -200,6 +214,8 @@ function get_json(route, data, method) {
         dataType: "json"
     })
         .done(function (data) {
+            hide_loading_spinner();
+
             if("exception" in data) {
                 show_message(
                     uiresponses.errors.searcherror,
@@ -223,6 +239,7 @@ function get_json(route, data, method) {
             $("#result-table").footable(data);
         })
         .fail(function (jqxhr, textStatus, error) {
+            hide_loading_spinner();
             console.log("Error in async operation: " + [jqxhr, textStatus, error]);
             show_message(uiresponses.errors.searcherror, "Failed to get data from server: " + textStatus);
         });
