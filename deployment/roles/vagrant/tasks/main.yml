@@ -1,0 +1,43 @@
+- name: update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+- name: install common tools
+  apt: pkg={{ item }}
+  with_items:
+    - bash-completion
+    - git
+    - htop
+    - httpie
+    - iputils-ping
+    - lsb-release
+    - lsof
+    - ncdu
+    - rsync
+    - tree
+    - vim
+    - wget
+- name: remove unwanted packages
+  apt: pkg={{ item }} state=absent purge=yes
+  with_items:
+    - vim-tiny
+
+- name: enable syntax highlighting in vim
+  lineinfile:
+    dest: /root/.vimrc
+    regexp: '^syn'
+    line: 'syntax on'
+    create: true
+
+- name: copy user's ssh key to root's authorized_keys
+  authorized_key: user=root key="{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+- name: disable password authentication for ssh
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp='PasswordAuthentication (yes|no)'
+    line='PasswordAuthentication no'
+  notify: restart ssh
+- name: restrict ssh for root to keys only
+  lineinfile: >
+    dest=/etc/ssh/sshd_config
+    regexp=^PermitRootLogin
+    line='PermitRootLogin without-password'
+  notify: restart ssh

@@ -1,0 +1,13 @@
+- hosts: vagrant
+  roles:
+    - { role: vagrant, tags: vagrant }
+  handlers:
+    - include: handlers/services.yml
+      static: yes
+
+- hosts: development:production
+  roles:
+    - { role: tamandua, tags: tamandua }
+  handlers:
+    - include: handlers/services.yml
+      static: yes
