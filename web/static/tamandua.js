@@ -4,6 +4,8 @@
 var expressionLineTemplate = null;
 var expressionLines = [];
 
+var messageShowDuration = 20000;
+
 /*
  * API Routes
  */
@@ -21,6 +23,40 @@ var methods = {
     'post': 'POST',
     'get': 'GET'
 };
+
+/*
+ * Errors/Messaging
+ */
+
+uiresponses = {
+    "types": {
+        "info": {
+            "name": "info",
+            "id": "#result-info"
+        }
+    },
+
+    "messages": {
+        "noresults": {
+            "type": "info",
+            "id": "#result-info-no-results"
+        }
+    }
+};
+
+function show_message(msg) {
+    var box = $(uiresponses.types[msg.type].id);
+    box.each(function () {
+        $(this).hide();
+    });
+
+    $(msg.id).show();
+    box.show();
+}
+
+function remove_messages_of_type(t) {
+    $(t.id).hide();
+}
 
 /*
  * Setup Functions
@@ -72,6 +108,7 @@ function remove_expression_line(item) {
 }
 
 function reset_result_table() {
+    remove_messages_of_type(uiresponses.types.info);
     $("#results").find(".remove").each(function () { $(this).remove(); });
     $("#result-container").empty();
     $("#result-container").html("<table id=\"result-table\" data-paging=\"true\" data-filtering=\"true\" data-sorting=\"true\"></table>");
@@ -134,7 +171,13 @@ function get_json(route, data, method) {
         dataType: "json"
     })
         .done(function (data) {
-            if(data['columns'] === undefined || data['rows'] === undefined) {
+            if(
+                !("columns" in data)            ||
+                !("rows" in data)               ||
+                data["columns"].length === 0    ||
+                data["rows"].length === 0
+            ) {
+                show_message(uiresponses.messages.noresults);
                 return;
             }
 
