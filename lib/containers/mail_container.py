@@ -243,7 +243,7 @@ class MailContainer(IDataContainer, ISerializable):
                 return isComplete
 
             action = mail.get('action')
-            if action is not None and action == 'hold':
+            if action is not None and (action == 'hold' or action == 'reject'):
                 mail[constants.COMPLETE] = True
                 mail[constants.DESTINATION] = constants.DESTINATION_HOLD
 

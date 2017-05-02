@@ -26,7 +26,7 @@ class Smtpd(SimplePlugin):
             (re.compile(r':\s(?P<' + constants.HOSTNAME_QID + r'>[^:]*):\sclient'), (RegexFlags.STORETIME,)),
 
             # reject RCPT and VRFY
-            re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>NOQUEUE):\s
+            re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
                            (?P<action>reject):\s
                            (?P<rejectstage>[^\s]*)\sfrom\s
                            (?P<connectclient>[^\[]*)\[(?P<connectip>[^\]]*)\]:\s
