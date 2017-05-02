@@ -2,7 +2,7 @@
 
 
 from datetime import datetime
-import copy
+# import copy
 import colorama
 colorama.init(autoreset=True)
 
@@ -265,7 +265,7 @@ class MailContainer(IDataContainer, ISerializable):
                     'spamscore',
                     'spamrequiredscore',
                     'spamdesc',
-                    'spamuser'
+                    'spamuser',
                     'spamuid',
                     'size'
                 ]):
