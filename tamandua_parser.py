@@ -45,6 +45,12 @@ def main():
         type=str,
         help='Path to the configfile')
     parser.add_argument(
+        '--print-only-integrity',
+        dest='printonlyintegrity',
+        default=False,
+        action='store_true',
+        help='Only print the integrity stats.')
+    parser.add_argument(
         '--no-print',
         dest='noprint',
         default=False,
@@ -120,7 +126,8 @@ def main():
 
         if not args.noprint:
             try:
-                container.represent()                   # represent data
+                if not args.printonlyintegrity:
+                    container.represent()                   # represent data
                 container.print_integrity_report()      # print integrity stats
 
                 print('\n')
