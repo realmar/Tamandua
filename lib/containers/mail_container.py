@@ -197,7 +197,9 @@ class MailContainer(IDataContainer, ISerializable):
         
         only_messageid
             Count of mails where only the messageid is known
-            
+        
+        missing_fields
+            Counts fields which are missing from incomplete Mails
         """
         self._integrity_stats = {
             'total_mails': 0,
@@ -209,7 +211,9 @@ class MailContainer(IDataContainer, ISerializable):
             'only_messageid': 0,
 
             'complete_mails': 0,
-            'incomplete_mails': 0
+            'incomplete_mails': 0,
+
+            'missing_fields': {}
         }
 
         self._final_data = []
@@ -224,11 +228,19 @@ class MailContainer(IDataContainer, ISerializable):
 
         def verify_fields(mail):
             def check_fields(requiredFields) -> bool:
+                isComplete = True
+
                 for field in requiredFields:
                     if mail.get(field) is None:
-                        return False
+                        isComplete = False
 
-                return True
+                        d = self._integrity_stats['missing_fields']
+                        if not isinstance(d.get(field), int):
+                            d[field] = 1
+                        else:
+                            d[field] += 1
+
+                return isComplete
 
             action = mail.get('action')
             if action is not None and action == 'hold':
@@ -495,8 +507,15 @@ class MailContainer(IDataContainer, ISerializable):
                 'Please run ' + self.__class__.__name__ + '.build_final() to generate integrity data.'
             )
         else:
+            def p(indent: int, key: str, value: str) -> None:
+                print(' ' * indent + colorama.Style.BRIGHT + key + ': ' + colorama.Style.NORMAL + str(value))
+
             for key, value in sorted(self._integrity_stats.items(), key=lambda x: x[0]):
-                print(colorama.Style.BRIGHT + key + ': ' + colorama.Style.NORMAL + str(value))
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        p(4, k, v)
+                else:
+                    p(0, key, value)
 
     def get_serializable_data(self) -> object:
         """Return data which should and can be serialized."""
