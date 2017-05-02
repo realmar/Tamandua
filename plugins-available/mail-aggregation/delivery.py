@@ -10,7 +10,7 @@ class Delivery(SimplePlugin):
     """Delivery mail aggregation plugin."""
 
     def _define_subscription_regex(self):
-        self._subscriptionRegex = re.compile(' postfix\/(smtp|local)\[')
+        self._subscriptionRegex = re.compile(' postfix\/(smtp|local|pipe)\[')
 
     def _define_data_regex(self):
         self._dataRegex = [
