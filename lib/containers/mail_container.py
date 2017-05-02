@@ -361,8 +361,6 @@ class MailContainer(IDataContainer, ISerializable):
         # collect incomplete data --> mails which do not have a queueid on phd-mxin
         #
 
-        known_msgids_imap = {}
-
         #
         # get imap unknown
         #
@@ -396,7 +394,7 @@ class MailContainer(IDataContainer, ISerializable):
 
 
             if msgid_imap is not None:
-                known_msgids_imap[msgid_imap] = True
+                known_msgids[msgid_imap] = True
                 msgid_mail = self._map_msgid.get(msgid_imap)
 
                 if msgid_mail is not None:
@@ -411,7 +409,7 @@ class MailContainer(IDataContainer, ISerializable):
         #
 
         for msgid, mail in self._map_msgid.items():
-            if known_msgids_imap.get(msgid) is not None:
+            if known_msgids.get(msgid) is not None:
                 continue
 
             self._integrity_stats['incomplete_mails'] += 1
