@@ -27,11 +27,13 @@ class Smtpd(SimplePlugin):
 
             # reject
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>NOQUEUE):\s
-                            (?P<action>reject).+?
-                            Recipient\saddress\srejected:\s
-                                (?P<rejectreason>[^;]*);\s
-                            from=<(?P<sender>[^>]*)>\s
-                            to=<(?P<recipient>[^>]*)''', re.X),
+                           (?P<action>reject):\s
+                           (?P<rejectstage>[^\s]*)\sfrom\s
+                           (?P<connectclient>[^\[]*)\[(?P<connectip>[^\]]*)\]:\s
+                           (?P<statuscode>[^\s]*)[^\:]*\:\s
+                           (?P<rejectreason>[^\;]*)\;\s
+                           from=<(?P<sender>[^>]*)>\s
+                           to=<(?P<recipient>[^>]*)''', re.X),
 
             # hold
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s

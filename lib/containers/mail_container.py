@@ -288,68 +288,74 @@ class MailContainer(IDataContainer, ISerializable):
                     m[constants.COMPLETE] = True
                     m[constants.DESTINATION] = constants.DESTINATION_REJECT
 
-                    self._final_data.append(m)
-            else:
-                finalMail = copy.deepcopy(mail)
-
-                msgid = mail.get(constants.MESSAGEID)
-                qid_imap = mail.get(constants.PHD_IMAP_QID)
-
-                # it may be possible to have multiple queueids which map to the same mail on phd-mxin
-                # this is when a user sends a mail to multiple persons at the same time.
-                #
-                # we solve that by always assuming multiple queueids on phd-imap which map to one
-                # queueid on phd-mxin --> if there is only one qid then we will just put it into
-                # a list (where this qid is the only item)
-
-                if not isinstance(qid_imap, list):
-                    qids_imap = [qid_imap]
-                else:
-                    qids_imap = qid_imap
-
-                for qid_imap in qids_imap:
-                    data_imap = self._map_qid_imap.get(qid_imap)
-
-                    # collect data for corresponding queueid on phd-imap
-
-                    if qid_imap is not None:
-                        known_qids_imap[qid_imap] = True
-
-                    if data_imap is not None:
-                        if msgid is None:
-                            msgid = data_imap.get(constants.MESSAGEID)
-
-                        self._merge_data(finalMail, data_imap)
-                    else:
-                        if msgid is None:
-                            self._integrity_stats['only_mxin_qid'] += 1
-
-                    # collect data for corresponding messageid
-
-                    if msgid is not None:
-                        if isinstance(msgid, list):
-                            msgids = msgid
-                        else:
-                            msgids = [msgid]
-
-                        for msgid in msgids:
-                            known_msgids[msgid] = True
-
-                            data_msgid = self._map_msgid.get(msgid)
-
-                            if data_msgid is not None:
-                                self._merge_data(finalMail, data_msgid)
-
-                # determine destination and verify integrity
-
-                verify_fields(finalMail)
-
-                if not finalMail[constants.COMPLETE]:
-                    self._integrity_stats['incomplete_mails'] += 1
-                else:
                     self._integrity_stats['complete_mails'] += 1
+                    self._integrity_stats['only_mxin_qid'] += 1
 
-                self._final_data.append(finalMail)
+                    self._final_data.append(m)
+
+                continue
+
+            # finalMail = copy.deepcopy(mail)
+            finalMail = mail
+
+            msgid = mail.get(constants.MESSAGEID)
+            qid_imap = mail.get(constants.PHD_IMAP_QID)
+
+            # it may be possible to have multiple queueids which map to the same mail on phd-mxin
+            # this is when a user sends a mail to multiple persons at the same time.
+            #
+            # we solve that by always assuming multiple queueids on phd-imap which map to one
+            # queueid on phd-mxin --> if there is only one qid then we will just put it into
+            # a list (where this qid is the only item)
+
+            if not isinstance(qid_imap, list):
+                qids_imap = [qid_imap]
+            else:
+                qids_imap = qid_imap
+
+            for qid_imap in qids_imap:
+                data_imap = self._map_qid_imap.get(qid_imap)
+
+                # collect data for corresponding queueid on phd-imap
+
+                if qid_imap is not None:
+                    known_qids_imap[qid_imap] = True
+
+                if data_imap is not None:
+                    if msgid is None:
+                        msgid = data_imap.get(constants.MESSAGEID)
+
+                    self._merge_data(finalMail, data_imap)
+                else:
+                    if msgid is None:
+                        self._integrity_stats['only_mxin_qid'] += 1
+
+                # collect data for corresponding messageid
+
+                if msgid is not None:
+                    if isinstance(msgid, list):
+                        msgids = msgid
+                    else:
+                        msgids = [msgid]
+
+                    for msgid in msgids:
+                        known_msgids[msgid] = True
+
+                        data_msgid = self._map_msgid.get(msgid)
+
+                        if data_msgid is not None:
+                            self._merge_data(finalMail, data_msgid)
+
+            # determine destination and verify integrity
+
+            verify_fields(finalMail)
+
+            if not finalMail[constants.COMPLETE]:
+                self._integrity_stats['incomplete_mails'] += 1
+            else:
+                self._integrity_stats['complete_mails'] += 1
+
+            self._final_data.append(finalMail)
 
         #
         # collect incomplete data --> mails which do not have a queueid on phd-mxin
@@ -357,42 +363,66 @@ class MailContainer(IDataContainer, ISerializable):
 
         known_msgids_imap = {}
 
+        #
         # get imap unknown
+        #
 
         for qid, mail in self._map_qid_imap.items():
-            if known_qids_imap.get(qid) is None:
-                self._integrity_stats['incomplete_mails'] += 1
-                self._integrity_stats['total_no_mxin'] += 1
-                msgid_imap = mail.get(constants.MESSAGEID)
+            if known_qids_imap.get(qid) is not None:
+                continue
 
-                incompleteMail = copy.deepcopy(mail)
-                verify_fields(incompleteMail)
-                incompleteMail[constants.COMPLETE] = False
+            if isinstance(mail, list):
+                # rejected mails on phd-imap (mailman)
+                for m in mail:
+                    m[constants.COMPLETE] = True
+                    m[constants.DESTINATION] = constants.DESTINATION_REJECT
 
-
-                if msgid_imap is not None:
-                    known_msgids_imap[msgid_imap] = True
-                    msgid_mail = self._map_msgid.get(msgid_imap)
-
-                    if msgid_mail is not None:
-                        self._merge_data(incompleteMail, msgid_mail)
-                else:
+                    self._integrity_stats['complete_mails'] += 1
+                    self._integrity_stats['total_no_mxin'] += 1
                     self._integrity_stats['only_imap_qid'] += 1
 
-                self._final_data.append(incompleteMail)
+                    self._final_data.append(m)
 
+                continue
+
+            self._integrity_stats['incomplete_mails'] += 1
+            self._integrity_stats['total_no_mxin'] += 1
+            msgid_imap = mail.get(constants.MESSAGEID)
+
+            # incompleteMail = copy.deepcopy(mail)
+            incompleteMail = mail
+            verify_fields(incompleteMail)
+            incompleteMail[constants.COMPLETE] = False
+
+
+            if msgid_imap is not None:
+                known_msgids_imap[msgid_imap] = True
+                msgid_mail = self._map_msgid.get(msgid_imap)
+
+                if msgid_mail is not None:
+                    self._merge_data(incompleteMail, msgid_mail)
+            else:
+                self._integrity_stats['only_imap_qid'] += 1
+
+            self._final_data.append(incompleteMail)
+
+        #
         # get messageid unknown
+        #
 
         for msgid, mail in self._map_msgid.items():
-            if known_msgids_imap.get(msgid) is None:
-                self._integrity_stats['incomplete_mails'] += 1
-                self._integrity_stats['only_messageid'] += 1
+            if known_msgids_imap.get(msgid) is not None:
+                continue
 
-                incompleteMail = copy.deepcopy(mail)
-                verify_fields(incompleteMail)
-                incompleteMail[constants.COMPLETE] = False
+            self._integrity_stats['incomplete_mails'] += 1
+            self._integrity_stats['only_messageid'] += 1
 
-                self._final_data.append(incompleteMail)
+            # incompleteMail = copy.deepcopy(mail)
+            incompleteMail = mail
+            verify_fields(incompleteMail)
+            incompleteMail[constants.COMPLETE] = False
+
+            self._final_data.append(incompleteMail)
 
         # global stats
 
