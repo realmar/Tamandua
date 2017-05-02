@@ -25,15 +25,23 @@ class Smtpd(SimplePlugin):
 
             (re.compile(r':\s(?P<' + constants.HOSTNAME_QID + r'>[^:]*):\sclient'), (RegexFlags.STORETIME,)),
 
-            # reject
+            # reject RCPT and VRFY
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>NOQUEUE):\s
                            (?P<action>reject):\s
                            (?P<rejectstage>[^\s]*)\sfrom\s
                            (?P<connectclient>[^\[]*)\[(?P<connectip>[^\]]*)\]:\s
                            (?P<statuscode>[^\s]*)[^\:]*\:\s
                            (?P<rejectreason>[^\;]*)\;\s
-                           from=<(?P<sender>[^>]*)>\s
+                           (from=<(?P<sender>[^>]*)>\s)?        # VRFY has no from field
                            to=<(?P<recipient>[^>]*)''', re.X),
+
+            # reject MAIL
+            re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>NOQUEUE):\s
+                       (?P<action>reject):\s
+                       (?P<rejectstage>[^\s]*)\sfrom\s
+                       (?P<connectclient>[^\[]*)\[(?P<connectip>[^\]]*)\]:\s
+                       (?P<statuscode>[^\s]*)\s[^\s]*\s
+                       (?P<rejectreason>[^;]*)''', re.X),
 
             # hold
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
