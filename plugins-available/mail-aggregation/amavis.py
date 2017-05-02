@@ -31,5 +31,11 @@ class Amavis(SimplePlugin):
                            (?P<sender>[^>]*)>\s->\s<
                            (?P<recipient>[^>]*)>.+?Queue-ID:\s
                            (?P<''' + constants.PHD_MXIN_QID + r'''>[^,]*),\sMessage-ID:\s<
-                           (?P<''' + constants.MESSAGEID + r'''>[^>]*)''', re.X)
+                           (?P<''' + constants.MESSAGEID + r'''>[^>]*)''', re.X),
+
+            # Truncated line (eg. when the lines contains a huge amount of recipients)
+
+            re.compile(r'''Queue-ID:\s(?P<''' + constants.PHD_MXIN_QID + r'''>[^,]*),\s
+                           Message-ID:\s<(?P<''' + constants.MESSAGEID + r'''>[^>]*)?(.+?
+                           queued_as:\s(?P<''' + constants.PHD_IMAP_QID + r'''>[^,]*))''', re.X)
         ]
