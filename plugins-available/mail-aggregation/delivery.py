@@ -16,6 +16,7 @@ class Delivery(SimplePlugin):
         self._dataRegex = [
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
                            to=<(?P<recipient>[^>]*)>,\s
+                           (orig_to=<(?P<orig_recipient>[^>]*)>,\s)?
                            relay=(?P<deliveryrelay>[^,]*).+?
                            status=(?P<deliverystatus>[^\s]*)\s\(
                            (?P<deliverymessage>[^\)]*)''', re.X)
