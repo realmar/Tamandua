@@ -1,10 +1,12 @@
 """Module which contains the serialization factory."""
 
-
 from os.path import join as path_join
 
 from .serialization_methods import JSONSerialization, PickleSerialization, ISerializationMethod
 from .exceptions import SerializationMethodNotAvailable
+
+# used in annotation
+from ..config import Config
 
 
 class SerializationFactory():
@@ -16,12 +18,12 @@ class SerializationFactory():
     }
 
     @classmethod
-    def get_methods(cls):
+    def get_methods(cls) -> list:
         """Return a list of all serialization methods as strings."""
         return list(cls._serializationMethods.keys())
 
     @classmethod
-    def get_serializer(cls, config):
+    def get_serializer(cls, config: Config) -> ISerializationMethod:
         """Return an instance of a serialization method."""
         path = path_join(config.get('basepath'), config.get('store_path'))
 

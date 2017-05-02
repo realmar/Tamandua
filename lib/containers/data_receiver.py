@@ -1,9 +1,9 @@
 """DataReceiver receives extracted data from logfiles and distributes them between IDataContainers."""
 
-
 from .statistics import Statistics
 from .mail_container import MailContainer
 from ..exceptions import print_warning
+
 
 class DataReceiver():
     """Distribute extracted data from the loglines between data containers."""

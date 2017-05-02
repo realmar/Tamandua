@@ -1,6 +1,5 @@
 """Module which contains the base plugin for all mail-aggregation plugins."""
 
-
 from .plugin_base import PluginBase
 
 
@@ -10,7 +9,7 @@ class SimplePlugin(PluginBase):
     def _format_hostname(self, hostname: str) -> str:
         return hostname.replace('-', '')
 
-    def _specify_regex_group_name(self, dataRegexMatches, preRegexMatches):
+    def _specify_regex_group_name(self, dataRegexMatches: dict, preRegexMatches: dict) -> dict:
         newDataRegexMatches = {}
 
         hostname = self._format_hostname(preRegexMatches.get('hostname'))

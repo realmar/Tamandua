@@ -1,6 +1,5 @@
 """This package contains the PluginManager."""
 
-
 # used to dynamically import the plugins
 import inspect
 import os

@@ -9,7 +9,7 @@ from ..interfaces import ISerializationMethod
 class BaseSerialization(ISerializationMethod):
     """Base class of all serialization methods."""
 
-    def __init__(self, path):
+    def __init__(self, path: str):
         self.path = path
 
 

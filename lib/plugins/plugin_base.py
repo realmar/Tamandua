@@ -2,6 +2,7 @@
 
 import abc
 from enum import Enum
+
 from ..exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
 from ..interfaces import IPlugin
 

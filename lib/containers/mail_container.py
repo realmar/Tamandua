@@ -1,6 +1,5 @@
 """Module which contains the DataContainer class."""
 
-
 from datetime import datetime
 # import copy
 import colorama
