@@ -119,30 +119,11 @@ class MailContainer(IDataContainer, ISerializable):
             imap_qid = d.get(constants.PHD_IMAP_QID)
             messageid = d.get(constants.MESSAGEID)
 
-            if mxin_qid is not None:
-                self._aggregate(mxin_qid, self._map_qid_mxin, d, logline)
-            elif imap_qid is not None:
-                self._aggregate(imap_qid, self._map_qid_imap, d, logline)
-            elif messageid is not None:
-                self._aggregate(messageid, self._map_msgid, d, logline)
+            pregexdata = data['pregexdata']
+            hostname = pregexdata.get('hostname')
 
-            if RegexFlags.STORETIME in flags:
-                pregexdata = data['pregexdata']
-                hostname = pregexdata.get('hostname')
-
-                if hostname is None:
-                    continue
-
+            if RegexFlags.STORETIME in flags and ('mxin' in hostname or 'imap' in hostname) and hostname is not None:
                 hostname = hostname.replace('-', '')
-
-                if 'mxin' in hostname and mxin_qid is not None:
-                    targetData = self._map_qid_mxin
-                    targetKey = mxin_qid
-                elif 'imap' in hostname and imap_qid is not None:
-                    targetData = self._map_qid_imap
-                    targetKey = imap_qid
-                else:
-                    continue
 
                 month = pregexdata.get('month')
                 day = pregexdata.get('day')
@@ -161,12 +142,16 @@ class MailContainer(IDataContainer, ISerializable):
                 # bring datetime in a portable format
                 newDtStr = dt.strftime(constants.TIME_FORMAT)
                 try:
-                    targetData[targetKey][
-                        constants.HOSTNAME_TIME_MAP[
-                            hostname
-                        ]] = newDtStr
+                    d[constants.HOSTNAME_TIME_MAP[hostname]] = newDtStr
                 except Exception as e:
                     pass
+
+            if mxin_qid is not None:
+                self._aggregate(mxin_qid, self._map_qid_mxin, d, logline)
+            elif imap_qid is not None:
+                self._aggregate(imap_qid, self._map_qid_imap, d, logline)
+            elif messageid is not None:
+                self._aggregate(messageid, self._map_msgid, d, logline)
 
     def build_final(self) -> None:
         """Aggregate data to mail objects and generate integrity stats."""

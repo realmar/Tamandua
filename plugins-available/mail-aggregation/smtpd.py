@@ -26,22 +26,22 @@ class Smtpd(SimplePlugin):
             (re.compile(r':\s(?P<' + constants.HOSTNAME_QID + r'>[^:]*):\sclient'), (RegexFlags.STORETIME,)),
 
             # reject RCPT and VRFY
-            re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
+            (re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
                            (?P<action>reject):\s
                            (?P<rejectstage>[^\s]*)\sfrom\s
                            (?P<connectclient>[^\[]*)\[(?P<connectip>[^\]]*)\]:\s
                            (?P<statuscode>[^\s]*)[^\:]*\:\s
                            (?P<rejectreason>[^\;]*)\;\s
                            (from=<(?P<sender>[^>]*)>\s)?        # VRFY has no from field
-                           to=<(?P<recipient>[^>]*)''', re.X),
+                           to=<(?P<recipient>[^>]*)''', re.X), (RegexFlags.STORETIME,)),
 
             # reject MAIL
-            re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>NOQUEUE):\s
+            (re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>NOQUEUE):\s
                        (?P<action>reject):\s
                        (?P<rejectstage>[^\s]*)\sfrom\s
                        (?P<connectclient>[^\[]*)\[(?P<connectip>[^\]]*)\]:\s
                        (?P<statuscode>[^\s]*)\s[^\s]*\s
-                       (?P<rejectreason>[^;]*)''', re.X),
+                       (?P<rejectreason>[^;]*)''', re.X), (RegexFlags.STORETIME,)),
 
             # hold
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
