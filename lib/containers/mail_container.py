@@ -166,7 +166,6 @@ class MailContainer(IDataContainer, ISerializable):
                             hostname
                         ]] = newDtStr
                 except Exception as e:
-                    # TODO: handle
                     pass
 
     def build_final(self) -> None:

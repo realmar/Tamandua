@@ -117,7 +117,6 @@ function setup_checkbox(item) {
 
 function add_expression_line() {
     if(expressionLineTemplate === null) {
-        // TODO: handle
         return;
     }
 
