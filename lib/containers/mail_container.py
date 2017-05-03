@@ -202,16 +202,16 @@ class MailContainer(IDataContainer, ISerializable):
         self._integrity_stats = {
             'total_mails': 0,
             'total_mxin': 0,
-            'total_no_mxin': 0,
+            # 'total_no_mxin': 0,
 
-            'only_mxin_qid': 0,
-            'only_imap_qid': 0,
-            'only_messageid': 0,
+            # 'only_mxin_qid': 0,
+            # 'only_imap_qid': 0,
+            # 'only_messageid': 0,
 
             'complete_mails': 0,
             'incomplete_mails': 0,
 
-            'missing_fields': {}
+            # 'missing_fields': {}
         }
 
         self._final_data = []
@@ -226,10 +226,11 @@ class MailContainer(IDataContainer, ISerializable):
 
         def verify_fields(mail):
             def check_fields(requiredFields) -> bool:
-                isComplete = True
+                # isComplete = True
 
                 for field in requiredFields:
                     if mail.get(field) is None:
+                        """
                         isComplete = False
 
                         d = self._integrity_stats['missing_fields']
@@ -237,8 +238,12 @@ class MailContainer(IDataContainer, ISerializable):
                             d[field] = 1
                         else:
                             d[field] += 1
+                        """
 
-                return isComplete
+                        return False
+
+                # return isComplete
+                return True
 
             action = mail.get('action')
             if action is not None and (action == 'hold' or action == 'reject'):
@@ -299,7 +304,7 @@ class MailContainer(IDataContainer, ISerializable):
                     m[constants.DESTINATION] = constants.DESTINATION_REJECT
 
                     self._integrity_stats['complete_mails'] += 1
-                    self._integrity_stats['only_mxin_qid'] += 1
+                    # self._integrity_stats['only_mxin_qid'] += 1
 
                     self._final_data.append(m)
 
@@ -336,9 +341,11 @@ class MailContainer(IDataContainer, ISerializable):
                         msgid = data_imap.get(constants.MESSAGEID)
 
                     self._merge_data(finalMail, data_imap)
-                else:
+                """
+                else: 
                     if msgid is None:
                         self._integrity_stats['only_mxin_qid'] += 1
+                """
 
                 # collect data for corresponding messageid
 
@@ -386,15 +393,15 @@ class MailContainer(IDataContainer, ISerializable):
                     m[constants.DESTINATION] = constants.DESTINATION_REJECT
 
                     self._integrity_stats['complete_mails'] += 1
-                    self._integrity_stats['total_no_mxin'] += 1
-                    self._integrity_stats['only_imap_qid'] += 1
+                    # self._integrity_stats['total_no_mxin'] += 1
+                    # self._integrity_stats['only_imap_qid'] += 1
 
                     self._final_data.append(m)
 
                 continue
 
             self._integrity_stats['incomplete_mails'] += 1
-            self._integrity_stats['total_no_mxin'] += 1
+            # self._integrity_stats['total_no_mxin'] += 1
             msgid_imap = mail.get(constants.MESSAGEID)
 
             # incompleteMail = copy.deepcopy(mail)
@@ -409,8 +416,10 @@ class MailContainer(IDataContainer, ISerializable):
 
                 if msgid_mail is not None:
                     self._merge_data(incompleteMail, msgid_mail)
+            """
             else:
                 self._integrity_stats['only_imap_qid'] += 1
+            """
 
             self._final_data.append(incompleteMail)
 
@@ -423,7 +432,7 @@ class MailContainer(IDataContainer, ISerializable):
                 continue
 
             self._integrity_stats['incomplete_mails'] += 1
-            self._integrity_stats['only_messageid'] += 1
+            # self._integrity_stats['only_messageid'] += 1
 
             # incompleteMail = copy.deepcopy(mail)
             incompleteMail = mail
