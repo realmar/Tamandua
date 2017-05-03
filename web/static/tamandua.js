@@ -127,13 +127,13 @@ function add_expression_line() {
     instance = setup_selectizer(newExp.find(".expression-select"));
 
     newExp.find(".expression-remove-button").click(function () {
-        remove_expression_line($(this).parent().parent());
+        on_remove_expression_line_button_click($(this).parent().parent());
     });
 
     expressionLines.push([newExp, instance]);
 }
 
-function remove_expression_line(item) {
+function on_remove_expression_line_button_click(item) {
     for(i in expressionLines) {
         if(expressionLines[i][0][0] === item[0]) {
             expressionLines.splice(i, 1);
