@@ -405,7 +405,9 @@ function get_json(route, data, method) {
                 }
             };
 
-            footableInstance = new FooTable.Table($("#result-table"), options);
+            footableInstance = new FooTable.Table($("#result-table"), options, function () {
+                footableInstance.sort('phdmxin_time', 'ASC');
+            });
         })
         .fail(function (jqxhr, textStatus, error) {
             hide_loading_spinner();
