@@ -5,6 +5,8 @@ var expressionLineTemplate = null;
 var expressionLines = [];
 var footableInstance = null;
 
+var datetimeFormat = "YYYY/MM/DD HH:mm:ss";
+
 /*
  * API Routes
  */
@@ -234,6 +236,10 @@ function get_json(route, data, method) {
                 return;
             }
 
+            /*
+             * Verify result
+             */
+
             if(
                 !("columns" in data)            ||
                 !("rows" in data)               ||
@@ -244,38 +250,86 @@ function get_json(route, data, method) {
                 return;
             }
 
+            /*
+             * Setting Variables
+             */
+
             var columns = data["columns"];
             var rows = data["rows"];
 
-            var codeFormatter = function (value) {
-                value = value
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
+            /*
+             * Formatter and sorter common
+             */
 
-                return "<pre>" + value + "</pre>";
+            var find_element = function (elementName) {
+                return columns.find(function (element) {
+                    return element.name === elementName;
+                });
             };
 
-            var codeParser = function (valueOrElement) {
-                if(valueOrElement instanceof Array) {
-                    var finalStr = '';
-                    for(i in valueOrElement) {
-                        finalStr += valueOrElement[i];
-                    }
-
-                    return finalStr;
-                }else {
-                    return String(valueOrElement);
+            var add_formatter = function (element, formatter, parser) {
+                if(element !== undefined) {
+                    element["formatter"] = formatter;
+                    element["parser"] = parser;
                 }
             };
 
-            var loglines = columns.find(function (element) {
-                return element.name === "loglines";
-            });
+            /*
+             * Code Formatter
+             */
 
-            if(loglines !== undefined) {
-                loglines["formatter"] = codeFormatter;
-                loglines["parser"] = codeParser;
-            }
+            var format_code = function (elementName) {
+                var code_formatter = function (value) {
+                    value = value
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+
+                    return "<pre>" + value + "</pre>";
+                };
+
+                var codeParser = function (valueOrElement) {
+                    if(valueOrElement instanceof Array) {
+                        var finalStr = '';
+                        for(i in valueOrElement) {
+                            finalStr += valueOrElement[i];
+                        }
+
+                        return finalStr;
+                    }else {
+                        return String(valueOrElement);
+                    }
+                };
+
+                add_formatter(find_element(elementName), code_formatter, codeParser);
+            };
+
+
+            /*
+             * Sorter
+             */
+
+            // TODO
+
+            /*
+             * Datetime
+             */
+
+            var add_datetime = function (elementName) {
+                var element = find_element(elementName);
+
+                if(element !== undefined) {
+                    element["type"] = "date";
+                    element["formatString"] = datetimeFormat;
+                }
+            };
+
+            /*
+             * Apply formatters, sorters and datetime
+             */
+
+            format_code("loglines");
+            add_datetime("phdmxin_time");
+            add_datetime("phdimap_time");
 
             var options = {
                 "columns" : columns,
@@ -309,7 +363,7 @@ function on_search_button_click() {
     var getDT = function (root, item) {
         if(root.is(":visible")) {
             try {
-                return item.datetimepicker('date').format("YYYY/MM/DD HH:mm:ss");
+                return item.datetimepicker('date').format(datetimeFormat);
             } catch (e) {
                 // console.log(e);
                 return "";
