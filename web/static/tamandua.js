@@ -104,7 +104,9 @@ function setup_selectizer(item) {
 }
 
 function setup_datetimepicker(item) {
-    item.datetimepicker();
+    item.datetimepicker({
+        format : 'DD/MM/YYYY HH:mm'
+    });
 }
 
 function setup_checkbox(item) {
