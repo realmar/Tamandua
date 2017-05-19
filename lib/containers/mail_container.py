@@ -1,6 +1,7 @@
 """Module which contains the DataContainer class."""
 
 from datetime import datetime
+import typing
 # import copy
 import colorama
 colorama.init(autoreset=True)
@@ -230,13 +231,29 @@ class MailContainer(IDataContainer, ISerializable):
                 # return isComplete
                 return True
 
+            def check_fieldcontent(field: typing.Union[str, list], other: str):
+                if field is None:
+                    return False
+
+                if isinstance(field, str):
+                    return other in field.lower()
+                elif isinstance(field, list):
+                    for f in field:
+                        if other in f.lower():
+                            return True
+
+                    return False
+                else:
+                    pass
+                    # TODO: handle
+
             action = mail.get('action')
-            if action is not None and (action == 'hold' or action == 'reject'):
+            if check_fieldcontent(action, 'hold') or check_fieldcontent(action, 'reject'):
                 mail[constants.COMPLETE] = True
                 mail[constants.DESTINATION] = constants.DESTINATION_HOLD
 
             virusresult = mail.get('virusresult')
-            if virusresult is not None and 'passed' not in virusresult.lower():
+            if check_fieldcontent(virusresult, 'passed'):
                 mail[constants.DESTINATION] = constants.DESTINATION_VIRUS
 
                 if not check_fields([
@@ -250,7 +267,7 @@ class MailContainer(IDataContainer, ISerializable):
                     mail[constants.COMPLETE] = True
 
             deliverystatus = mail.get('deliverystatus')
-            if deliverystatus is not None and 'sent' in deliverystatus:
+            if check_fieldcontent(deliverystatus, 'sent'):
                 mail[constants.COMPLETE] = True
                 mail[constants.DESTINATION] = constants.DESTINATION_DELIVERED
 
