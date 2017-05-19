@@ -274,6 +274,25 @@ function get_json(route, data, method) {
                 }
             };
 
+            var column_types = {
+                "numeric": "numeric",
+                "date": "date"
+            };
+
+            var set_column_type = function (elementName, type) {
+                var element = find_element(elementName);
+
+                if(element !== undefined) {
+                    element["type"] = type;
+                }
+            };
+
+            var add_column_field = function (element, key, value) {
+                if(element !== undefined) {
+                    element[key] = value
+                }
+            };
+
             /*
              * Code Formatter
              */
@@ -308,18 +327,57 @@ function get_json(route, data, method) {
              * Sorter
              */
 
-            // TODO
+            var sort_column = function (elementName, sortValueMapper) {
+                if(!("None" in sortValueMapper)) {
+                    sortValueMapper["None"] = 1000000
+                }
+
+                var sortValue = function (valueOrElement) {
+                    if(valueOrElement === undefined) {
+                        return undefined;
+                    }
+
+                    var val = sortValueMapper["None"];
+
+                    Object.keys(sortValueMapper).forEach(function (key) {
+                        if(valueOrElement.toLowerCase().indexOf(key) !== -1) {
+                            val = sortValueMapper[key];
+                        }
+                    });
+
+                    return val;
+                };
+
+                add_column_field(find_element(elementName), "sortValue", sortValue)
+            };
 
             /*
              * Datetime
              */
 
             var add_datetime = function (elementName) {
-                var element = find_element(elementName);
+                set_column_type(elementName, column_types.date);
+                add_column_field(find_element(elementName), "formatString", datetimeFormat)
+            };
 
+            /*
+             * Numeric
+             */
+
+            var add_numeric = function (elementName) {
+                set_column_type(elementName, column_types.numeric);
+
+                var element = find_element(elementName);
                 if(element !== undefined) {
-                    element["type"] = "date";
-                    element["formatString"] = datetimeFormat;
+                    var sortValue = function (valueOrElement) {
+                        if(valueOrElement === undefined) {
+                            return undefined;
+                        }
+
+                        return parseFloat(valueOrElement);
+                    };
+
+                    element["sortValue"] = sortValue;
                 }
             };
 
@@ -328,8 +386,14 @@ function get_json(route, data, method) {
              */
 
             format_code("loglines");
+            sort_column("virusresult", {
+                'clean': 0,
+                'header': 1,
+                'infected': 2
+            });
             add_datetime("phdmxin_time");
             add_datetime("phdimap_time");
+            add_numeric("spamscore");
 
             var options = {
                 "columns" : columns,
@@ -337,8 +401,6 @@ function get_json(route, data, method) {
             };
 
             footableInstance = new FooTable.Table($("#result-table"), options);
-
-            // $("#result-table").footable(data, options);
         })
         .fail(function (jqxhr, textStatus, error) {
             hide_loading_spinner();
