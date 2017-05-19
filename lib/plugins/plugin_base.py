@@ -2,6 +2,7 @@
 
 import abc
 from enum import Enum
+from ast import literal_eval
 
 from ..exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
 from ..interfaces import IPlugin
@@ -159,12 +160,21 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
                 continue
 
             # remove leading and trailing whitspaces from values
-            def strip(v):
+            def strip(v: str) -> str:
                 if isinstance(v, str):
                     return v.strip()
                 else:
                     return v
-            result = {key: strip(value) for key, value in search.groupdict().items()}
+
+            def le(input: str) -> object:
+                try:
+                    # try interpreting the string as a type
+                    return literal_eval(input)
+                except Exception as e:
+                    # if we fail, then we will simply return the original input
+                    return input
+
+            result = {key: le(strip(value)) for key, value in search.groupdict().items()}
 
             if not any(v is not None for v in result.values()):
                 continue

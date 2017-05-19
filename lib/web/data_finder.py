@@ -1,6 +1,7 @@
 """Module used by the webapp: backend to search the data."""
 
 from datetime import datetime
+from ast import literal_eval
 
 from ..serialization.serializer import Serializer
 from .. import constants
@@ -179,15 +180,28 @@ class DataFinder():
 
             for field in fields:
                 for key, value in field.items():
-                    value = str(value).strip().lower()
+                    try:
+                        value = literal_eval(value)
+                    except Exception as e:
+                        pass
 
-                    if value == '':
+                    if value == '' or value is None:
                         continue
 
                     fieldData = data.get(key)
-                    if fieldData is None or value not in str(fieldData).lower():
+
+                    if fieldData is None:
                         mismatch = True
                         break
+
+                    if isinstance(fieldData, str):
+                        if value not in str(fieldData).lower():
+                            mismatch = True
+                            break
+                    else:
+                        if value != fieldData:
+                            mismatch = True
+                            break
 
                 if mismatch:
                     break

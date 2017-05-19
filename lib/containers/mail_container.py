@@ -463,7 +463,7 @@ class MailContainer(IDataContainer, ISerializable):
         def print_list(key, value):
             print('    ' + colorama.Style.BRIGHT + key)
             for v in value:
-                print('        ' + v.strip())
+                print('        ' + str(v).strip())
 
         print('\n========' + colorama.Style.BRIGHT + ' List of collected Mails ' +
               colorama.Style.NORMAL + '========')
