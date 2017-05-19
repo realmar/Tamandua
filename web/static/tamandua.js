@@ -100,7 +100,13 @@ function setup_selectizer(item) {
         sortField: 'text'
     });
 
-    return $select[0].selectize;
+    var selectize = $select[0].selectize;
+
+    $('.selectize-input').click(function () {
+        selectize.clear(true);
+    });
+
+    return selectize;
 }
 
 function setup_datetimepicker(item) {
