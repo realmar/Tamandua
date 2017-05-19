@@ -12,17 +12,17 @@ var datetimeFormat = "YYYY/MM/DD HH:mm:ss";
  */
 
 var api = {
-    'get': {
-        'sample': '/api/get/sample',
-        'all': '/api/get/all'
+    get: {
+        sample: '/api/get/sample',
+        all: '/api/get/all'
     },
 
-    'search': '/api/search'
+    search: '/api/search'
 };
 
 var methods = {
-    'post': 'POST',
-    'get': 'GET'
+    post: 'POST',
+    get: 'GET'
 };
 
 /*
@@ -30,31 +30,31 @@ var methods = {
  */
 
 uiresponses = {
-    "types": {
-        "info": {
-            "name": "info",
-            "id": "#result-info"
+    types: {
+        info: {
+            name: "info",
+            id: "#result-info"
         },
-        "error": {
-            "name": "error",
-            "id": "#search-error"
+        error: {
+            name: "error",
+            id: "#search-error"
         }
     },
 
-    "messages": {
-        "noresults": {
-            "type": "info",
-            "id": "#result-info-no-results"
+    messages: {
+        noresults: {
+            type: "info",
+            id: "#result-info-no-results"
         }
     },
-    "errors": {
-        "searcherror": {
-            "type": "error",
-            "id": "#search-error-generic"
+    errors: {
+        searcherror: {
+            type: "error",
+            id: "#search-error-generic"
         }
     },
 
-    "none": ""
+    none: ""
 };
 
 function show_message(msg, data) {
@@ -275,8 +275,8 @@ function get_json(route, data, method) {
             };
 
             var column_types = {
-                "numeric": "numeric",
-                "date": "date"
+                numeric: "numeric",
+                date: "date"
             };
 
             var set_column_type = function (elementName, type) {
@@ -387,17 +387,22 @@ function get_json(route, data, method) {
 
             format_code("loglines");
             sort_column("virusresult", {
-                'clean': 0,
-                'header': 1,
-                'infected': 2
+                clean: 0,
+                header: 1,
+                infected: 2
             });
             add_datetime("phdmxin_time");
             add_datetime("phdimap_time");
             add_numeric("spamscore");
 
             var options = {
-                "columns" : columns,
-                "rows": rows
+                columns : columns,
+                rows: rows,
+                breakpoints: {
+                    tabland: 1200,
+                    tablet: 959,
+                    phone: 479
+                }
             };
 
             footableInstance = new FooTable.Table($("#result-table"), options);
@@ -466,10 +471,10 @@ function on_search_button_click() {
      */
 
     var expression = {
-        "fields": [],
-        "datetime": {
-            "start": "",
-            "end": ""
+        fields: [],
+        datetime: {
+            start: "",
+            end: ""
         }
     };
 

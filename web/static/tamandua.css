@@ -26,14 +26,18 @@ hr {
 }
 
 .footable-header > th {
-  word-wrap: break-word;
+    word-wrap: break-word;
 
-  min-width: 5em;
-  max-width: 11em;
+    min-width: 5em;
+    max-width: 11em;
+    font-size: 0.8em;
 }
 
 #result-table > tbody > tr > td {
-  word-wrap: break-word;
+    word-wrap: break-word;
+    font-size: 0.8em;
+    border-bottom: solid 1px #ddd;
+    vertical-align: top;
 }
 
 #header-panel {

@@ -56,8 +56,6 @@ class DataFinder():
         """Removes unwanted fields from data."""
 
         allowedFields = [
-            constants.PHD_MXIN_QID,
-            constants.PHD_IMAP_QID,
             constants.PHD_MXIN_TIME,
             constants.PHD_IMAP_TIME,
             'action',
