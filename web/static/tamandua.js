@@ -3,6 +3,7 @@
  */
 var expressionLineTemplate = null;
 var expressionLines = [];
+var footableInstance = null;
 
 /*
  * API Routes
@@ -243,7 +244,47 @@ function get_json(route, data, method) {
                 return;
             }
 
-            $("#result-table").footable(data);
+            var columns = data["columns"];
+            var rows = data["rows"];
+
+            var codeFormatter = function (value) {
+                value = value
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+
+                return "<pre>" + value + "</pre>";
+            };
+
+            var codeParser = function (valueOrElement) {
+                if(valueOrElement instanceof Array) {
+                    var finalStr = '';
+                    for(i in valueOrElement) {
+                        finalStr += valueOrElement[i];
+                    }
+
+                    return finalStr;
+                }else {
+                    return String(valueOrElement);
+                }
+            };
+
+            var loglines = columns.find(function (element) {
+                return element.name === "loglines";
+            });
+
+            if(loglines !== undefined) {
+                loglines["formatter"] = codeFormatter;
+                loglines["parser"] = codeParser;
+            }
+
+            var options = {
+                "columns" : columns,
+                "rows": rows
+            };
+
+            footableInstance = new FooTable.Table($("#result-table"), options);
+
+            // $("#result-table").footable(data, options);
         })
         .fail(function (jqxhr, textStatus, error) {
             hide_loading_spinner();
