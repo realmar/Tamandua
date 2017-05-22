@@ -3,6 +3,9 @@
 import colorama
 import inspect
 import sys
+import os
+
+from . import constants
 
 
 class NoSubscriptionRegex(Exception):
@@ -71,6 +74,11 @@ def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, d
             print(colorama.Style.BRIGHT + 'Function: ' + colorama.Style.NORMAL + str(trace[3]))
     except Exception as e:
         pass
+
+    # if we are in a development env we will reraise the exception
+    env = os.environ.get(constants.TAMANDUAENV)
+    if env == constants.DEVENV:
+        raise e
 
 
 def print_warning(msg):

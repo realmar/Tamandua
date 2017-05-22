@@ -58,3 +58,8 @@ DESTINATION_UNKOWN = 'unknown'
 # config
 
 CONFIGFILE = 'config.json'
+
+# environment variables
+
+TAMANDUAENV = 'TAMANDUAENV'
+DEVENV = 'development'
