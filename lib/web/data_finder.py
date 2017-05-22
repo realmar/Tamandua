@@ -21,12 +21,6 @@ class DataFinder():
 
         self.load_data()
 
-    def __generate_table_data_structure(self, columns: list, rows: list) -> dict:
-        return {
-            'columns': [{'name': x, 'title': x} for x in columns],
-            'rows': rows
-        }
-
     def _get_keys(self, inputData: list) -> list:
         """Return a list of all uniq keys."""
 
@@ -40,6 +34,8 @@ class DataFinder():
         return sorted(tmpAvailableFields.keys())
 
     def load_data(self) -> None:
+        """Load data from the data store into memory."""
+
         self._data = Serializer(self._config).load()['MailContainer']
         self.analise_data()
 
@@ -52,41 +48,7 @@ class DataFinder():
 
         self.availableFields = self._get_keys(self._data)
 
-    def filter_important(self, data: dict) -> dict:
-        """Removes unwanted fields from data."""
-
-        allowedFields = [
-            constants.PHD_MXIN_TIME,
-            constants.PHD_IMAP_TIME,
-            'action',
-            'holdreason',
-            'sender',
-            'recipient',
-            'virusresult',
-            'spamscore'
-        ]
-
-        newData = []
-
-        for d in data['rows']:
-            newDict = {}
-            for field in allowedFields:
-                if d.get(field) is not None:
-                    newDict[field] = d[field]
-
-            if len(newDict) > 0:
-                newData.append(newDict)
-
-        return self.__generate_table_data_structure(self._get_keys(newData), newData)
-
-    def get_all(self) -> dict:
-        return self.__generate_table_data_structure(self.availableFields, self._data)
-
-    def get_sample(self) -> dict:
-        data = self._data[0:20]
-        return self.__generate_table_data_structure(self._get_keys(data), data)
-
-    def search(self, expression: dict) -> dict:
+    def search(self, expression: dict) -> list:
         """Search for specific mails."""
 
         """
@@ -119,8 +81,10 @@ class DataFinder():
         if not isinstance(expression.get('fields'), list):
             fields = []
         else:
+            fields = expression['fields']
+
             counter = 0
-            for f in expression['fields']:
+            for f in fields:
                 currField = 'fields.' + str(counter) + ' '
 
                 if not isinstance(f, dict):
@@ -130,8 +94,6 @@ class DataFinder():
                         raise ExpressionInvalid(currField + 'has more than 1 key value pair')
 
                 counter += 1
-
-        fields = expression['fields']
 
         """
         Validation of datetime strings
@@ -249,4 +211,4 @@ class DataFinder():
 
             filteredData.append(data)
 
-        return self.__generate_table_data_structure(self._get_keys(filteredData), filteredData)
+        return filteredData

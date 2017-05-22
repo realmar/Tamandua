@@ -3,3 +3,4 @@ colorama
 
 # Web-App: Backend
 Flask
+flask-restful
