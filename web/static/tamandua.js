@@ -12,11 +12,7 @@ var datetimeFormat = "YYYY/MM/DD HH:mm:ss";
  */
 
 var api = {
-    get: {
-        sample: '/api/get/sample',
-        all: '/api/get/all'
-    },
-
+    columns: '/api/columns',
     search: '/api/search'
 };
 
@@ -118,10 +114,6 @@ function setup_datetimepicker(item) {
     });
 }
 
-function setup_checkbox(item) {
-    item.checkboxpicker();
-}
-
 /*
  * Creational/Destructional Functions
  */
@@ -205,17 +197,13 @@ function on_remove_dt_button_click(item) {
 
 /* API */
 
-function get_json(route, data, method) {
-    reset_result_table();
+function handle_ajax_error(jqxhr, textStatus, error) {
+    hide_loading_spinner();
+    console.log("Error in async operation: " + [jqxhr, textStatus, error]);
+    show_message(uiresponses.errors.searcherror, "Failed to get data from server: " + textStatus);
+}
 
-    data['only_important'] = $("#only-important-checkbox").prop("checked");
-
-    if(method === methods.post) {
-        data = JSON.stringify(data)
-    }
-
-    show_loading_spinner();
-
+function get_rows(route, data, method, columns) {
     $.ajax({
         url: route,
         type: method,
@@ -223,15 +211,14 @@ function get_json(route, data, method) {
         contentType: "application/json; charset=utf-8",
         dataType: "json"
     })
-        .done(function (data) {
+        .done(function (rows) {
             hide_loading_spinner();
 
-            if("exception" in data) {
+            if("message" in rows) {
                 show_message(
                     uiresponses.errors.searcherror,
                     "An error on the server occured:<br>" +
-                    "<span class=\"bold\">Type: </span>" + data["exception"]["type"] + "<br>" +
-                    "<span class=\"bold\">Message: </span>" + data["exception"]["message"]);
+                    "<span class=\"bold\">Details: </span>" + rows["message"] + "<br>");
 
                 return;
             }
@@ -240,25 +227,13 @@ function get_json(route, data, method) {
              * Verify result
              */
 
-            if(
-                !("columns" in data)            ||
-                !("rows" in data)               ||
-                data["columns"].length === 0    ||
-                data["rows"].length === 0
-            ) {
+            if(rows.length === 0) {
                 show_message(uiresponses.messages.noresults, uiresponses.none);
                 return;
             }
 
             /*
-             * Setting Variables
-             */
-
-            var columns = data["columns"];
-            var rows = data["rows"];
-
-            /*
-             * Formatter and sorter common
+             * Formatter
              */
 
             var find_element = function (elementName) {
@@ -273,29 +248,6 @@ function get_json(route, data, method) {
                     element["parser"] = parser;
                 }
             };
-
-            var column_types = {
-                numeric: "numeric",
-                date: "date"
-            };
-
-            var set_column_type = function (elementName, type) {
-                var element = find_element(elementName);
-
-                if(element !== undefined) {
-                    element["type"] = type;
-                }
-            };
-
-            var add_column_field = function (element, key, value) {
-                if(element !== undefined) {
-                    element[key] = value
-                }
-            };
-
-            /*
-             * Code Formatter
-             */
 
             var format_code = function (elementName) {
                 var code_formatter = function (value) {
@@ -322,106 +274,44 @@ function get_json(route, data, method) {
                 add_formatter(find_element(elementName), code_formatter, codeParser);
             };
 
-
             /*
-             * Sorter
-             */
-
-            var sort_column = function (elementName, sortValueMapper) {
-                if(!("None" in sortValueMapper)) {
-                    sortValueMapper["None"] = 1000000
-                }
-
-                var sortValue = function (valueOrElement) {
-                    if(valueOrElement === undefined) {
-                        return undefined;
-                    }
-
-                    var val = sortValueMapper["None"];
-
-                    Object.keys(sortValueMapper).forEach(function (key) {
-                        if(valueOrElement.toLowerCase().indexOf(key) !== -1) {
-                            val = sortValueMapper[key];
-                        }
-                    });
-
-                    return val;
-                };
-
-                add_column_field(find_element(elementName), "sortValue", sortValue)
-            };
-
-            /*
-             * Datetime
-             */
-
-            var add_datetime = function (elementName) {
-                set_column_type(elementName, column_types.date);
-                add_column_field(find_element(elementName), "formatString", datetimeFormat)
-            };
-
-            /*
-             * Numeric
-             */
-
-            var add_numeric = function (elementName) {
-                set_column_type(elementName, column_types.numeric);
-
-                var element = find_element(elementName);
-                if(element !== undefined) {
-                    var sortValue = function (valueOrElement) {
-                        if(valueOrElement === undefined) {
-                            return undefined;
-                        }
-
-                        return parseFloat(valueOrElement);
-                    };
-
-                    element["sortValue"] = sortValue;
-                }
-            };
-
-            /*
-             * Apply formatters, sorters and datetime
+             * Create FooTable instance
              */
 
             format_code("loglines");
-            sort_column("virusresult", {
-                clean: 0,
-                header: 1,
-                infected: 2
-            });
-            add_datetime("phdmxin_time");
-            add_datetime("phdimap_time");
-            add_numeric("spamscore");
 
             var options = {
+                toggleColumn: "first",
+
                 columns : columns,
-                rows: rows,
-                breakpoints: {
-                    tabland: 1200,
-                    tablet: 959,
-                    phone: 479
-                }
+                rows: rows
             };
 
             footableInstance = new FooTable.Table($("#result-table"), options, function () {
                 footableInstance.sort('phdmxin_time', 'ASC');
             });
         })
-        .fail(function (jqxhr, textStatus, error) {
-            hide_loading_spinner();
-            console.log("Error in async operation: " + [jqxhr, textStatus, error]);
-            show_message(uiresponses.errors.searcherror, "Failed to get data from server: " + textStatus);
-        });
+        .fail(handle_ajax_error);
 }
 
-function on_get_sample_button_click() {
-    get_json(api.get.sample, {}, methods.get);
-}
+function get_json(route, data, method) {
+    reset_result_table();
 
-function on_get_all_button_click() {
-    get_json(api.get.all, {}, methods.get);
+    if(method === methods.post) {
+        data = JSON.stringify(data)
+    }
+
+    show_loading_spinner();
+
+    $.ajax({
+        url: api.columns,
+        type: methods.get,
+        dataType: "json"
+    })
+    .done(function (columns) {
+        get_rows(route, data, method, columns);
+    })
+    .fail(handle_ajax_error);
 }
 
 function on_search_button_click() {
@@ -516,8 +406,6 @@ function register_event_handlers() {
     $(".remove-dt-button").click(on_remove_dt_button_click);
 
     /* API */
-    $("#get-sample-button").click(on_get_sample_button_click);
-    $("#get-all-button").click(on_get_all_button_click);
     $("#search-button").click(on_search_button_click);
 }
 
@@ -526,8 +414,6 @@ function main() {
     register_event_handlers();
     setup_datetimepicker($("#dt-from-picker"));
     setup_datetimepicker($("#dt-to-picker"));
-    setup_checkbox($("#only-important-checkbox"))
-    // add_expression_line();
 }
 
 $(document).ready(main);
