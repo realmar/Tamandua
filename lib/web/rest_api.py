@@ -24,7 +24,7 @@ class Columns(BaseResource):
     _breakcolumn = 'xs sm md lg'
     _nobreak = ''
 
-    def get(self) -> dict:
+    def get(self) -> list:
         rawColumns = self._dataFinder.availableFields
         columns = []
 
@@ -39,7 +39,7 @@ class Columns(BaseResource):
                 'breakpoints': breakpoints
             })
 
-        return { 'columns': columns }
+        return columns
 
 
 class Search(BaseResource):
