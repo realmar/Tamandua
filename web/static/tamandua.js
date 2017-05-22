@@ -284,7 +284,11 @@ function get_rows(route, data, method, columns) {
                 toggleColumn: "first",
 
                 columns : columns,
-                rows: rows
+                rows: rows,
+
+                paging: {
+                    size: 20
+                }
             };
 
             footableInstance = new FooTable.Table($("#result-table"), options, function () {
