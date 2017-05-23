@@ -62,6 +62,15 @@ class Search(BaseResource):
     {"fields" : [{ "sender": "lionel" }],"datetime": {"start": "2017/01/19 22:51:45","end": "2017/01/19 22:55:50"}}
     """
 
-    def post(self) -> list:
+    _default_page_size = 20
+
+    def post(self, page: int) -> list:
         expression = request.get_json()
-        return self._dataFinder.search(expression)
+        page_size = expression.get('page_size')
+        if not isinstance(page_size, int):
+            page_size = self._default_page_size
+        page_start = page * page_size
+
+        results = self._dataFinder.search(expression)
+
+        return results[page_start:page_start + page_size]
