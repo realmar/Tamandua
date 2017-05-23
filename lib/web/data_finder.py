@@ -211,4 +211,15 @@ class DataFinder():
 
             filteredData.append(data)
 
-        return filteredData
+        def sort_key(d: dict) -> object:
+            mxintime = d.get(constants.PHD_MXIN_TIME)
+
+            if isinstance(mxintime, list):
+                mxintime = mxintime[0]
+
+            if mxintime is not None:
+                return datetime.strptime(mxintime, constants.TIME_FORMAT)
+            else:
+                return datetime.min
+
+        return sorted(filteredData, key=sort_key)
