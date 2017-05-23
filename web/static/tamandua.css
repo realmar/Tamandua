@@ -87,6 +87,10 @@ hr {
     cursor:default !important;
 }
 
+.add-margin-top {
+    margin-top: 0.4em;
+}
+
 .add-margin-bottom {
     margin-bottom: 0.4em;
 }

@@ -4,6 +4,8 @@
 var expressionLineTemplate = null;
 var expressionLines = [];
 var footableInstance = null;
+var currentExpression = null;
+var currentPage = 0;
 
 var datetimeFormat = "YYYY/MM/DD HH:mm:ss";
 
@@ -13,7 +15,7 @@ var datetimeFormat = "YYYY/MM/DD HH:mm:ss";
 
 var api = {
     columns: '/api/columns',
-    search: '/api/search'
+    search: '/api/search/'
 };
 
 var methods = {
@@ -149,6 +151,9 @@ function reset_result_table() {
     remove_all_messages();
     $("#results").find(".remove").each(function () { $(this).remove(); });
     $("#result-container").empty();
+    footableInstance = null;
+    currentExpression = null;
+    currentPage = 0;
     $("#result-container").html("<table id=\"result-table\" data-paging=\"true\" data-filtering=\"true\" data-sorting=\"true\"></table>");
 }
 
@@ -201,10 +206,14 @@ function handle_ajax_error(jqxhr, textStatus, error) {
     hide_loading_spinner();
     console.log("Error in async operation: " + [jqxhr, textStatus, error]);
 
-    show_message(
-        uiresponses.errors.searcherror,
-        "An error on the server occured:<br>" +
-        "<span class=\"bold\">Details: </span>" + jqxhr.responseJSON.message + "<br>");
+    try {
+        show_message(
+            uiresponses.errors.searcherror,
+            "An error on the server occured:<br>" +
+            "<span class=\"bold\">Details: </span>" + jqxhr.responseJSON.message + "<br>");
+    }catch (e) {
+        show_message(uiresponses.errors.searcherror, "Failed to get data from server: " + textStatus);
+    }
 }
 
 function get_rows(route, data, method, columns) {
@@ -286,7 +295,7 @@ function get_rows(route, data, method, columns) {
                 }
             };
 
-            footableInstance = new FooTable.Table($("#result-table"), options, function () {
+            footableInstance = new FooTable.init($("#result-table"), options, function () {
                 footableInstance.sort('phdmxin_time', 'ASC');
             });
         })
@@ -366,7 +375,8 @@ function on_search_button_click() {
         datetime: {
             start: "",
             end: ""
-        }
+        },
+        page_size: 20
     };
 
     $.each(expressionLines, function () {
@@ -385,7 +395,31 @@ function on_search_button_click() {
     expression.datetime.start = getFromDT();
     expression.datetime.end = getToDT();
 
-    get_json(api.search, expression, methods.post);
+    get_json(api.search + 0, expression, methods.post);
+
+    currentExpression = expression;
+}
+
+function on_load_more_button_click() {
+    if(footableInstance === null || currentExpression === null) {
+        return;
+    }
+
+    show_loading_spinner();
+    currentPage++;
+
+    $.ajax({
+        url: api.search + currentPage,
+        type: methods.post,
+        data: JSON.stringify(currentExpression),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json"
+    })
+        .done(function (rows) {
+            hide_loading_spinner();
+            footableInstance.rows.load(rows, true);
+        })
+        .fail(handle_ajax_error);
 }
 
 /*
@@ -406,6 +440,9 @@ function register_event_handlers() {
 
     /* API */
     $("#search-button").click(on_search_button_click);
+
+    /* Results */
+    $("#load-more-button").click(on_load_more_button_click);
 }
 
 function main() {

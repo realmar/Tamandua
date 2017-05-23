@@ -55,7 +55,9 @@ class Search(BaseResource):
         "datetime": {
             "start": "2017/01/19 22:51:45",
             "end": "2017/01/19 22:55:50"
-        }
+        },
+        
+        "page_size": 20
     }
     
     # one line    
