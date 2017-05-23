@@ -200,7 +200,11 @@ function on_remove_dt_button_click(item) {
 function handle_ajax_error(jqxhr, textStatus, error) {
     hide_loading_spinner();
     console.log("Error in async operation: " + [jqxhr, textStatus, error]);
-    show_message(uiresponses.errors.searcherror, "Failed to get data from server: " + textStatus);
+
+    show_message(
+        uiresponses.errors.searcherror,
+        "An error on the server occured:<br>" +
+        "<span class=\"bold\">Details: </span>" + jqxhr.responseJSON.message + "<br>");
 }
 
 function get_rows(route, data, method, columns) {
@@ -213,15 +217,6 @@ function get_rows(route, data, method, columns) {
     })
         .done(function (rows) {
             hide_loading_spinner();
-
-            if("message" in rows) {
-                show_message(
-                    uiresponses.errors.searcherror,
-                    "An error on the server occured:<br>" +
-                    "<span class=\"bold\">Details: </span>" + rows["message"] + "<br>");
-
-                return;
-            }
 
             /*
              * Verify result
