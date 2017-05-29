@@ -3,11 +3,14 @@
  */
 var expressionLineTemplate = null;
 var expressionLines = [];
-var footableInstance = null;
-var currentExpression = null;
-var currentPage = 0;
 
-var datetimeFormat = "YYYY/MM/DD HH:mm:ss";
+var datetimeFormat = 'YYYY/MM/DD HH:mm:ss';
+
+var visibleColumns = [
+    'phdmxin_time',
+    'sender',
+    'recipient'
+];
 
 /*
  * API Routes
@@ -15,7 +18,7 @@ var datetimeFormat = "YYYY/MM/DD HH:mm:ss";
 
 var api = {
     columns: '/api/columns',
-    search: '/api/search/'
+    search: '/api/search/{page}/{size}'
 };
 
 var methods = {
@@ -30,29 +33,34 @@ var methods = {
 uiresponses = {
     types: {
         info: {
-            name: "info",
-            id: "#result-info"
+            name: 'info',
+            id: '#result-info'      // container
         },
         error: {
-            name: "error",
-            id: "#search-error"
+            name: 'error',
+            id: '#search-error'     // container
         }
     },
 
     messages: {
         noresults: {
-            type: "info",
-            id: "#result-info-no-results"
-        }
-    },
-    errors: {
-        searcherror: {
-            type: "error",
-            id: "#search-error-generic"
+            type: 'info',
+            id: '#result-info-no-results'       // p-tag
         }
     },
 
-    none: ""
+    errors: {
+        searcherror: {
+            type: 'error',                      // mapping with types, to display the container
+            id: '#search-error-generic'         // p-tag
+        },
+        receivedinvalid: {
+            type: 'error',
+            id: '#search-error-received-invalid'
+        }
+    },
+
+    none: ''
 };
 
 function show_message(msg, data) {
@@ -61,7 +69,7 @@ function show_message(msg, data) {
         $(this).hide();
     });
 
-    if(data !== "") {
+    if(data !== '') {
         $(msg.id).html(data);
     }
 
@@ -71,6 +79,7 @@ function show_message(msg, data) {
 
 function remove_messages_of_type(t) {
     $(t.id).hide();
+    $(t.id).find('p').each(function () { $(this).hide(); });
 }
 
 function remove_all_messages() {
@@ -84,11 +93,11 @@ function remove_all_messages() {
  */
 
 function show_loading_spinner() {
-    $("#search-loading").show();
+    $('#search-loading').show();
 }
 
 function hide_loading_spinner() {
-    $("#search-loading").hide();
+    $('#search-loading').hide();
 }
 
 /*
@@ -126,11 +135,11 @@ function add_expression_line() {
     }
 
     var newExp = expressionLineTemplate.clone();
-    newExp.appendTo("#expression-container");
+    newExp.appendTo('#expression-container');
 
-    instance = setup_selectizer(newExp.find(".expression-select"));
+    instance = setup_selectizer(newExp.find('.expression-select'));
 
-    newExp.find(".expression-remove-button").click(function () {
+    newExp.find('.expression-remove-button').click(function () {
         on_remove_expression_line_button_click($(this).parent().parent());
     });
 
@@ -147,16 +156,6 @@ function on_remove_expression_line_button_click(item) {
     item.remove();
 }
 
-function reset_result_table() {
-    remove_all_messages();
-    $("#results").find(".remove").each(function () { $(this).remove(); });
-    $("#result-container").empty();
-    footableInstance = null;
-    currentExpression = null;
-    currentPage = 0;
-    $("#result-container").html("<table id=\"result-table\" data-paging=\"true\" data-filtering=\"true\" data-sorting=\"true\"></table>");
-}
-
 /*
  * Event Handlers
  */
@@ -167,7 +166,7 @@ function has_empty_expression_fields() {
     var hasEmptyFields = false;
 
     $.each(expressionLines, function () {
-        var expInput = $(this[0]).find(".expression-input");
+        var expInput = $(this[0]).find('.expression-input');
         if(!expInput.val()) {
             hasEmptyFields = true;
         }
@@ -189,137 +188,186 @@ function on_add_expression_line_button_click() {
 
 function on_add_dt_button_click(item) {
     var parent = $(this).parent().parent();
-    parent.find(".dt-add").hide();
-    parent.find(".dt-search-mask").show();
+    parent.find('.dt-add').hide();
+    parent.find('.dt-search-mask').show();
 
 }
 
 function on_remove_dt_button_click(item) {
     var parent = $(this).parent().parent().parent();
-    parent.find(".dt-search-mask").hide();
-    parent.find(".dt-add").show();
+    parent.find('.dt-search-mask').hide();
+    parent.find('.dt-add').show();
 }
 
 /* API */
 
 function handle_ajax_error(jqxhr, textStatus, error) {
     hide_loading_spinner();
-    console.log("Error in async operation: " + [jqxhr, textStatus, error]);
+    console.log('Error in async operation: ' + [jqxhr, textStatus, error]);
 
     try {
         show_message(
             uiresponses.errors.searcherror,
-            "An error on the server occured:<br>" +
-            "<span class=\"bold\">Details: </span>" + jqxhr.responseJSON.message + "<br>");
+            'An error on the server occured:<br>' +
+            '<span class="bold">Details: </span>' + jqxhr.responseJSON.message + '<br>');
     }catch (e) {
-        show_message(uiresponses.errors.searcherror, "Failed to get data from server: " + textStatus);
+        show_message(uiresponses.errors.searcherror, 'Failed to get data from server: ' + textStatus);
     }
 }
 
-function get_rows(route, data, method, columns) {
-    $.ajax({
-        url: route,
-        type: method,
-        data: data,
-        contentType: "application/json; charset=utf-8",
-        dataType: "json"
-    })
-        .done(function (rows) {
-            hide_loading_spinner();
-
-            /*
-             * Verify result
-             */
-
-            if(rows.length === 0) {
-                show_message(uiresponses.messages.noresults, uiresponses.none);
-                return;
-            }
-
-            /*
-             * Formatter
-             */
-
-            var find_element = function (elementName) {
-                return columns.find(function (element) {
-                    return element.name === elementName;
-                });
-            };
-
-            var add_formatter = function (element, formatter, parser) {
-                if(element !== undefined) {
-                    element["formatter"] = formatter;
-                    element["parser"] = parser;
-                }
-            };
-
-            var format_code = function (elementName) {
-                var code_formatter = function (value) {
-                    value = value
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;');
-
-                    return "<pre>" + value + "</pre>";
-                };
-
-                var codeParser = function (valueOrElement) {
-                    if(valueOrElement instanceof Array) {
-                        var finalStr = '';
-                        for(i in valueOrElement) {
-                            finalStr += valueOrElement[i];
-                        }
-
-                        return finalStr;
-                    }else {
-                        return String(valueOrElement);
-                    }
-                };
-
-                add_formatter(find_element(elementName), code_formatter, codeParser);
-            };
-
-            /*
-             * Create FooTable instance
-             */
-
-            format_code("loglines");
-
-            var options = {
-                toggleColumn: "first",
-
-                columns : columns,
-                rows: rows,
-
-                paging: {
-                    size: 20
-                }
-            };
-
-            footableInstance = new FooTable.init($("#result-table"), options, function () {
-                footableInstance.sort('phdmxin_time', 'ASC');
-            });
-        })
-        .fail(handle_ajax_error);
-}
-
-function get_json(route, data, method) {
-    reset_result_table();
-
-    if(method === methods.post) {
-        data = JSON.stringify(data)
-    }
-
+function empty_table() {
     show_loading_spinner();
+    remove_all_messages();
+
+    $('#results').find('.remove').each(
+        function () {
+            $(this).remove();
+        }
+    );
+
+    result_table_thead = $('#result-table > thead');
+    result_table_tbody = $('#result-table > tbody');
+
+    result_table_thead.empty();
+    result_table_tbody.empty();
+}
+
+function reset_table(callback) {
+    empty_table();
 
     $.ajax({
         url: api.columns,
         type: methods.get,
-        dataType: "json"
+        dataType: 'json'
     })
     .done(function (columns) {
-        get_rows(route, data, method, columns);
+        if(!columns instanceof Array || columns.length == 0) {
+            show_message(uiresponses.errors.receivedinvalid, uiresponses.none);
+            hide_loading_spinner();
+            return;
+        }
+
+        result_table_thead.append('<tr></tr>');
+        var tr_head = result_table_thead.find('tr');
+
+        // validate received data
+
+        for(var i in columns) {
+            if($.type(columns[i]) !== 'string') {
+                empty_table();
+                show_message(uiresponses.errors.receivedinvalid, uiresponses.none);
+                hide_loading_spinner();
+                return;
+            }
+        }
+
+        // add headers
+
+        tr_head.append('<td></td>');
+        for(var i in visibleColumns) {
+            tr_head.append('<td>' + visibleColumns[i] + '</td>');
+        }
+
+        callback(columns);
     })
     .fail(handle_ajax_error);
+}
+
+function insert_data_into_table(expression, columns) {
+    var jTable = $('#result-table');
+
+    jTable
+        .tablesorter({
+            theme : 'bootstrap',
+            widthFixed: true,
+
+            cssChildRow: 'tablesorter-childRow',
+
+            widgets: [ 'zebra', 'pager' ],
+            widgetOptions : {
+                zebra : [ 'normal-row', 'alt-row' ]
+            }
+        })
+        .tablesorterPager({
+            ajaxUrl: api.search,
+            ajaxObject: {
+                type: methods.post,
+                data: JSON.stringify(expression),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json'
+            },
+            ajaxProcessing: function (data) {
+                if( data &&
+                    data.hasOwnProperty('rows') &&
+                    data.hasOwnProperty('total_rows')
+                ) {
+
+                    var rows = '';
+
+                    for(var r in data['rows']) {
+                        var visibleRow =
+                            '<tr>' +
+                                '<td class="toggle">' +
+                                    '<span class="glyphicon glyphicon-plus"></span>' +
+                                '</td>';
+
+                        var childRow =
+                            '<tr class="tablesorter-childRow">' +
+                                '<td colspan="' + visibleColumns.length + '">';
+
+                        var visibleRowMap = {};
+
+                        for (var i in columns) {
+                            var rowData = '';
+
+                            if(data['rows'][r].hasOwnProperty(columns[i])) {
+                                rowData = data['rows'][r][columns[i]];
+                            }
+
+                            if(visibleColumns.indexOf(columns[i]) === -1) {
+                                childRow += rowData;
+                            }else{
+                                visibleRowMap[columns[i]] = rowData;
+                            }
+                        }
+
+                        for(var j in visibleColumns) {
+                            if(visibleRowMap.hasOwnProperty(visibleColumns[j])) {
+                                visibleRow += '<td>' + visibleRowMap[visibleColumns[j]] + '</td>';
+                            }else{
+                                visibleRow += '<td></td>';
+                            }
+                        }
+
+                        rows += visibleRow + '</tr>' + childRow  + '</td></tr>';
+                    }
+
+                    return [
+                        data['total_rows'],
+                        $(rows)
+                    ];
+                }
+            },
+
+            processAjaxOnInit: true,
+            output: '{startRow} to {endRow} ({totalRows})',
+            page: 0,
+            size: 25
+        });
+
+    // register events
+
+    jTable.bind('pagerComplete', function (e, d) {
+        // hide child rows
+       $('.tablesorter-childRow td').hide();
+    });
+
+    jTable.delegate('.toggle', 'click' ,function(e, d) {
+        $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
+        return false;
+    });
+
+    hide_loading_spinner();
 }
 
 function on_search_button_click() {
@@ -328,24 +376,24 @@ function on_search_button_click() {
      */
 
     var getDT = function (root, item) {
-        if(root.is(":visible")) {
+        if(root.is(':visible')) {
             try {
                 return item.datetimepicker('date').format(datetimeFormat);
             } catch (e) {
                 // console.log(e);
-                return "";
+                return '';
             }
         }else{
-            return "";
+            return '';
         }
     };
 
     var getFromDT = function () {
-        return getDT($("#dt-from-search-mask"), $("#dt-from-picker"));
+        return getDT($('#dt-from-search-mask'), $('#dt-from-picker'));
     };
 
     var getToDT = function () {
-        return getDT($("#dt-to-search-mask"), $("#dt-to-picker"));
+        return getDT($('#dt-to-search-mask'), $('#dt-to-picker'));
     };
 
     /*
@@ -353,12 +401,12 @@ function on_search_button_click() {
      */
 
     if(has_empty_expression_fields()) {
-        show_message(uiresponses.errors.searcherror, "Some Field Values are empty, please delete them or fill in content.");
+        show_message(uiresponses.errors.searcherror, 'Some Field Values are empty, please delete them or fill in content.');
         return;
     }
 
     if(expressionLines.length === 0 && !getFromDT() && !getToDT()) {
-        show_message(uiresponses.errors.searcherror, "The searchmask is empty. Specify some search criteria.");
+        show_message(uiresponses.errors.searcherror, 'The searchmask is empty. Specify some search criteria.');
         return;
     }
 
@@ -371,12 +419,11 @@ function on_search_button_click() {
      */
 
     var expression = {
-        fields: [],
+        fields: [{'complete': 'True'}],
         datetime: {
-            start: "",
-            end: ""
-        },
-        page_size: 20
+            start: '',
+            end: ''
+        }
     };
 
     $.each(expressionLines, function () {
@@ -384,7 +431,7 @@ function on_search_button_click() {
         var s = this[1];
 
         var key = s.getValue();
-        var value = jq.find(".expression-input").val();
+        var value = jq.find('.expression-input').val();
 
         var h = {};
         h[key] = value;
@@ -395,9 +442,9 @@ function on_search_button_click() {
     expression.datetime.start = getFromDT();
     expression.datetime.end = getToDT();
 
-    get_json(api.search + 0, expression, methods.post);
-
-    currentExpression = expression;
+    reset_table(function (columns) {
+        insert_data_into_table(expression, columns);
+    });
 }
 
 function on_load_more_button_click() {
@@ -412,8 +459,8 @@ function on_load_more_button_click() {
         url: api.search + currentPage,
         type: methods.post,
         data: JSON.stringify(currentExpression),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json"
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json'
     })
         .done(function (rows) {
             hide_loading_spinner();
@@ -427,29 +474,29 @@ function on_load_more_button_click() {
  */
 
 function init_global_variables() {
-    expressionLineTemplate = $("#expression-templates > .expression-line");
+    expressionLineTemplate = $('#expression-templates > .expression-line');
 }
 
 function register_event_handlers() {
     /* expression builder */
-    $("#add-expression-line-button").click(on_add_expression_line_button_click);
+    $('#add-expression-line-button').click(on_add_expression_line_button_click);
 
     /* datetime */
-    $(".add-dt-button").click(on_add_dt_button_click);
-    $(".remove-dt-button").click(on_remove_dt_button_click);
+    $('.add-dt-button').click(on_add_dt_button_click);
+    $('.remove-dt-button').click(on_remove_dt_button_click);
 
     /* API */
-    $("#search-button").click(on_search_button_click);
+    $('#search-button').click(on_search_button_click);
 
     /* Results */
-    $("#load-more-button").click(on_load_more_button_click);
+    $('#load-more-button').click(on_load_more_button_click);
 }
 
 function main() {
     init_global_variables();
     register_event_handlers();
-    setup_datetimepicker($("#dt-from-picker"));
-    setup_datetimepicker($("#dt-to-picker"));
+    setup_datetimepicker($('#dt-from-picker'));
+    setup_datetimepicker($('#dt-to-picker'));
 }
 
 $(document).ready(main);

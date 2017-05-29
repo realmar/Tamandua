@@ -27,12 +27,15 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment-with-locales.min.js"></script>
 
     <!-- bootstrap-datetimepicker -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
 
-    <!-- footable -->
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-footable/3.1.4/footable.bootstrap.min.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-footable/3.1.4/footable.min.js"></script>
+    <!-- jquery tablesorter -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/css/theme.bootstrap_3.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/jquery.tablesorter.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/jquery.tablesorter.widgets.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/extras/jquery.tablesorter.pager.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/widgets/widget-pager.min.js"></script>
 
     <!-- tamandua specific -->
     <link href="/static/tamandua.css" rel="stylesheet" />
@@ -151,6 +154,7 @@
                         <hr class="margin-top-1">
                         <div  class="alert alert-danger">
                             <p style="display: none;" id="search-error-generic"></p>
+                            <p style="display: none;" id="search-error-received-invalid">The received data from the server is invalid and cannot be processed.</p>
                         </div>
                     </div>
                 </div>
@@ -174,7 +178,12 @@
             <div style="display: none;" id="result-info" class="alert alert-info">
                 <p style="display: none;" id="result-info-no-results">No results. Try to search for something different!</p>
             </div>
-            <div id="result-container"></div>
+            <div id="result-container">
+                <table id="result-table">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </main>

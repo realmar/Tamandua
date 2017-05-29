@@ -135,6 +135,22 @@ hr {
     font-weight: bold;
 }
 
+/* tablesorter custom css */
+
+table.tablesorter tbody tr.normal-row td {
+    background: #FAFAFA;
+    color: #000;
+}
+table.tablesorter tbody tr.alt-row td {
+    background: #EEEEEE;
+    color: #000;
+}
+
+td.toggle > span {
+    cursor: pointer;
+    padding-left: 0.5em;
+}
+
 /* Source: https://www.w3schools.com/howto/howto_css_loader.asp */
 
 .loader {
