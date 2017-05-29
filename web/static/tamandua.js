@@ -313,8 +313,11 @@ function insert_data_into_table(expression, columns) {
 
                         var childRow =
                             '<tr class="tablesorter-childRow">' +
-                                '<td colspan="' + visibleColumns.length + '">';
+                                '<td colspan="' + (visibleColumns.length + 1) + '">' +
+                                    '<div>';
 
+                        var loglines = '';
+                        var childRowEnd = '</div></td>';
                         var visibleRowMap = {};
 
                         for (var i in columns) {
@@ -322,10 +325,35 @@ function insert_data_into_table(expression, columns) {
 
                             if(data['rows'][r].hasOwnProperty(columns[i])) {
                                 rowData = data['rows'][r][columns[i]];
+
+                                if(rowData instanceof Array) {
+                                    var replacement = '\n';
+                                    if(columns[i] === 'loglines') {
+                                        replacement = '';
+                                    }
+                                    rowData = rowData.join(replacement);
+                                }
                             }
 
                             if(visibleColumns.indexOf(columns[i]) === -1) {
-                                childRow += rowData;
+                                var tmp = '';
+
+                                if(columns[i] === 'loglines') {
+                                    rowData = rowData.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    rowData = '<pre><code>' + rowData + '</code></pre>';
+                                }
+
+                                tmp =
+                                    '<div class="inline tab-row">' +
+                                        '<div class="inline tab-col-left">' + columns[i] + '</div>' +
+                                        '<div class="inline tab-col-right">' + rowData + '</div>' +
+                                    '</div>';
+
+                                if(columns[i] === 'loglines') {
+                                    loglines = tmp;
+                                }else{
+                                    childRow += tmp;
+                                }
                             }else{
                                 visibleRowMap[columns[i]] = rowData;
                             }
@@ -339,7 +367,7 @@ function insert_data_into_table(expression, columns) {
                             }
                         }
 
-                        rows += visibleRow + '</tr>' + childRow  + '</td></tr>';
+                        rows += visibleRow + '</tr>' + childRow  + loglines + childRowEnd + '</tr>';
                     }
 
                     return [
@@ -400,7 +428,7 @@ function on_search_button_click() {
      * Validate Fields
      */
 
-    if(has_empty_expression_fields()) {
+    /*if(has_empty_expression_fields()) {
         show_message(uiresponses.errors.searcherror, 'Some Field Values are empty, please delete them or fill in content.');
         return;
     }
@@ -412,7 +440,7 @@ function on_search_button_click() {
 
     if(expressionLines === null) {
         return;
-    }
+    }*/
 
     /*
      * Build Expression

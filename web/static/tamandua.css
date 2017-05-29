@@ -151,6 +151,28 @@ td.toggle > span {
     padding-left: 0.5em;
 }
 
+div.tab-row {
+    width: 100%;
+}
+
+div.tab-col-left {
+    width: 20%;
+    font-weight: bold;
+    padding-left: 0.5em;
+    vertical-align: top;
+}
+
+div.tab-col-right {
+    width: 80%;
+    padding-right: 0.5em;
+}
+
+div.tab-row {
+    border-bottom: solid #E0E0E0 1px;
+    padding-bottom: 0.2em;
+    padding-top: 0.2em;
+}
+
 /* Source: https://www.w3schools.com/howto/howto_css_loader.asp */
 
 .loader {
