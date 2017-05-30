@@ -219,11 +219,8 @@ function empty_table() {
     show_loading_spinner();
     remove_all_messages();
 
-    $('#results').find('.remove').each(
-        function () {
-            $(this).remove();
-        }
-    );
+    $('#results').find('.remove').remove();
+    $(".pager").hide();
 
     result_table_thead = $('#result-table > thead');
     result_table_tbody = $('#result-table > tbody');
@@ -283,7 +280,7 @@ function insert_data_into_table(expression, columns) {
 
             cssChildRow: 'tablesorter-childRow',
 
-            widgets: [ 'zebra', 'pager' ],
+            widgets: [ 'zebra' ],
             widgetOptions : {
                 zebra : [ 'normal-row', 'alt-row' ]
             }
@@ -301,6 +298,7 @@ function insert_data_into_table(expression, columns) {
                     data.hasOwnProperty('rows') &&
                     data.hasOwnProperty('total_rows')
                 ) {
+                    $('#pager').prop('colspan', visibleColumns.length + 1);
 
                     var rows = '';
 
@@ -377,10 +375,24 @@ function insert_data_into_table(expression, columns) {
                 }
             },
 
+            container: $(".pager"),
+            countChildRows: false,
+            removeRows: false,
+            updateArrows: true,
+
+            cssNext: '.next',
+            cssPrev: '.prev',
+            cssFirst: '.first',
+            cssLast: '.last',
+            cssGoto: '.gotoPage',
+
+            cssPageDisplay: '.pagedisplay',
+            cssPageSize: '.pagesize',
+
             processAjaxOnInit: true,
             output: '{startRow} to {endRow} ({totalRows})',
             page: 0,
-            size: 25
+            size: 20
         });
 
     // register events
@@ -388,6 +400,7 @@ function insert_data_into_table(expression, columns) {
     jTable.bind('pagerComplete', function (e, d) {
         // hide child rows
        $('.tablesorter-childRow td').hide();
+       $(".pager").show();
     });
 
     jTable.delegate('.toggle', 'click' ,function(e, d) {
