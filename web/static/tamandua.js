@@ -359,9 +359,9 @@ function insert_data_into_table(expression, columns) {
 
                         for(var j in visibleColumns) {
                             if(visibleRowMap.hasOwnProperty(visibleColumns[j])) {
-                                visibleRow += '<td>' + visibleRowMap[visibleColumns[j]] + '</td>';
+                                visibleRow += '<td class="tab-col-visible">' + visibleRowMap[visibleColumns[j]] + '</td>';
                             }else{
-                                visibleRow += '<td></td>';
+                                visibleRow += '<td class="tab-col-visible"></td>';
                             }
                         }
 
@@ -377,7 +377,7 @@ function insert_data_into_table(expression, columns) {
 
             container: $(".pager"),
             countChildRows: false,
-            removeRows: false,
+            removeRows: true,
             updateArrows: true,
 
             cssNext: '.next',
@@ -441,7 +441,7 @@ function on_search_button_click() {
      * Validate Fields
      */
 
-    /*if(has_empty_expression_fields()) {
+    if(has_empty_expression_fields()) {
         show_message(uiresponses.errors.searcherror, 'Some Field Values are empty, please delete them or fill in content.');
         return;
     }
@@ -453,7 +453,7 @@ function on_search_button_click() {
 
     if(expressionLines === null) {
         return;
-    }*/
+    }
 
     /*
      * Build Expression
@@ -538,6 +538,7 @@ function main() {
     register_event_handlers();
     setup_datetimepicker($('#dt-from-picker'));
     setup_datetimepicker($('#dt-to-picker'));
+    setup_selectizer($(".pagesize"));
 }
 
 $(document).ready(main);

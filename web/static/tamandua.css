@@ -56,7 +56,6 @@ hr {
 }
 
 #result-container {
-    overflow-x: scroll;
 }
 
 .inline {
@@ -138,11 +137,11 @@ hr {
 /* tablesorter custom css */
 
 table.tablesorter tbody tr.normal-row td {
-    background: #FAFAFA;
+    background: #CFD8DC;
     color: #000;
 }
 table.tablesorter tbody tr.alt-row td {
-    background: #EEEEEE;
+    background: #ECEFF1;
     color: #000;
 }
 
@@ -171,6 +170,24 @@ div.tab-row {
     border-bottom: solid #E0E0E0 1px;
     padding-bottom: 0.2em;
     padding-top: 0.2em;
+}
+
+td.tab-col-visible {
+    min-width: 10em;
+    word-break: break-word;
+}
+
+.tablesorter-bootstrap thead td {
+    background-color: #ECEFF1;
+}
+
+.tablesorter-bootstrap tfoot td {
+    background-color: #ECEFF1;
+}
+
+.pagesize {
+    margin-bottom: -5px;
+    width: 8em;
 }
 
 /* Source: https://www.w3schools.com/howto/howto_css_loader.asp */
