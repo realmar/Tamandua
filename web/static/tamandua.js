@@ -107,16 +107,13 @@ function hide_loading_spinner() {
 function setup_selectizer(item) {
     var $select = item.selectize({
         create: true,
-        sortField: 'text'
+        sortField: 'text',
+        onFocus: function () {
+            this.clear(true);
+        }
     });
 
-    var selectize = $select[0].selectize;
-
-    $('.selectize-input').click(function () {
-        selectize.clear(true);
-    });
-
-    return selectize;
+    return $select[0].selectize;
 }
 
 function setup_datetimepicker(item) {
