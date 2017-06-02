@@ -257,9 +257,9 @@ function reset_table(callback) {
 
         // add headers
 
-        tr_head.append('<td></td>');
+        tr_head.append('<th></th>');
         for(var i in visibleColumns) {
-            tr_head.append('<td>' + visibleColumns[i] + '</td>');
+            tr_head.append('<th>' + visibleColumns[i] + '</th>');
         }
 
         callback(columns);
@@ -374,7 +374,7 @@ function insert_data_into_table(expression, columns) {
 
             container: $(".pager"),
             countChildRows: false,
-            removeRows: true,
+            removeRows: false,
             updateArrows: true,
 
             cssNext: '.next',
