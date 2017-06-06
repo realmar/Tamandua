@@ -413,18 +413,24 @@ function insert_data_into_table(expression, columns) {
             size: 20
         });
 
+    var hide_child_rows = function() {
+        $('.tablesorter-childRow td').hide();
+        $("#pager").show();
+        $("#result-table > thead").show();
+    };
+
     // register events
+
+    jTable.bind('pagerComplete', function (e, d) {
+        hide_child_rows();
+    });
 
     jTable.delegate('.toggle', 'click' ,function(e, d) {
         $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
         return false;
     });
 
-    // hide child rows
-    $('.tablesorter-childRow td').hide();
-    $("#pager").show();
-    $("#result-table > thead").show();
-
+    hide_child_rows();
     hide_loading_spinner();
 }
 
