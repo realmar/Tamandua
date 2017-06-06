@@ -219,8 +219,13 @@ function empty_table() {
     $('#results').find('.remove').remove();
     $(".pager").hide();
 
-    $('#result-table > thead').empty();
-    $('#result-table > tbody').empty();
+    var result_table = $("#result-table");
+
+    result_table.trigger("destroy");
+    // result_table.empty();
+    result_table.find('thead').remove();
+    result_table.find('tbody').remove();
+    result_table.append('<thead style="display: none;"></thead><tbody></tbody>');
 }
 
 function append_rows(expression, columns, callback) {
