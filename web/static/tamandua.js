@@ -18,7 +18,7 @@ var visibleColumns = [
 
 var api = {
     columns: '/api/columns',
-    search: '/api/search/{page}/{size}'
+    search: '/api/search/0/2000'
 };
 
 var methods = {
@@ -219,14 +219,117 @@ function empty_table() {
     $('#results').find('.remove').remove();
     $(".pager").hide();
 
-    result_table_thead = $('#result-table > thead');
-    result_table_tbody = $('#result-table > tbody');
-
-    result_table_thead.empty();
-    result_table_tbody.empty();
+    $('#result-table > thead').empty();
+    $('#result-table > tbody').empty();
 }
 
-function reset_table(callback) {
+function append_rows(expression, columns, callback) {
+    $.ajax({
+        url: api.search,
+        type: methods.post,
+        data: JSON.stringify(expression),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json'
+    })
+    .done(function (data) {
+        if( data &&
+            data.hasOwnProperty('rows') &&
+            data.hasOwnProperty('total_rows')
+        ) {
+            $('#pager').prop('colspan', visibleColumns.length + 1);
+            var result_table_tbody = $('#result-table > tbody');
+
+            var rows = '';
+
+            for(var r in data['rows']) {
+                var visibleRow =
+                    '<tr>' +
+                        '<td class="toggle tab-col-visible">' +
+                            '<span class="glyphicon glyphicon-plus tab-col-toggle-icon"></span>';
+
+                var childRow =
+                    '<tr class="tablesorter-childRow">' +
+                        '<td colspan="' + (visibleColumns.length + 1) + '">' +
+                            '<div>';
+
+                var loglines = '';
+                var childRowEnd = '</div></td>';
+                var visibleRowMap = {};
+
+                for (var i in columns) {
+                    var rowData = '';
+
+                    if(data['rows'][r].hasOwnProperty(columns[i])) {
+                        rowData = data['rows'][r][columns[i]];
+
+                        if(rowData instanceof Array) {
+                            var replacement = '\n';
+                            if(columns[i] === 'loglines') {
+                                replacement = '';
+                            }
+                            rowData = rowData.join(replacement);
+                        }
+                    }
+
+                    if(visibleColumns.indexOf(columns[i]) === -1) {
+                        var tmp = '';
+
+                        if(columns[i] === 'loglines') {
+                            rowData = rowData.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            rowData = '<pre><code>' + rowData + '</code></pre>';
+                        }
+
+                        tmp =
+                            '<div class="inline tab-row">' +
+                                '<div class="inline tab-col-left">' + columns[i] + '</div>' +
+                                '<div class="inline tab-col-right">' + rowData + '</div>' +
+                            '</div>';
+
+                        if(columns[i] === 'loglines') {
+                            loglines = tmp;
+                        }else{
+                            childRow += tmp;
+                        }
+                    }else{
+                        visibleRowMap[columns[i]] = rowData;
+                    }
+                }
+
+                var isFirst = true;
+                for(var j in visibleColumns) {
+                    if(visibleRowMap.hasOwnProperty(visibleColumns[j])) {
+                        if(isFirst) {
+                            visibleRow += visibleRowMap[visibleColumns[j]] + '</td>';
+                        isFirst = false;
+                        }else{
+                            visibleRow += '<td class="tab-col-visible">' + visibleRowMap[visibleColumns[j]] + '</td>';
+                        }
+                    }else{
+                        if(isFirst) {
+                            visibleRow += '</td>';
+                            isFirst = false;
+                        }else{
+                            visibleRow += '<td class="tab-col-visible"></td>';
+                        }
+                    }
+                }
+
+                rows += visibleRow + '</tr>' + childRow  + loglines + childRowEnd + '</tr>';
+            }
+
+            result_table_tbody.append($(rows));
+
+            /* return [
+                data['total_rows'],
+                $(rows)
+            ]; */
+        }
+        callback();
+    })
+    .fail(handle_ajax_error);
+}
+
+function reset_table(expression, callback) {
     empty_table();
 
     $.ajax({
@@ -240,6 +343,8 @@ function reset_table(callback) {
             hide_loading_spinner();
             return;
         }
+
+        var result_table_thead = $('#result-table > thead');
 
         result_table_thead.append('<tr></tr>');
         var tr_head = result_table_thead.find('tr');
@@ -261,7 +366,7 @@ function reset_table(callback) {
             tr_head.append('<th>' + visibleColumns[i] + '</th>');
         }
 
-        callback(columns);
+        append_rows(expression, columns, callback);
     })
     .fail(handle_ajax_error);
 }
@@ -288,108 +393,9 @@ function insert_data_into_table(expression, columns) {
             }
         })
         .tablesorterPager({
-            ajaxUrl: api.search,
-            ajaxObject: {
-                type: methods.post,
-                data: JSON.stringify(expression),
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json'
-            },
-            ajaxProcessing: function (data) {
-                if( data &&
-                    data.hasOwnProperty('rows') &&
-                    data.hasOwnProperty('total_rows')
-                ) {
-                    $('#pager').prop('colspan', visibleColumns.length + 1);
-
-                    var rows = '';
-
-                    for(var r in data['rows']) {
-                        var visibleRow =
-                            '<tr>' +
-                                '<td class="toggle tab-col-visible">' +
-                                    '<span class="glyphicon glyphicon-plus tab-col-toggle-icon"></span>';
-
-                        var childRow =
-                            '<tr class="tablesorter-childRow">' +
-                                '<td colspan="' + (visibleColumns.length + 1) + '">' +
-                                    '<div>';
-
-                        var loglines = '';
-                        var childRowEnd = '</div></td>';
-                        var visibleRowMap = {};
-
-                        for (var i in columns) {
-                            var rowData = '';
-
-                            if(data['rows'][r].hasOwnProperty(columns[i])) {
-                                rowData = data['rows'][r][columns[i]];
-
-                                if(rowData instanceof Array) {
-                                    var replacement = '\n';
-                                    if(columns[i] === 'loglines') {
-                                        replacement = '';
-                                    }
-                                    rowData = rowData.join(replacement);
-                                }
-                            }
-
-                            if(visibleColumns.indexOf(columns[i]) === -1) {
-                                var tmp = '';
-
-                                if(columns[i] === 'loglines') {
-                                    rowData = rowData.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                    rowData = '<pre><code>' + rowData + '</code></pre>';
-                                }
-
-                                tmp =
-                                    '<div class="inline tab-row">' +
-                                        '<div class="inline tab-col-left">' + columns[i] + '</div>' +
-                                        '<div class="inline tab-col-right">' + rowData + '</div>' +
-                                    '</div>';
-
-                                if(columns[i] === 'loglines') {
-                                    loglines = tmp;
-                                }else{
-                                    childRow += tmp;
-                                }
-                            }else{
-                                visibleRowMap[columns[i]] = rowData;
-                            }
-                        }
-
-                        var isFirst = true;
-                        for(var j in visibleColumns) {
-                            if(visibleRowMap.hasOwnProperty(visibleColumns[j])) {
-                                if(isFirst) {
-                                    visibleRow += visibleRowMap[visibleColumns[j]] + '</td>';
-                                isFirst = false;
-                                }else{
-                                    visibleRow += '<td class="tab-col-visible">' + visibleRowMap[visibleColumns[j]] + '</td>';
-                                }
-                            }else{
-                                if(isFirst) {
-                                    visibleRow += '</td>';
-                                    isFirst = false;
-                                }else{
-                                    visibleRow += '<td class="tab-col-visible"></td>';
-                                }
-                            }
-                        }
-
-                        rows += visibleRow + '</tr>' + childRow  + loglines + childRowEnd + '</tr>';
-                    }
-
-                    return [
-                        data['total_rows'],
-                        $(rows)
-                    ];
-                }
-            },
-
             container: $(".pager"),
             countChildRows: false,
-            removeRows: false,
+            removeRows: true,
             updateArrows: true,
 
             cssNext: '.next',
@@ -409,16 +415,15 @@ function insert_data_into_table(expression, columns) {
 
     // register events
 
-    jTable.bind('pagerComplete', function (e, d) {
-        // hide child rows
-       $('.tablesorter-childRow td').hide();
-       $(".pager").show();
-    });
-
     jTable.delegate('.toggle', 'click' ,function(e, d) {
         $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
         return false;
     });
+
+    // hide child rows
+    $('.tablesorter-childRow td').hide();
+    $("#pager").show();
+    $("#result-table > thead").show();
 
     hide_loading_spinner();
 }
@@ -495,9 +500,7 @@ function on_search_button_click() {
     expression.datetime.start = getFromDT();
     expression.datetime.end = getToDT();
 
-    reset_table(function (columns) {
-        insert_data_into_table(expression, columns);
-    });
+    reset_table(expression, insert_data_into_table);
 }
 
 /*
