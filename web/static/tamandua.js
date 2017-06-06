@@ -257,7 +257,6 @@ function reset_table(callback) {
 
         // add headers
 
-        // tr_head.append('<th></th>');
         for(var i in visibleColumns) {
             tr_head.append('<th>' + visibleColumns[i] + '</th>');
         }
@@ -454,7 +453,7 @@ function on_search_button_click() {
      * Validate Fields
      */
 
-    /*if(has_empty_expression_fields()) {
+    if(has_empty_expression_fields()) {
         show_message(uiresponses.errors.searcherror, 'Some Field Values are empty, please delete them or fill in content.');
         return;
     }
@@ -466,7 +465,7 @@ function on_search_button_click() {
 
     if(expressionLines === null) {
         return;
-    }*/
+    }
 
     /*
      * Build Expression
@@ -501,28 +500,6 @@ function on_search_button_click() {
     });
 }
 
-function on_load_more_button_click() {
-    if(footableInstance === null || currentExpression === null) {
-        return;
-    }
-
-    show_loading_spinner();
-    currentPage++;
-
-    $.ajax({
-        url: api.search + currentPage,
-        type: methods.post,
-        data: JSON.stringify(currentExpression),
-        contentType: 'application/json; charset=utf-8',
-        dataType: 'json'
-    })
-        .done(function (rows) {
-            hide_loading_spinner();
-            footableInstance.rows.load(rows, true);
-        })
-        .fail(handle_ajax_error);
-}
-
 /*
  * Init
  */
@@ -541,9 +518,6 @@ function register_event_handlers() {
 
     /* API */
     $('#search-button').click(on_search_button_click);
-
-    /* Results */
-    $('#load-more-button').click(on_load_more_button_click);
 }
 
 function main() {
