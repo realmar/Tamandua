@@ -31,11 +31,25 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
 
     <!-- jquery tablesorter -->
+    <!-- jquery tablesorter - css - themes -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/css/theme.default.min.css" />
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/css/theme.bootstrap_3.min.css" />
+
+    <!-- jquery tablesorter - css - widgets -->
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/css/jquery.tablesorter.pager.min.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/css/filter.formatter.min.css" />
+
+    <!-- jquery tablesorter - js - main -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/js/jquery.tablesorter.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/js/jquery.tablesorter.widgets.min.js"></script>
+
+    <!-- jquery tablesorter - js - pager -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/js/extras/jquery.tablesorter.pager.min.js"></script>
+
+    <!-- jquery tablesorter - js - filter -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/js/widgets/widget-filter-formatter-select2.min.js"></script>
+
+    <!-- jquery tablesorter - js - widgets -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.12/js/jquery.tablesorter.widgets.min.js"></script>
 
     <!-- tamandua specific -->
     <link href="/static/tamandua.css" rel="stylesheet" />
@@ -179,37 +193,33 @@
                 <table id="result-table">
                     <thead></thead>
                     <tbody></tbody>
-                    <tfoot>
-                        <tr>
-                            <td id="pager" class="pager" style="display: none;">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-default first">&lt;&lt;</button>
-                                    <button type="button" class="btn btn-default prev">&lt;</button>
-                                </div>
-
-                                <div class="btn-group" role="group">
-                                    <input class="form-control pagedisplay" type="text" readonly />
-                                </div>
-
-
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-default next">&gt;</button>
-                                    <button type="button" class="btn btn-default last">&gt;&gt;</button>
-                                </div>
-
-                                <div class="btn-group" role="group">
-                                    <select class="pagesize">
-                                        <option value="10">10</option>
-                                        <option selected="selected" value="20">20</option>
-                                        <option value="40">40</option>
-                                        <option value="60">60</option>
-                                        <option value="80">80</option>
-                                    </select>
-                                </div>
-                            </td>
-                        </tr>
-                    </tfoot>
                 </table>
+                <div id="pager" class="pager" style="display: none;">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default first">&lt;&lt;</button>
+                        <button type="button" class="btn btn-default prev">&lt;</button>
+                    </div>
+
+                    <div class="btn-group" role="group">
+                        <input class="form-control pagedisplay" type="text" readonly />
+                    </div>
+
+
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default next">&gt;</button>
+                        <button type="button" class="btn btn-default last">&gt;&gt;</button>
+                    </div>
+
+                    <div class="btn-group" role="group">
+                        <select class="pagesize">
+                            <option value="10">10</option>
+                            <option selected="selected" value="20">20</option>
+                            <option value="40">40</option>
+                            <option value="60">60</option>
+                            <option value="80">80</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

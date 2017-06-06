@@ -257,7 +257,7 @@ function reset_table(callback) {
 
         // add headers
 
-        tr_head.append('<th></th>');
+        // tr_head.append('<th></th>');
         for(var i in visibleColumns) {
             tr_head.append('<th>' + visibleColumns[i] + '</th>');
         }
@@ -272,14 +272,20 @@ function insert_data_into_table(expression, columns) {
 
     jTable
         .tablesorter({
-            theme : 'bootstrap',
+            theme : 'default',
             widthFixed: true,
 
             cssChildRow: 'tablesorter-childRow',
 
-            widgets: [ 'zebra' ],
+            widgets: [ 'zebra', 'filter' ],
             widgetOptions : {
-                zebra : [ 'normal-row', 'alt-row' ]
+                zebra : [ 'normal-row', 'alt-row' ],
+
+                filter_placeholder: { search : 'Search...' },
+                filter_childRows  : true,
+                filter_cssFilter  : 'tablesorter-filter',
+                filter_startsWith : false,
+                filter_ignoreCase : true
             }
         })
         .tablesorterPager({
@@ -302,9 +308,8 @@ function insert_data_into_table(expression, columns) {
                     for(var r in data['rows']) {
                         var visibleRow =
                             '<tr>' +
-                                '<td class="toggle">' +
-                                    '<span class="glyphicon glyphicon-plus"></span>' +
-                                '</td>';
+                                '<td class="toggle tab-col-visible">' +
+                                    '<span class="glyphicon glyphicon-plus tab-col-toggle-icon"></span>';
 
                         var childRow =
                             '<tr class="tablesorter-childRow">' +
@@ -354,11 +359,22 @@ function insert_data_into_table(expression, columns) {
                             }
                         }
 
+                        var isFirst = true;
                         for(var j in visibleColumns) {
                             if(visibleRowMap.hasOwnProperty(visibleColumns[j])) {
-                                visibleRow += '<td class="tab-col-visible">' + visibleRowMap[visibleColumns[j]] + '</td>';
+                                if(isFirst) {
+                                    visibleRow += visibleRowMap[visibleColumns[j]] + '</td>';
+                                isFirst = false;
+                                }else{
+                                    visibleRow += '<td class="tab-col-visible">' + visibleRowMap[visibleColumns[j]] + '</td>';
+                                }
                             }else{
-                                visibleRow += '<td class="tab-col-visible"></td>';
+                                if(isFirst) {
+                                    visibleRow += '</td>';
+                                    isFirst = false;
+                                }else{
+                                    visibleRow += '<td class="tab-col-visible"></td>';
+                                }
                             }
                         }
 
@@ -438,7 +454,7 @@ function on_search_button_click() {
      * Validate Fields
      */
 
-    if(has_empty_expression_fields()) {
+    /*if(has_empty_expression_fields()) {
         show_message(uiresponses.errors.searcherror, 'Some Field Values are empty, please delete them or fill in content.');
         return;
     }
@@ -450,7 +466,7 @@ function on_search_button_click() {
 
     if(expressionLines === null) {
         return;
-    }
+    }*/
 
     /*
      * Build Expression
