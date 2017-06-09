@@ -229,7 +229,8 @@ function empty_table() {
 
     var result_table = $("#result-table");
 
-    result_table.trigger("destroy");
+    result_table.trigger('destroyPager');
+    result_table.trigger('destroy');
     // result_table.empty();
     result_table.find('thead').remove();
     result_table.find('tbody').remove();
@@ -399,6 +400,12 @@ function reset_table(expression, callback) {
     .fail(handle_ajax_error);
 }
 
+function hide_child_rows() {
+    $('.tablesorter-childRow td').hide();
+    $("#pager").show();
+    $("#result-table > thead").show();
+}
+
 function initialize_table(expression, columns) {
     var jTable = $('#result-table');
 
@@ -440,23 +447,6 @@ function initialize_table(expression, columns) {
             page: 0,
             size: 20
         });
-
-    var hide_child_rows = function() {
-        $('.tablesorter-childRow td').hide();
-        $("#pager").show();
-        $("#result-table > thead").show();
-    };
-
-    // register events
-
-    jTable.bind('pagerComplete', function (e, d) {
-        hide_child_rows();
-    });
-
-    jTable.delegate('.toggle', 'click' ,function(e, d) {
-        $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
-        return false;
-    });
 
     jTable.trigger('pageSet', 0);
 
@@ -557,6 +547,19 @@ function register_event_handlers() {
 
     /* API */
     $('#search-button').click(on_search_button_click);
+
+    /* Table */
+    var jTable = $('#result-table');
+
+    jTable.on('pagerComplete', function (e, d) {
+        hide_child_rows();
+        return false;
+    });
+
+    jTable.on('click', '.toggle', function(e, d) {
+        $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
+        return false;
+    });
 }
 
 function main() {
