@@ -16,9 +16,11 @@ var visibleColumns = [
  * API Routes
  */
 
+var maxPageSize = 200;
+
 var api = {
     columns: '/api/columns',
-    search: '/api/search/0/2000'
+    search: '/api/search/0/' + maxPageSize
 };
 
 var methods = {
@@ -46,6 +48,10 @@ uiresponses = {
         noresults: {
             type: 'info',
             id: '#result-info-no-results'       // p-tag
+        },
+        toomanyresults: {
+            type: 'info',
+            id: '#result-info-too-may-results'
         }
     },
 
@@ -243,6 +249,21 @@ function append_rows(expression, columns, callback) {
             data.hasOwnProperty('rows') &&
             data.hasOwnProperty('total_rows')
         ) {
+            if(data['rows'].length === 0) {
+                show_message(uiresponses.messages.noresults, '');
+                hide_loading_spinner();
+                return;
+            }
+
+            if(data['total_rows'] > maxPageSize) {
+                show_message(uiresponses.messages.toomanyresults,
+                    'Too many matches, only showing ' +
+                        '<b>' + data['rows'].length + '</b> out of ' +
+                        '<b>' + data['total_rows'] + '</b>. ' +
+                    'Please do a more specific search.'
+                )
+            }
+
             $('#pager').prop('colspan', visibleColumns.length + 1);
             var result_table_tbody = $('#result-table > tbody');
 
@@ -378,7 +399,7 @@ function reset_table(expression, callback) {
     .fail(handle_ajax_error);
 }
 
-function insert_data_into_table(expression, columns) {
+function initialize_table(expression, columns) {
     var jTable = $('#result-table');
 
     jTable
@@ -513,7 +534,7 @@ function on_search_button_click() {
     expression.datetime.start = getFromDT();
     expression.datetime.end = getToDT();
 
-    reset_table(expression, insert_data_into_table);
+    reset_table(expression, initialize_table);
 }
 
 /*

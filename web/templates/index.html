@@ -187,6 +187,7 @@
             <div id="search-loading" class="loader" style="display: none;"></div>
             <div style="display: none;" id="result-info" class="alert alert-info">
                 <p style="display: none;" id="result-info-no-results">No results. Try to search for something different!</p>
+                <p style="display: none;" id="result-info-too-may-results"></p>
             </div>
             <div id="result-container">
                 <table id="result-table">
@@ -209,7 +210,7 @@
                     </div>
 
                     <div class="btn-group" role="group">
-                        <select class="pagesize">
+                        <select class="pagesize" data-noclear="true">
                             <option value="10">10</option>
                             <option selected="selected" value="20">20</option>
                             <option value="40">40</option>
