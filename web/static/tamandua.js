@@ -109,7 +109,9 @@ function setup_selectizer(item) {
         create: true,
         sortField: 'text',
         onFocus: function () {
-            this.clear(true);
+            if(!item.data('noclear')) {
+                this.clear(true);
+            }
         }
     });
 
