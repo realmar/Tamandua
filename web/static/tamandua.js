@@ -458,6 +458,8 @@ function initialize_table(expression, columns) {
         return false;
     });
 
+    jTable.trigger('pageSet', 0);
+
     hide_child_rows();
     hide_loading_spinner();
 }
