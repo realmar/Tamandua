@@ -19,6 +19,10 @@ class MailContainer(IDataContainer, ISerializable):
         self._map_qid_imap = {}
         self._map_msgid = {}
 
+        # this will store all mailfragments which where "sent" by the pickup service
+        # map : imap_qid -> mail-fragment
+        self._map_pickup = {}
+
         self._final_data = []
 
         self._integrity_stats = {}
@@ -105,7 +109,7 @@ class MailContainer(IDataContainer, ISerializable):
     def add_info(self, data: dict) -> None:
         """Add data to the container."""
 
-        # if we add new data but have already generate some integrity stats
+        # if we add new data but have already generated some integrity stats
         # then we need to erase them, as those stats become out dated
         if len(self._integrity_stats) > 0:
             self._integrity_stats = {}
@@ -123,6 +127,8 @@ class MailContainer(IDataContainer, ISerializable):
             pregexdata = data['pregexdata']
             hostname = pregexdata.get('hostname')
 
+            # if the STORETIME flag is present, we store the date and time
+            # which is given by the logline
             if RegexFlags.STORETIME in flags and ('mxin' in hostname or 'imap' in hostname) and hostname is not None:
                 hostname = hostname.replace('-', '')
 
@@ -150,7 +156,16 @@ class MailContainer(IDataContainer, ISerializable):
             if mxin_qid is not None:
                 self._aggregate(mxin_qid, self._map_qid_mxin, d, logline)
             elif imap_qid is not None:
-                self._aggregate(imap_qid, self._map_qid_imap, d, logline)
+                if RegexFlags.PICKUP in flags or self._map_pickup.get(imap_qid) is not None:
+                    self._aggregate(imap_qid, self._map_pickup, d, logline)
+
+                    prev_map = self._map_qid_imap.get(imap_qid)
+                    if prev_map is not None:
+                        self._merge_data(self._map_pickup, prev_map)
+                        del self._map_qid_imap[imap_qid]
+
+                else:
+                    self._aggregate(imap_qid, self._map_qid_imap, d, logline)
             elif messageid is not None:
                 self._aggregate(messageid, self._map_msgid, d, logline)
 
@@ -294,6 +309,17 @@ class MailContainer(IDataContainer, ISerializable):
                 mail[constants.COMPLETE] = False
                 mail[constants.DESTINATION] = constants.DESTINATION_UNKOWN
 
+        def merge_pickup(finalMail: dict, msgid: str):
+            if msgid is None:
+                return
+
+            for qid_imap, mail in self._map_pickup.items():
+                for k, v in mail.items():
+                    if k == constants.MESSAGEID and msgid == v:
+                        self._merge_data(finalMail, mail)
+                        del self._map_pickup[qid_imap]
+                        return
+
         #
         # collect complete data
         #
@@ -374,6 +400,8 @@ class MailContainer(IDataContainer, ISerializable):
             else:
                 self._integrity_stats['complete_mails'] += 1
 
+            merge_pickup(finalMail, msgid)
+
             self._final_data.append(finalMail)
 
         #
@@ -423,6 +451,8 @@ class MailContainer(IDataContainer, ISerializable):
                 self._integrity_stats['only_imap_qid'] += 1
             """
 
+            merge_pickup(incompleteMail, msgid_imap)
+
             self._final_data.append(incompleteMail)
 
         #
@@ -441,7 +471,15 @@ class MailContainer(IDataContainer, ISerializable):
             verify_fields(incompleteMail)
             incompleteMail[constants.COMPLETE] = False
 
+            merge_pickup(incompleteMail, msgid)
+
             self._final_data.append(incompleteMail)
+
+        #
+        # only pickup mails
+        #
+
+        self._final_data.extend(self._map_pickup.values())
 
         # global stats
 
