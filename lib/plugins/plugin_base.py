@@ -9,7 +9,8 @@ from ..interfaces import IPlugin
 
 
 class RegexFlags(Enum):
-    STORETIME = 1
+    STORETIME = 1,
+    PICKUP = 2
 
 
 class PluginBase(IPlugin, metaclass=abc.ABCMeta):

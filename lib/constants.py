@@ -27,6 +27,11 @@ NOQUEUE = 'NOQUEUE'
 
 MESSAGEID = 'messageid'
 
+# User
+
+USERNAME = 'username'
+UID = 'uid'
+
 # Time
 
 PHD_MXIN_TIME = PHD_MXIN + '_time'

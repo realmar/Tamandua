@@ -18,8 +18,8 @@ class Spamd(SimplePlugin):
                            (?P<spamdesc>[^\s]*)\s
                            scantime=(?P<spamscantime>[^,]*),
                            size=(?P<size>[^,]*),
-                           user=(?P<spamuser>[^,]*),
-                           uid=(?P<spamuid>[^,]*),
+                           user=(?P<''' + constants.USERNAME + r'''>[^,]*),
+                           uid=(?P<''' + constants.UID + r'''>[^,]*),
                            required_score=(?P<spamrequiredscore>[^,]*).+?<
                            (?P<''' + constants.MESSAGEID + r'''>[^>]*)''', re.X)
         ]

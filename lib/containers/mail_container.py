@@ -282,8 +282,8 @@ class MailContainer(IDataContainer, ISerializable):
                     'spamscore',
                     'spamrequiredscore',
                     'spamdesc',
-                    'spamuser',
-                    'spamuid',
+                    constants.USERNAME,
+                    constants.UID,
                     'size'
                 ]):
                     mail[constants.COMPLETE] = False
