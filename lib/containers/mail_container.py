@@ -321,7 +321,9 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         # only pickup mails
         #
 
-        self._final_data.extend(self._map_pickup.values())
+        for m in self._map_pickup.values():
+            if do_postprocessing(m) != ProcessorAction.DELETE:
+                self._final_data.append(m)
 
 
     def represent(self) -> None:
