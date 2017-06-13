@@ -128,7 +128,6 @@ def main():
             try:
                 if not args.printonlyintegrity:
                     container.represent()                   # represent data
-                container.print_integrity_report()      # print integrity stats
 
                 print('\n')
                 print('-' * 60)

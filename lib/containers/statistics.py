@@ -101,7 +101,3 @@ class Statistics(IDataContainer):
     def represent(self) -> None:
         """Output the statistics to STDOUT."""
         pprint(self._data)
-
-    def print_integrity_report(self) -> None:
-        """Does nothing ATM, needed for interface."""
-        pass

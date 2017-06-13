@@ -18,14 +18,11 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         self._map_qid_mxin = {}
         self._map_qid_imap = {}
         self._map_msgid = {}
-
         # this will store all mailfragments which where "sent" by the pickup service
         # map : imap_qid -> mail-fragment
         self._map_pickup = {}
 
         self._final_data = []
-
-        self._integrity_stats = {}
 
         self._pluginManager = None
 
@@ -114,11 +111,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
     def add_info(self, data: dict) -> None:
         """Add data to the container."""
 
-        # if we add new data but have already generated some integrity stats
-        # then we need to erase them, as those stats become out dated
-        if len(self._integrity_stats) > 0:
-            self._integrity_stats = {}
-
         logline = data['raw_logline']
 
         for hasData, flags, d in data['data']:
@@ -175,144 +167,10 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                 self._aggregate(messageid, self._map_msgid, d, logline)
 
     def build_final(self) -> None:
-        """Aggregate data to mail objects and generate integrity stats."""
-
-        """
-        
-        integrity stats description:
-        
-        total_mails
-            total count of mails, complete or incomplete
-        
-        total_mxin
-            total mails with a queueid from phd-mxin
-        
-        total_no_mxin
-            Count of mails where the queueid of phd-mxin is unknown
-            
-            meaning that the queueid of phd-imap is known but the queueid of
-            phd-mxin is unkonwn and the messageid may be known
-        
-        only_mxin_qid
-            Count of mails where only the queueid of phd-mxin is known
-            
-        only_imap_qid
-            Count of mails where only the queueid of phd-imap is known
-        
-        only_messageid
-            Count of mails where only the messageid is known
-        
-        missing_fields
-            Counts fields which are missing from incomplete Mails
-        """
-        self._integrity_stats = {
-            'total_mails': 0,
-            'total_mxin': 0,
-            # 'total_no_mxin': 0,
-
-            # 'only_mxin_qid': 0,
-            # 'only_imap_qid': 0,
-            # 'only_messageid': 0,
-
-            'complete_mails': 0,
-            'incomplete_mails': 0,
-
-            # 'missing_fields': {}
-        }
-
-        self._final_data = []
-        self._final_incomplete_data = []
+        """Aggregate data to mail objects."""
 
         known_qids_imap = {}
         known_msgids = {}
-
-        #
-        # verify_fields contains rules which determines if a mail if complete or not
-        #
-
-        def verify_fields(mail):
-            def check_fields(requiredFields) -> bool:
-                # isComplete = True
-
-                for field in requiredFields:
-                    if mail.get(field) is None:
-                        """
-                        isComplete = False
-
-                        d = self._integrity_stats['missing_fields']
-                        if not isinstance(d.get(field), int):
-                            d[field] = 1
-                        else:
-                            d[field] += 1
-                        """
-
-                        return False
-
-                # return isComplete
-                return True
-
-            def check_fieldcontent(field: typing.Union[str, list], other: str):
-                if field is None:
-                    return False
-
-                if isinstance(field, str):
-                    return other in field.lower()
-                elif isinstance(field, list):
-                    for f in field:
-                        if other in f.lower():
-                            return True
-
-                    return False
-                else:
-                    pass
-                    # TODO: handle
-
-            action = mail.get('action')
-            if check_fieldcontent(action, 'hold') or check_fieldcontent(action, 'reject'):
-                mail[constants.COMPLETE] = True
-                mail[constants.DESTINATION] = constants.DESTINATION_HOLD
-
-            virusresult = mail.get('virusresult')
-            if check_fieldcontent(virusresult, 'passed'):
-                mail[constants.DESTINATION] = constants.DESTINATION_VIRUS
-
-                if not check_fields([
-                    'sender',
-                    'recipient',
-                    'virusresult',
-                    'virusaction'
-                ]):
-                    mail[constants.COMPLETE] = False
-                else:
-                    mail[constants.COMPLETE] = True
-
-            deliverystatus = mail.get('deliverystatus')
-            if check_fieldcontent(deliverystatus, 'sent'):
-                mail[constants.COMPLETE] = True
-                mail[constants.DESTINATION] = constants.DESTINATION_DELIVERED
-
-                if not check_fields([
-                    'sender',
-                    'recipient',
-                    'virusresult',
-                    'virusaction',
-                    'deliverystatus',
-                    'deliverymessage',
-                    'deliveryrelay',
-                    'spamscore',
-                    'spamrequiredscore',
-                    'spamdesc',
-                    constants.USERNAME,
-                    constants.UID,
-                    'size'
-                ]):
-                    mail[constants.COMPLETE] = False
-                else:
-                    mail[constants.COMPLETE] = True
-
-            if mail.get(constants.COMPLETE) is None:
-                mail[constants.COMPLETE] = False
-                mail[constants.DESTINATION] = constants.DESTINATION_UNKOWN
 
         def merge_pickup(finalMail: dict, msgid: str):
             if msgid is None:
@@ -341,9 +199,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                 for m in mail:
                     m[constants.COMPLETE] = True
                     m[constants.DESTINATION] = constants.DESTINATION_REJECT
-
-                    self._integrity_stats['complete_mails'] += 1
-                    # self._integrity_stats['only_mxin_qid'] += 1
 
                     self._final_data.append(m)
 
@@ -380,11 +235,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                         msgid = data_imap.get(constants.MESSAGEID)
 
                     self._merge_data(finalMail, data_imap)
-                """
-                else: 
-                    if msgid is None:
-                        self._integrity_stats['only_mxin_qid'] += 1
-                """
 
                 # collect data for corresponding messageid
 
@@ -401,15 +251,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
                         if data_msgid is not None:
                             self._merge_data(finalMail, data_msgid)
-
-            # determine destination and verify integrity
-
-            verify_fields(finalMail)
-
-            if not finalMail[constants.COMPLETE]:
-                self._integrity_stats['incomplete_mails'] += 1
-            else:
-                self._integrity_stats['complete_mails'] += 1
 
             merge_pickup(finalMail, msgid)
             do_postprocessing(finalMail)
@@ -434,21 +275,14 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                     m[constants.COMPLETE] = True
                     m[constants.DESTINATION] = constants.DESTINATION_REJECT
 
-                    self._integrity_stats['complete_mails'] += 1
-                    # self._integrity_stats['total_no_mxin'] += 1
-                    # self._integrity_stats['only_imap_qid'] += 1
-
                     self._final_data.append(m)
 
                 continue
 
-            self._integrity_stats['incomplete_mails'] += 1
-            # self._integrity_stats['total_no_mxin'] += 1
             msgid_imap = mail.get(constants.MESSAGEID)
 
             # incompleteMail = copy.deepcopy(mail)
             incompleteMail = mail
-            verify_fields(incompleteMail)
             incompleteMail[constants.COMPLETE] = False
 
 
@@ -458,10 +292,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
                 if msgid_mail is not None:
                     self._merge_data(incompleteMail, msgid_mail)
-            """
-            else:
-                self._integrity_stats['only_imap_qid'] += 1
-            """
 
             merge_pickup(incompleteMail, msgid_imap)
             do_postprocessing(finalMail)
@@ -476,12 +306,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             if known_msgids.get(msgid) is not None:
                 continue
 
-            self._integrity_stats['incomplete_mails'] += 1
-            # self._integrity_stats['only_messageid'] += 1
-
             # incompleteMail = copy.deepcopy(mail)
             incompleteMail = mail
-            verify_fields(incompleteMail)
             incompleteMail[constants.COMPLETE] = False
 
             merge_pickup(incompleteMail, msgid)
@@ -495,10 +321,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
         self._final_data.extend(self._map_pickup.values())
 
-        # global stats
-
-        self._integrity_stats['total_mails'] = len(self._final_data)
-        self._integrity_stats['total_mxin'] = len(self._map_qid_mxin)
 
     def represent(self) -> None:
         """Print the contents of this container in a human readable format to stdout."""
@@ -556,27 +378,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             loglines = mail.get(constants.LOGLINES)
             if loglines is not None:
                 print_list(constants.LOGLINES, loglines)
-
-    def print_integrity_report(self) -> None:
-        """Print the integrity report to stdout."""
-        print('\n========' + colorama.Style.BRIGHT + ' Integrity Report ' + colorama.Style.NORMAL + '========')
-
-        if len(self._integrity_stats) == 0:
-            print(
-                'No integrity stats for ' + colorama.Style.BRIGHT + self.__class__.__name__
-                + colorama.Style.NORMAL + ' at the moment.\n'
-                'Please run ' + self.__class__.__name__ + '.build_final() to generate integrity data.'
-            )
-        else:
-            def p(indent: int, key: str, value: str) -> None:
-                print(' ' * indent + colorama.Style.BRIGHT + key + ': ' + colorama.Style.NORMAL + str(value))
-
-            for key, value in sorted(self._integrity_stats.items(), key=lambda x: x[0]):
-                if isinstance(value, dict):
-                    for k, v in value.items():
-                        p(4, k, v)
-                else:
-                    p(0, key, value)
 
     def get_serializable_data(self) -> object:
         """Return data which should and can be serialized."""
