@@ -1,8 +1,8 @@
 """Module which contains the DataContainer class."""
 
 from datetime import datetime
-import typing
-# import copy
+from typing import List, Dict
+import copy
 import colorama
 colorama.init(autoreset=True)
 
@@ -85,7 +85,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                 else:
                     continue
 
-    def _aggregate(self, id: str, target: dict, data: dict, logline: str) -> None:
+    def _aggregate_fragment(self, id: str, target: dict, data: dict, logline: str) -> None:
         """Aggregate data."""
         if id == constants.NOQUEUE:
             data[constants.LOGLINES] = [logline]
@@ -109,7 +109,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         else:
             target[id][constants.LOGLINES].append(logline)
 
-    def add_info(self, data: dict) -> None:
+    def add_fragment(self, data: dict) -> None:
         """Add data to the container."""
 
         logline = data['raw_logline']
@@ -152,10 +152,10 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                     pass
 
             if mxin_qid is not None:
-                self._aggregate(mxin_qid, self._map_qid_mxin, d, logline)
+                self._aggregate_fragment(mxin_qid, self._map_qid_mxin, d, logline)
             elif imap_qid is not None:
                 if RegexFlags.PICKUP in flags or self._map_pickup.get(imap_qid) is not None:
-                    self._aggregate(imap_qid, self._map_pickup, d, logline)
+                    self._aggregate_fragment(imap_qid, self._map_pickup, d, logline)
 
                     prev_map = self._map_qid_imap.get(imap_qid)
                     if prev_map is not None:
@@ -163,168 +163,123 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                         del self._map_qid_imap[imap_qid]
 
                 else:
-                    self._aggregate(imap_qid, self._map_qid_imap, d, logline)
+                    self._aggregate_fragment(imap_qid, self._map_qid_imap, d, logline)
             elif messageid is not None:
-                self._aggregate(messageid, self._map_msgid, d, logline)
+                self._aggregate_fragment(messageid, self._map_msgid, d, logline)
+
+    def __merge_pickup(self, mail: dict, msgid: str) -> None:
+        if msgid is None:
+            return
+
+        for qid, m in self._map_pickup.items():
+            for k, v in m.items():
+                if k == constants.MESSAGEID and msgid == v:
+                    self._merge_data(mail, m)
+                    del self._map_pickup[qid]
+                    return
+
+    def __postprocessing(self, mail: dict) -> ProcessorAction:
+        if self._pluginManager is not None:
+            chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
+            if chain is not None:
+                pd = ProcessorData(mail)
+                chain.process(pd)
+                return pd.action
+
+    def __aggregate_mails(self,
+                          fragments: dict,
+                          fragmentChain: List[Dict[str, dict]],
+                          keyChain: List[str]) -> None:
+        """
+        Abstract:
+        TODO
+        This method does the actual aggregation of multiple fragments into multiple mail-objects.
+
+        Description:
+        TODO
+
+        """
+
+        def __agg_wrapp(frag: dict) -> dict:
+            # create aggregate target
+            target = copy.deepcopy(frag)
+
+            for index in range(len(keyChain)):
+                nextid = target.get(keyChain[index])
+                toDelete = []
+                if nextid is not None:
+                    def agg_nextid(id):
+                        otherFrag = fragmentChain[index].get(id)
+                        if otherFrag is not None:
+                            self._merge_data(target, otherFrag)
+                            # cannot delete object now, as it would break the iteration
+                            toDelete.append(
+                                (index, id)
+                            )
+
+                    if isinstance(nextid, list):
+                        for n in nextid:
+                            agg_nextid(n)
+                    else:
+                        agg_nextid(nextid)
+
+                    for id1, id2 in toDelete:
+                        del fragmentChain[id1][id2]
+                else:
+                    continue
+
+            return target
+
+        def __post(target: dict):
+            self.__merge_pickup(target, target.get(constants.MESSAGEID))
+            if self.__postprocessing(target) != ProcessorAction.DELETE:
+                self._final_data.append(target)
+
+        for id, frag in fragments.items():
+            if isinstance(frag, list):
+                for f in frag:
+                    __post(__agg_wrapp(f))
+
+            else:
+                __post(__agg_wrapp(frag))
+
+        fragments.clear()
 
     def build_final(self) -> None:
         """Aggregate data to mail objects."""
+        self.__aggregate_mails(
+            self._map_qid_mxin,
+            [
+                self._map_qid_imap,
+                self._map_msgid
+            ],
+            [
+                constants.PHD_IMAP_QID,
+                constants.MESSAGEID,
+            ]
+        )
 
-        # TODO: REFACTOR!!!!!!!!!
-        # There is a lot of code duplication and
-        # the code is generally not very clear
+        self.__aggregate_mails(
+            self._map_qid_imap,
+            [
+                self._map_msgid
+            ],
+            [
+                constants.MESSAGEID
+            ]
+        )
 
-        known_qids_imap = {}
-        known_msgids = {}
-
-        def merge_pickup(finalMail: dict, msgid: str):
-            if msgid is None:
-                return
-
-            for qid_imap, mail in self._map_pickup.items():
-                for k, v in mail.items():
-                    if k == constants.MESSAGEID and msgid == v:
-                        self._merge_data(finalMail, mail)
-                        del self._map_pickup[qid_imap]
-                        return
-
-        def do_postprocessing(finalMail: dict) -> ProcessorAction:
-            if self._pluginManager is not None:
-                chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
-                if chain is not None:
-                    pd = ProcessorData(finalMail)
-                    chain.process(pd)
-                    return pd.action
-
-            return ProcessorAction.NONE
-
-        #
-        # collect complete data
-        #
-
-        for qid, mail in self._map_qid_mxin.items():
-            if isinstance(mail, list):
-                # rejected mails, which have the same qid (NOQUEUE)
-                for m in mail:
-                    if do_postprocessing(m) != ProcessorAction.DELETE:
-                        self._final_data.append(m)
-
-                continue
-
-            # finalMail = copy.deepcopy(mail)
-            finalMail = mail
-
-            msgid = mail.get(constants.MESSAGEID)
-            qid_imap = mail.get(constants.PHD_IMAP_QID)
-
-            # it may be possible to have multiple queueids which map to the same mail on phd-mxin
-            # this is when a user sends a mail to multiple persons at the same time.
-            #
-            # we solve that by always assuming multiple queueids on phd-imap which map to one
-            # queueid on phd-mxin --> if there is only one qid then we will just put it into
-            # a list (where this qid is the only item)
-
-            if not isinstance(qid_imap, list):
-                qids_imap = [qid_imap]
-            else:
-                qids_imap = qid_imap
-
-            for qid_imap in qids_imap:
-                data_imap = self._map_qid_imap.get(qid_imap)
-
-                # collect data for corresponding queueid on phd-imap
-
-                if qid_imap is not None:
-                    known_qids_imap[qid_imap] = True
-
-                if data_imap is not None:
-                    if msgid is None:
-                        msgid = data_imap.get(constants.MESSAGEID)
-
-                    self._merge_data(finalMail, data_imap)
-
-                # collect data for corresponding messageid
-
-                if msgid is not None:
-                    if isinstance(msgid, list):
-                        msgids = msgid
-                    else:
-                        msgids = [msgid]
-
-                    for msgid in msgids:
-                        known_msgids[msgid] = True
-
-                        data_msgid = self._map_msgid.get(msgid)
-
-                        if data_msgid is not None:
-                            self._merge_data(finalMail, data_msgid)
-
-            merge_pickup(finalMail, msgid)
-            if do_postprocessing(finalMail) != ProcessorAction.DELETE:
-                self._final_data.append(finalMail)
-
-        #
-        # collect incomplete data --> mails which do not have a queueid on phd-mxin
-        #
-
-        #
-        # get imap unknown
-        #
-
-        for qid, mail in self._map_qid_imap.items():
-            if known_qids_imap.get(qid) is not None:
-                continue
-
-            if isinstance(mail, list):
-                # rejected mails on phd-imap (mailman)
-                for m in mail:
-                    if do_postprocessing(m) != ProcessorAction.DELETE:
-                        self._final_data.append(m)
-
-                continue
-
-            msgid_imap = mail.get(constants.MESSAGEID)
-
-            # incompleteMail = copy.deepcopy(mail)
-            incompleteMail = mail
-            incompleteMail[constants.COMPLETE] = False
-
-
-            if msgid_imap is not None:
-                known_msgids[msgid_imap] = True
-                msgid_mail = self._map_msgid.get(msgid_imap)
-
-                if msgid_mail is not None:
-                    self._merge_data(incompleteMail, msgid_mail)
-
-            merge_pickup(incompleteMail, msgid_imap)
-            if do_postprocessing(incompleteMail) != ProcessorAction.DELETE:
-                self._final_data.append(incompleteMail)
-
-        #
-        # get messageid unknown
-        #
-
-        for msgid, mail in self._map_msgid.items():
-            if known_msgids.get(msgid) is not None:
-                continue
-
-            # incompleteMail = copy.deepcopy(mail)
-            incompleteMail = mail
-            incompleteMail[constants.COMPLETE] = False
-
-            merge_pickup(incompleteMail, msgid)
-            if do_postprocessing(incompleteMail) != ProcessorAction.DELETE:
-                self._final_data.append(incompleteMail)
-
-        #
-        # only pickup mails
-        #
+        self.__aggregate_mails(
+            self._map_msgid,
+            [],
+            []
+        )
 
         for m in self._map_pickup.values():
-            if do_postprocessing(m) != ProcessorAction.DELETE:
+            if self.__postprocessing(m) != ProcessorAction.DELETE:
                 self._final_data.append(m)
 
+        self._map_pickup.clear()
 
     def represent(self) -> None:
         """Print the contents of this container in a human readable format to stdout."""

@@ -61,7 +61,7 @@ class IDataContainer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def add_info(self, data: dict) -> None:
+    def add_fragment(self, data: dict) -> None:
         """Add data to the container."""
         pass
 

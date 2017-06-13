@@ -41,7 +41,7 @@ class DataReceiver():
             foundContainer = False
             for container in self.containers:
                 if folder == container.subscribedFolder:
-                    container.add_info(data)
+                    container.add_fragment(data)
                     foundContainer = True
                     break
 
