@@ -44,5 +44,5 @@ class Chain():
         self.__sort_handlers()
 
     def process(self, data: dict) -> None:
-        for h in self._handlers:
+        for f, h in self._handlers:
             h.process(data)

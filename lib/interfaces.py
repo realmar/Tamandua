@@ -45,6 +45,12 @@ class IProcessorPlugin(IAbstractPlugin, metaclass=ABCMeta):
         pass
 
 
+class IRequiresPlugins(metaclass=ABCMeta):
+    @abstractmethod
+    def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
+        pass
+
+
 class IDataContainer(metaclass=ABCMeta):
     """Public interface of a DataContainer."""
 

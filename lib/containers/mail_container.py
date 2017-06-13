@@ -6,12 +6,12 @@ import typing
 import colorama
 colorama.init(autoreset=True)
 
-from ..interfaces import IDataContainer, ISerializable
+from ..interfaces import IDataContainer, ISerializable, IRequiresPlugins
 from .. import constants
 from ..plugins.plugin_base import RegexFlags
 
 
-class MailContainer(IDataContainer, ISerializable):
+class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
     """Container which aggregates and stores mail objects."""
 
     def __init__(self):
@@ -27,10 +27,15 @@ class MailContainer(IDataContainer, ISerializable):
 
         self._integrity_stats = {}
 
+        self._pluginManager = None
+
     @property
     def subscribedFolder(self) -> str:
         """Return the folder name from which we want the plugin data."""
         return "mail-aggregation"
+
+    def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
+        self._pluginManager = pluginManager
 
     def _merge_data(self, target: dict, origin: dict) -> None:
         """Generic merge method."""
@@ -320,6 +325,11 @@ class MailContainer(IDataContainer, ISerializable):
                         del self._map_pickup[qid_imap]
                         return
 
+        def do_postprocessing(finalMail: dict) -> None:
+            if self._pluginManager is not None:
+                chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
+                chain.process(finalMail)
+
         #
         # collect complete data
         #
@@ -401,6 +411,7 @@ class MailContainer(IDataContainer, ISerializable):
                 self._integrity_stats['complete_mails'] += 1
 
             merge_pickup(finalMail, msgid)
+            do_postprocessing(finalMail)
 
             self._final_data.append(finalMail)
 
@@ -452,6 +463,7 @@ class MailContainer(IDataContainer, ISerializable):
             """
 
             merge_pickup(incompleteMail, msgid_imap)
+            do_postprocessing(finalMail)
 
             self._final_data.append(incompleteMail)
 
@@ -472,6 +484,7 @@ class MailContainer(IDataContainer, ISerializable):
             incompleteMail[constants.COMPLETE] = False
 
             merge_pickup(incompleteMail, msgid)
+            do_postprocessing(finalMail)
 
             self._final_data.append(incompleteMail)
 

@@ -39,7 +39,7 @@ class PluginManager():
         if self.__limitHosts is None:
             self.__limitHosts = []
 
-        self.dataReceiver = DataReceiver()
+        self.dataReceiver = DataReceiver(self)
         # This regex is used to extract generic information from each
         # log line. Eg. hostname
         self.__preRegex = re.compile(config.get('preregex'))

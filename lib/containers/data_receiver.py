@@ -3,16 +3,22 @@
 from .statistics import Statistics
 from .mail_container import MailContainer
 from ..exceptions import print_warning
+from ..interfaces import IRequiresPlugins
 
 
 class DataReceiver():
     """Distribute extracted data from the loglines between data containers."""
 
-    def __init__(self):
-        self.containers = [
-            Statistics(),
-            MailContainer()
-        ]
+    def __init__(self, pluginManager: 'PluginManager'):
+        self.containers = []
+
+        cs = [Statistics, MailContainer]
+
+        for c in cs:
+            ci = c()
+            if issubclass(c, IRequiresPlugins):
+                ci.set_pluginmanager(pluginManager)
+            self.containers.append(ci)
 
     def get_conainers_of_type(self, t: type) -> list:
         """Get a list of containers of a specific type."""
