@@ -9,6 +9,7 @@ colorama.init(autoreset=True)
 from ..interfaces import IDataContainer, ISerializable, IRequiresPlugins
 from .. import constants
 from ..plugins.plugin_base import RegexFlags
+from ..plugins.plugin_processor import ProcessorData, ProcessorAction
 
 
 class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
@@ -183,11 +184,15 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                         del self._map_pickup[qid_imap]
                         return
 
-        def do_postprocessing(finalMail: dict) -> None:
+        def do_postprocessing(finalMail: dict) -> ProcessorAction:
             if self._pluginManager is not None:
                 chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
                 if chain is not None:
-                    chain.process(finalMail)
+                    pd = ProcessorData(finalMail)
+                    chain.process(pd)
+                    return pd.action
+
+            return ProcessorAction.NONE
 
         #
         # collect complete data
@@ -253,9 +258,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                             self._merge_data(finalMail, data_msgid)
 
             merge_pickup(finalMail, msgid)
-            do_postprocessing(finalMail)
-
-            self._final_data.append(finalMail)
+            if do_postprocessing(finalMail) != ProcessorAction.DELETE:
+                self._final_data.append(finalMail)
 
         #
         # collect incomplete data --> mails which do not have a queueid on phd-mxin
@@ -294,9 +298,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                     self._merge_data(incompleteMail, msgid_mail)
 
             merge_pickup(incompleteMail, msgid_imap)
-            do_postprocessing(finalMail)
-
-            self._final_data.append(incompleteMail)
+            if do_postprocessing(incompleteMail) != ProcessorAction.DELETE:
+                self._final_data.append(incompleteMail)
 
         #
         # get messageid unknown
@@ -311,9 +314,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             incompleteMail[constants.COMPLETE] = False
 
             merge_pickup(incompleteMail, msgid)
-            do_postprocessing(finalMail)
-
-            self._final_data.append(incompleteMail)
+            if do_postprocessing(incompleteMail) != ProcessorAction.DELETE:
+                self._final_data.append(incompleteMail)
 
         #
         # only pickup mails

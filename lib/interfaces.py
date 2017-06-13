@@ -41,7 +41,7 @@ class IProcessorPlugin(IAbstractPlugin, metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def process(self, data: dict) -> None:
+    def process(self, obj: object) -> None:
         pass
 
 
