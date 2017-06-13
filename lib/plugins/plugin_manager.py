@@ -17,7 +17,6 @@ import re
 
 from os.path import join as path_join
 from os.path import split as path_split
-from typing import List
 
 from ..containers.data_receiver import DataReceiver
 from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin
