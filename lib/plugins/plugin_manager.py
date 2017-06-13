@@ -17,6 +17,7 @@ import re
 
 from os.path import join as path_join
 from os.path import split as path_split
+from os.path import sep as path_sep
 
 from ..containers.data_receiver import DataReceiver
 from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin
@@ -67,16 +68,15 @@ class PluginManager():
                     # -->
                     # Plugins.test.plugin
                     modul = modul.replace(
-                        absPluginsPath[: absPluginsPath.rfind('/')],
+                        absPluginsPath[: absPluginsPath.rfind(path_sep)],
                         '').replace('.py', '')[
-                        1:].replace('/', '.')
+                        1:].replace(path_sep, '.')
                     # append a tuple in following form:
                     # ( namespace, absolutepath )
                     pluginGroupName = absolute.replace(absPluginsPath, '')
                     split = path_split(pluginGroupName)
-                    #    linux               windows
-                    #      v                    v
-                    if split[0] == '/' or split[0] == '\\':
+
+                    if split[0] == path_sep:
                         pluginGroupName = split[1]
                     else:
                         pluginGroupName = split[0]

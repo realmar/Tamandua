@@ -1,6 +1,9 @@
 # Build
 *.pyc
 
+# virtual env
+ve/*
+
 # Logs
 # *.log
 logdump/*
