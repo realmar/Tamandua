@@ -34,6 +34,8 @@ class Chain():
         else:
             self._handlers = []
 
+        self.__sort_handlers()
+
     def __sort_handlers(self):
         self._handlers.sort(key=lambda x: x[0])
 
