@@ -328,7 +328,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         def do_postprocessing(finalMail: dict) -> None:
             if self._pluginManager is not None:
                 chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
-                chain.process(finalMail)
+                if chain is not None:
+                    chain.process(finalMail)
 
         #
         # collect complete data
