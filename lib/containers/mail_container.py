@@ -170,6 +170,10 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
     def build_final(self) -> None:
         """Aggregate data to mail objects."""
 
+        # TODO: REFACTOR!!!!!!!!!
+        # There is a lot of code duplication and
+        # the code is generally not very clear
+
         known_qids_imap = {}
         known_msgids = {}
 
@@ -202,10 +206,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             if isinstance(mail, list):
                 # rejected mails, which have the same qid (NOQUEUE)
                 for m in mail:
-                    m[constants.COMPLETE] = True
-                    m[constants.DESTINATION] = constants.DESTINATION_REJECT
-
-                    self._final_data.append(m)
+                    if do_postprocessing(m) != ProcessorAction.DELETE:
+                        self._final_data.append(m)
 
                 continue
 
@@ -276,10 +278,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             if isinstance(mail, list):
                 # rejected mails on phd-imap (mailman)
                 for m in mail:
-                    m[constants.COMPLETE] = True
-                    m[constants.DESTINATION] = constants.DESTINATION_REJECT
-
-                    self._final_data.append(m)
+                    if do_postprocessing(m) != ProcessorAction.DELETE:
+                        self._final_data.append(m)
 
                 continue
 
