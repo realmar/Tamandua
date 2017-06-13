@@ -1,4 +1,4 @@
-"""This package contains the PluginManager."""
+"""This module contains the PluginManager."""
 
 # used to dynamically import the plugins
 import inspect
@@ -17,10 +17,14 @@ import re
 
 from os.path import join as path_join
 from os.path import split as path_split
+from typing import List
 
 from ..containers.data_receiver import DataReceiver
-from .plugin_base import IPlugin
-from ..exceptions import print_exception
+from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin
+from .plugin_base import PluginBase
+from .simple_plugin import SimplePlugin
+from .chain import Chain
+from ..exceptions import print_exception, print_warning
 
 # used in annotation
 from ..config import Config
@@ -40,7 +44,8 @@ class PluginManager():
         # log line. Eg. hostname
         self.__preRegex = re.compile(config.get('preregex'))
 
-        self.plugins = None
+        self.plugins = []
+        self._chains = []
         self.__load_plugins(absPluginsPath)
 
     def __load_plugins(self, absPluginsPath: str) -> None:
@@ -77,7 +82,7 @@ class PluginManager():
                     else:
                         pluginGroupName = split[0]
 
-                    modules.append((modul, path_join(absPluginsPath, absolute, f), pluginGroupName))
+                    modules.append((modul, path_join(absPluginsPath, absolute, f), pluginGroupName, f))
 
         for module in modules:
             if sys.version_info[1] < 5:
@@ -98,12 +103,53 @@ class PluginManager():
             classes = inspect.getmembers(
                 imp, lambda cls:
                     isinstance(cls, type) and
-                    issubclass(cls, IPlugin))
+                    issubclass(cls, IAbstractPlugin))
 
             pluginClasses.extend(
-                [(module[2], cls) for name, cls in classes if name != 'PluginBase' and name != 'SimplePlugin'])
+                [(module[2], module[3], cls) for name, cls in classes])
 
-        self.plugins = [(info[0], info[1]()) for info in pluginClasses]
+        chains = {}
+        for info in pluginClasses:
+            folderName = info[0]
+            fileName = info[1]
+            cls = info[2]
+
+            exludePluginTypes = \
+                [IAbstractPlugin, IPlugin, IProcessorPlugin, SimplePlugin, PluginBase]
+
+            if cls in exludePluginTypes:
+                # if the plugin is any of our base classes we will ignore it.
+                continue
+
+            if folderName[-2:] == '.d':
+                if not issubclass(cls, IProcessorPlugin):
+                    # if the plugin is not a processor then
+                    # we will ignore it and warn the user
+                    print_warning('Trying to register a processor plugin which is not a processor: ' + folderName + '/' + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
+                    continue
+
+                rname = folderName[:-2]
+                handler = (fileName, cls())
+                if chains.get(rname) is None:
+                    chains[rname] = [handler]
+                else:
+                    chains[rname].append(handler)
+            else:
+                if not issubclass(cls, IPlugin):
+                    # if the plugin is not a data collection plugin
+                    # we will ignore it and warn the user
+                    print_warning('Trying to register a data collection plugin which is not a data collection plugin: ' + folderName + '/' + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
+                    continue
+
+                self.plugins.append((folderName, cls()))
+
+        for responsibility, handlers in chains.items():
+            self._chains.append(Chain(responsibility, handlers))
+
+    def get_chain_with_responsibility(self, responsibility: str) -> Chain:
+        for c in self._chains:
+            if c.responsibility == responsibility:
+                return c
 
     def process_line(self, line: str) -> None:
         """Extract data from one logline."""

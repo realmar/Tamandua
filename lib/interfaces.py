@@ -4,7 +4,17 @@
 from abc import ABCMeta, abstractmethod
 
 
-class IPlugin(metaclass=ABCMeta):
+class IAbstractPlugin():
+    """
+    Abstract plugin.
+
+    This is a marker interface, which hints a plugin.
+    (Used in PluginManager to identify all types of plugins)
+    """
+    pass
+
+
+class IPlugin(IAbstractPlugin, metaclass=ABCMeta):
     """Public interface which every plugin has to implement."""
 
     @abstractmethod
@@ -15,6 +25,23 @@ class IPlugin(metaclass=ABCMeta):
     @abstractmethod
     def gather_data(self, line: str, preRegexMatches: dict) -> dict:
         """Extract the data from a logline and return the results as a dict."""
+        pass
+
+
+class IProcessorPlugin(IAbstractPlugin, metaclass=ABCMeta):
+    """
+    Interface of a processor plugin.
+
+    A plugin of this type can execute generic
+    operations on a given dict.
+
+    Eg.:
+    Derivatives of this interface could be used as a postprocessors,
+    which modify the mail-objects after their aggregation.
+    """
+
+    @abstractmethod
+    def process(self, data: dict) -> None:
         pass
 
 
