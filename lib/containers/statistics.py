@@ -21,7 +21,7 @@ class Statistics(IDataContainer):
     def subscribedFolder(self) -> str:
         return "statistics"
 
-    def add_info(self, data: dict) -> None:
+    def add_fragment(self, data: dict) -> None:
         """Add more data to the statistic."""
         lineHasData = False
         setHasData = True
