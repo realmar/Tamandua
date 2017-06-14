@@ -9,6 +9,7 @@ dphysDomainRegexps = [re.compile(r'@' + x + r'$', re.X) for x in DPHYS_DOMAINS]
 
 
 def is_any_dphys_subdomain(d: str) -> bool:
+    """Predicate which checks if a given string is a dphys mail address."""
     for regex in dphysDomainRegexps:
         if regex.search(d):
             return True
@@ -17,6 +18,7 @@ def is_any_dphys_subdomain(d: str) -> bool:
 
 
 def check_value(v: Union[List[str], str], predicate: Callable[[str], bool]):
+    """Wrapper function for checking either a string or a list of strings with a predicate."""
     if v is None:
         return False
 
@@ -30,6 +32,7 @@ def check_value(v: Union[List[str], str], predicate: Callable[[str], bool]):
 
 
 def add_tag(data: dict, name: str):
+    """Wrapper function which encapsulates adding tags to a dict."""
     if not isinstance(data.get('tags'), list):
         data['tags'] = [name]
     else:
@@ -37,5 +40,8 @@ def add_tag(data: dict, name: str):
             data['tags'].append(name)
 
 
-def get_tag(data: dict, name: str):
-    return data.get(name)
+def has_tag(data: dict, name: str):
+    """Wrapper function which encapsulates checking if a tag in a given dict exists."""
+    tags = data.get('tags')
+    if isinstance(tags, list):
+        return name in tags
