@@ -11,6 +11,9 @@ class TagIncomingOutgoing(IProcessorPlugin):
         sender = obj.data.get('sender')
         recipient = obj.data.get('recipient')
 
+        if sender is None or recipient is None:
+            return
+
         sender_phys = check_value(sender, is_any_dphys_subdomain)
         recipient_phys = check_value(recipient, is_any_dphys_subdomain)
 
@@ -20,3 +23,5 @@ class TagIncomingOutgoing(IProcessorPlugin):
             add_tag(obj.data, 'outgoing')
         elif not sender_phys and recipient_phys:
             add_tag(obj.data, 'incoming')
+        elif not sender_phys and not recipient_phys:
+            add_tag(obj.data, 'relaying')

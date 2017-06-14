@@ -91,5 +91,6 @@ DPHYS_DOMAINS = [
     'qipc2011.ethz.ch',
     'solid.phys.ethz.ch',
     'stat-phys.org',
-    'stud.phys.ethz.ch'
+    'stud.phys.ethz.ch',
+    'bb.phys.ethz.ch'
 ]

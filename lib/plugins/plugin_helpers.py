@@ -5,7 +5,7 @@ from typing import Union, List, Callable
 
 from ..constants import DPHYS_DOMAINS
 
-dphysDomainRegexps = [re.compile(r'@' + x + r'$', re.X) for x in DPHYS_DOMAINS]
+dphysDomainRegexps = [re.compile(r'@' + x + r'$', re.IGNORECASE) for x in DPHYS_DOMAINS]
 
 
 def is_any_dphys_subdomain(d: str) -> bool:
