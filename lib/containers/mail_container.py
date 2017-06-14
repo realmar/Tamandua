@@ -1,4 +1,4 @@
-"""Module which contains the DataContainer class."""
+"""Module which contains the MailContainer class."""
 
 from datetime import datetime
 from typing import List, Dict
@@ -13,7 +13,14 @@ from ..plugins.plugin_processor import ProcessorData, ProcessorAction
 
 
 class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
-    """Container which aggregates and stores mail objects."""
+    """
+    Container which aggregates and stores mail objects.
+
+    Nomenclature:
+    fragment:   a fragment is a part of a mail-object, this fragment is then merged with
+                other fragments into one mail-object. Eg. such a fragment could be all
+                data of a mail from phd-mxin.
+    """
 
     def __init__(self):
         self._map_qid_mxin = {}
@@ -23,7 +30,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         # map : imap_qid -> mail-fragment
         self._map_pickup = {}
 
-        self._final_data = []
+        self._aggregated_mails = []
 
         self._pluginManager = None
 
@@ -52,7 +59,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
                             if target[key] not in value:
                                 # WARNING: incompatible with python 3.4:
-                                # SyntaxError: can use starred expression only as assignment target
+                                # SyntaxError: can use starred expression
+                                #              only as assignment target
                                 #
                                 #                            unpack values in value
                                 #                               v
@@ -168,6 +176,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                 self._aggregate_fragment(messageid, self._map_msgid, d, logline)
 
     def __merge_pickup(self, mail: dict, msgid: str) -> None:
+        """Merge pickup fragments with a mail-object."""
         if msgid is None:
             return
 
@@ -179,6 +188,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                     return
 
     def __postprocessing(self, mail: dict) -> ProcessorAction:
+        """Apply postprocessing plugins to a mail-object."""
         if self._pluginManager is not None:
             chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
             if chain is not None:
@@ -187,62 +197,148 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                 return pd.action
 
     def __aggregate_mails(self,
-                          fragments: dict,
+                          fragments: Dict[str, dict],
                           fragmentChain: List[Dict[str, dict]],
                           keyChain: List[str]) -> None:
         """
         Abstract:
-        TODO
-        This method does the actual aggregation of multiple fragments into multiple mail-objects.
+        This method aggregates all fragments with a fragmentChain
+        which is defined by the keyChain.
 
         Description:
-        TODO
+        fragments:
+        Dictionary which maps a given ID to a fragment,
+        eg. self._map_qid_mxin
 
+        fragmentChain:
+        the given fragments have to be aggregated with other fragments,
+        those other fragments are found in the fragmentChain:
+
+        eg. a fragmentChain may contain self._map_qid_mxin and self._map_msgid
+        this would mean that the given fragments are first aggregated with
+        self._map_qid_imap and then with self._map_msgid
+
+        keyChain:
+        in order to aggregate the fragments with a fragmentChain
+        the algorithm has to know which keys are relevant for aggregating.
+        Those keys are defined in the keyChain, the keyCHain must have
+        the same amount of elements as the fragmentChain --> each fragments
+        in the fragmentChain is mapped using one key in the keyChain
+
+        eg.
+        fragmentChain = [ self._map_qid_imap,     self._map_msgid     ]
+        keyChain      = [ constants.PHD_IMAP_QID, constants.MESSAGEID ]
+
+        a given key is now used to find a given fragment in the fragmentChain:
+
+        we will start with the first key:
+        index = 1
+
+        frags     = fragmentChain[index]
+        key       = keyChain[index]
+
+        now the key is used to extract a given fragment out of frags:
+
+        fragment = fragments[key]
+
+        this fragment is then merged with one fragment in fragments.
         """
 
-        def __agg_wrapp(frag: dict) -> dict:
+        """
+        Clojures
+        """
+
+        def agg_wrapp(frag: dict) -> dict:
+            """
+            Wrapper function for aggregating the fragments.
+
+            This function is needed, as a fragment may be a list, see below.
+            """
+
             # create aggregate target
+            # all data is aggregated into this dict
             target = copy.deepcopy(frag)
 
+            # the current fragment is now copied to the target
+            # so we can start merging the fragmentChain:
+
+            # we will iterate over the keyChain, as we want to aggregate
+            # the fragment in order of succession
             for index in range(len(keyChain)):
+                # extract the data given by a key
+                # in the keyChain from the target
                 nextid = target.get(keyChain[index])
+
+                # create a list for all fragments which has been aggregated
+                # and can be deleted afterwards
                 toDelete = []
+
+                # if the target contains key data, we will use it to for aggregation
                 if nextid is not None:
                     def agg_nextid(id):
+                        """An id may be a list, so we need a clojure, see below."""
+
+                        # get the fragment stored with the 'id'
                         otherFrag = fragmentChain[index].get(id)
                         if otherFrag is not None:
+                            # if the fragment is not None (aka if it exists)
+                            # we will merge it with the target
                             self._merge_data(target, otherFrag)
-                            # cannot delete object now, as it would break the iteration
+                            # we can not delete the merged fragment now, as it would
+                            # break the iteration, so we have to cache its indexes
                             toDelete.append(
                                 (index, id)
                             )
 
                     if isinstance(nextid, list):
+                        # if the extracted id is a list, then we will
+                        # iterate over it.
+                        # eg. For some reason there may be
+                        # multiple queueids (edge case)
                         for n in nextid:
                             agg_nextid(n)
                     else:
+                        # if the is not a list, then we do not iterate over it
                         agg_nextid(nextid)
 
+                    # when we are finished with the current fragmentChain, we will
+                    # delete all fragments which we aggregated
                     for id1, id2 in toDelete:
                         del fragmentChain[id1][id2]
                 else:
+                    # if not then we will continue with the next key
                     continue
 
             return target
 
-        def __post(target: dict):
+        def merge_pickup_wrapp(target: dict):
             self.__merge_pickup(target, target.get(constants.MESSAGEID))
             if self.__postprocessing(target) != ProcessorAction.DELETE:
-                self._final_data.append(target)
+                self._aggregated_mails.append(target)
 
+        """
+        Procedure start
+        """
+
+        # as we want to aggregate each fragment in fragments with some fragments
+        # in the fragmentChain given by the keys in the keyChain we will iterate
+        # over the fragments:
         for id, frag in fragments.items():
+            # if the fragment is a list then we need to iterate over
+            # this list, as the actual fragments are in this list
+            # This happens when multiple fragments have the same id
+            # in the case of NOQUEUE (rejected mails)
             if isinstance(frag, list):
                 for f in frag:
-                    __post(__agg_wrapp(f))
+                    merge_pickup_wrapp(agg_wrapp(f))
 
             else:
-                __post(__agg_wrapp(frag))
+                # if the fragment is not a list, then it is
+                # a dict, so we can just aggregate it
+                merge_pickup_wrapp(agg_wrapp(frag))
 
+        # all fragments have been aggregated now, we will therefore
+        # clear the list of fragments
         fragments.clear()
 
     def build_final(self) -> None:
@@ -277,7 +373,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
         for m in self._map_pickup.values():
             if self.__postprocessing(m) != ProcessorAction.DELETE:
-                self._final_data.append(m)
+                self._aggregated_mails.append(m)
 
         self._map_pickup.clear()
 
@@ -303,7 +399,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
         # begin printing mails
 
-        for mail in self._final_data:
+        for mail in self._aggregated_mails:
             print('\n')
             print(colorama.Back.LIGHTMAGENTA_EX + '>>>>' * 4 + colorama.Style.BRIGHT + ' Mail ' +
                   colorama.Style.NORMAL + '<<<<' * 4)
@@ -340,4 +436,4 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
     def get_serializable_data(self) -> object:
         """Return data which should and can be serialized."""
-        return self._final_data
+        return self._aggregated_mails
