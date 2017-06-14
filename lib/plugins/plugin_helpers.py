@@ -3,9 +3,14 @@
 import re
 from typing import Union, List, Callable
 
-from ..constants import DPHYS_DOMAINS
+from ..constants import DPHYS_DOMAINS, PHD_MXIN_QID
 
 dphysDomainRegexps = [re.compile(r'@' + x + r'$', re.IGNORECASE) for x in DPHYS_DOMAINS]
+
+
+def is_rejected(d: dict):
+    """Return True if the mail has been rejected."""
+    return check_value(d.get('action'), lambda x: x == 'reject')
 
 
 def is_any_dphys_subdomain(d: str) -> bool:

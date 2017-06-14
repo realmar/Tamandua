@@ -3,11 +3,18 @@
 
 from lib.interfaces import IProcessorPlugin
 from lib.plugins.plugin_processor import ProcessorData
-from lib.plugins.plugin_helpers import add_tag, is_any_dphys_subdomain, check_value
+from lib.plugins.plugin_helpers import \
+                                        add_tag, \
+                                        is_any_dphys_subdomain, \
+                                        check_value, \
+                                        is_rejected
 
 
 class TagIncomingOutgoing(IProcessorPlugin):
     def process(self, obj: ProcessorData) -> None:
+        if is_rejected(obj.data):
+            return
+
         sender = obj.data.get('sender')
         recipient = obj.data.get('recipient')
 

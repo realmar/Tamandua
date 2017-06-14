@@ -2,7 +2,7 @@
 
 from lib.interfaces import IProcessorPlugin
 from lib.plugins.plugin_processor import ProcessorData
-from lib.plugins.plugin_helpers import add_tag, check_value
+from lib.plugins.plugin_helpers import add_tag, check_value, is_rejected
 
 
 class TagAction(IProcessorPlugin):
@@ -13,9 +13,9 @@ class TagAction(IProcessorPlugin):
 
         if action == 'hold':
             add_tag(obj.data, 'hold')
-        elif action == 'reject':
+        elif is_rejected(obj.data):
             reason = obj.data.get('rejectreason')
             if check_value(reason, lambda x: 'greylisted' in x.lower()):
                 add_tag(obj.data, 'greylisted')
-            elif check_value(reason, lambda x: 'account expired' in x.lower()):
-                add_tag(obj.data, 'account_expired')
+            # elif check_value(reason, lambda x: 'account expired' in x.lower()):
+            #    add_tag(obj.data, 'account_expired')
