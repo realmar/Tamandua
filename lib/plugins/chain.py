@@ -3,6 +3,7 @@
 
 from typing import List, Tuple
 from ..interfaces import IProcessorPlugin
+from .plugin_processor import ProcessorData, ProcessorAction
 
 
 class Chain():
@@ -45,6 +46,9 @@ class Chain():
         )
         self.__sort_handlers()
 
-    def process(self, data: dict) -> None:
+    def process(self, data: ProcessorData) -> None:
         for f, h in self._handlers:
             h.process(data)
+
+            if data.action == ProcessorAction.DELETE:
+                return
