@@ -68,3 +68,28 @@ CONFIGFILE = 'config.json'
 
 TAMANDUAENV = 'TAMANDUAENV'
 DEVENV = 'development'
+
+# domain specific data
+
+DPHYS_DOMAINS = [
+    'aglpl.ch',
+    'chipp.ch',
+    'comp-phys.org',
+    'first.ethz.ch',
+    'ihp.phys.ethz.ch',
+    'iqe.phys.ethz.ch',
+    'itp.phys.ethz.ch',
+    'lists.comp-phys.org',
+    'lists.phys.ethz.ch',
+    'mail.phys.ethz.ch',
+    'openqu.org',
+    'particle.phys.ethz.ch',
+    'paulicenter.ch',
+    'phd-mxin.ethz.ch',
+    'phys.ethz.ch',
+    'physiklaborant.ch',
+    'qipc2011.ethz.ch',
+    'solid.phys.ethz.ch',
+    'stat-phys.org',
+    'stud.phys.ethz.ch'
+]

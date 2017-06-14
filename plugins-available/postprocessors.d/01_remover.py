@@ -7,6 +7,7 @@ from lib.plugins.plugin_processor import ProcessorData, ProcessorAction
 class RemoveUnwanted(IProcessorPlugin):
     def process(self, obj: ProcessorData) -> None:
         recipient = obj.data.get('recipient')
+
         if not isinstance(recipient, list):
             recipient = [recipient]
 
