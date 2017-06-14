@@ -22,7 +22,8 @@ class TagAction(IProcessorPlugin):
         'no_longer_at_dphys'    : 'no longer at eth zurich d-phys',
         'greylisted'            : 'greylisted',
         'relay_denied'          : 'relay access denied',
-        'encryption_required'   : 'session encryption is required'
+        'encryption_required'   : 'session encryption is required',
+        'client_rejected'       : 'client host rejected'
     }
 
     def process(self, obj: ProcessorData) -> None:
