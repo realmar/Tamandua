@@ -32,12 +32,6 @@ class VerifyDelivery(BaseVerifyProcessor):
     def _get_additional_fields(self, obj: ProcessorData) -> list:
         fields = []
 
-        def add_mxin_qid_time():
-            fields.extend([
-                constants.PHD_MXIN_QID,
-                constants.PHD_MXIN_TIME
-            ])
-
         messageid = obj.data.get(constants.MESSAGEID)
 
         if not (is_mailinglist(obj.data.get('sender')) and
@@ -45,7 +39,10 @@ class VerifyDelivery(BaseVerifyProcessor):
                     obj.data.get('loglines'),
                     lambda x: self.__imapLocalhostClientRegex.search(x) is not None
                 )):
-            add_mxin_qid_time()
+            fields.extend([
+                constants.PHD_MXIN_QID,
+                constants.PHD_MXIN_TIME
+            ])
 
             if messageid != '':
                 fields.extend([
