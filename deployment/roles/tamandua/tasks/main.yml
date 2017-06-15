@@ -7,6 +7,7 @@
     - python3-colorama
     - python3-flask
     - python3-flask-restful
+    - python3-typing
 
 - name: clone tamandua git repository into opt
   git:
