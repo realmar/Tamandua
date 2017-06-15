@@ -50,3 +50,11 @@ def has_tag(data: dict, name: str):
     tags = data.get('tags')
     if isinstance(tags, list):
         return name in tags
+
+
+def get_max(l: Union[object, list]) -> object:
+    """Return max of l if it is a list or directly return l if it is not a list."""
+    if isinstance(l, list):
+        return max(l)
+
+    return l

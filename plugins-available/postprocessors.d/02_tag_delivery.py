@@ -1,4 +1,4 @@
-"""Postprocessor plugin which tags an email for incoming or outgoing."""
+"""Postprocessor plugin."""
 
 
 from lib.interfaces import IProcessorPlugin
@@ -10,7 +10,9 @@ from lib.plugins.plugin_helpers import \
                                         is_rejected
 
 
-class TagIncomingOutgoing(IProcessorPlugin):
+class TagDelivery(IProcessorPlugin):
+    """Tag mails depending on their mail addresses."""
+
     def process(self, obj: ProcessorData) -> None:
         if is_rejected(obj.data):
             return

@@ -23,6 +23,7 @@ from ..containers.data_receiver import DataReceiver
 from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin
 from .plugin_base import PluginBase
 from .simple_plugin import SimplePlugin
+from .plugin_processor import BaseVerifyProcessor
 from .chain import Chain
 from ..exceptions import print_exception, print_warning
 
@@ -114,7 +115,14 @@ class PluginManager():
             cls = info[2]
 
             exludePluginTypes = \
-                [IAbstractPlugin, IPlugin, IProcessorPlugin, SimplePlugin, PluginBase]
+                [
+                    IAbstractPlugin,
+                    IPlugin,
+                    IProcessorPlugin,
+                    SimplePlugin,
+                    PluginBase,
+                    BaseVerifyProcessor
+                ]
 
             if cls in exludePluginTypes:
                 # if the plugin is any of our base classes we will ignore it.
