@@ -45,11 +45,19 @@ def main():
         type=str,
         help='Path to the configfile')
     parser.add_argument(
-        '--print-only-integrity',
-        dest='printonlyintegrity',
-        default=False,
-        action='store_true',
-        help='Only print the integrity stats.')
+        '--outpath',
+        '-o',
+        dest='store_path',
+        default=None,
+        type=str,
+        help='Path to the output file')
+    parser.add_argument(
+        '--outformat',
+        '-f',
+        dest='store_type',
+        default=None,
+        type=str,
+        help='Output format: can be either pyobj-store or json')
     parser.add_argument(
         '--no-print',
         dest='noprint',
@@ -59,7 +67,13 @@ def main():
     args = parser.parse_args()
 
     try:
-        config = Config(args.configfile, BASEDIR)
+        config = Config(
+            args.configfile,
+            BASEDIR,
+            {
+                'store_path': args.store_path,
+                'store_type': args.store_type
+            })
     except FileNotFoundError as e:
         print_exception(
             e,
@@ -119,15 +133,14 @@ def main():
         except Exception as e:
             print_exception(
                 e,
-                'Aggregating the data and building integrity stats',
+                'Aggregating the data',
                 'Discarding aggregation and exiting application',
                 fatal=True)
             sys.exit(10)
 
         if not args.noprint:
             try:
-                if not args.printonlyintegrity:
-                    container.represent()                   # represent data
+                container.represent()                   # represent data
 
                 print('\n')
                 print('-' * 60)
