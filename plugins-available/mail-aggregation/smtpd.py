@@ -16,14 +16,15 @@ class Smtpd(SimplePlugin):
     def _define_data_regex(self):
         self._dataRegex = [
             # saslauth and saslmethod
-            (re.compile(r''':\s
-                            (?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s[^,]*,\s
+            (re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
+                            client=(?P<connectclient>[^\[]+?)\[
+                            (?P<connectip>[^\]]+?)\],\s
                             sasl_method=(?P<saslmethod>[^,]*),\s
                             sasl_username=(?P<saslusername>[^$]*)''', re.X), (RegexFlags.STORETIME,)),
 
             # no saslauth
 
-            (re.compile(r':\s(?P<' + constants.HOSTNAME_QID + r'>[^:]*):\sclient'), (RegexFlags.STORETIME,)),
+            (re.compile(r':\s(?P<' + constants.HOSTNAME_QID + r'>[^:]*):\sclient=(?P<connectclient>[^\]]+?)\[(?P<connectip>[^\]]+?)\]'), (RegexFlags.STORETIME,)),
 
             # reject RCPT and VRFY
             (re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
