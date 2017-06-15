@@ -6,14 +6,22 @@ from typing import Union, List, Callable
 from ..constants import DPHYS_DOMAINS, PHD_MXIN_QID
 
 dphysDomainRegexps = [re.compile(r'@' + x + r'$', re.IGNORECASE) for x in DPHYS_DOMAINS]
+maillinglistRegex = re.compile(r'@lists.phys.ethz.ch$', re.IGNORECASE)
+
+# create type alias
+ListOrStr = Union[List[str], str]
 
 
-def is_rejected(d: dict):
+def is_mailinglist(s: ListOrStr) -> bool:
+    return check_value(s, lambda x: maillinglistRegex.search(x) is not None)
+
+
+def is_rejected(d: dict) -> bool:
     """Return True if the mail has been rejected."""
     return check_value(d.get('action'), lambda x: x == 'reject')
 
 
-def is_any_dphys_subdomain(d: str) -> bool:
+def is_dphys_subdomain(d: str) -> bool:
     """Predicate which checks if a given string is a dphys mail address."""
     for regex in dphysDomainRegexps:
         if regex.search(d):
@@ -22,7 +30,7 @@ def is_any_dphys_subdomain(d: str) -> bool:
     return False
 
 
-def check_value(v: Union[List[str], str], predicate: Callable[[str], bool]):
+def check_value(v: ListOrStr, predicate: Callable[[str], bool]):
     """Wrapper function for checking either a string or a list of strings with a predicate."""
     if v is None:
         return False

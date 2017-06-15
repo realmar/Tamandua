@@ -1,18 +1,22 @@
 """Postprocessor plugin."""
 
+import re
+
 from lib.plugins.plugin_processor import BaseVerifyProcessor, ProcessorData
-from lib.plugins.plugin_helpers import has_tag, is_rejected, get_max
+from lib.plugins.plugin_helpers import has_tag, is_rejected, get_max, is_mailinglist, check_value
 import lib.constants as constants
 
 
 class VerifyDelivery(BaseVerifyProcessor):
     """Verify delivery."""
 
+    # regex which matches loglines on phd-imap which show localhost as connecting client
+    # those loglines hit a mail from a mailinglist directly from imap
+    __imapLocalhostClientRegex = re.compile(r'phd-imap\spostfix\/smtpd\[[^\]]+?\]:\s[^\:]+?\:\sclient=localhost\[[^\]]+?\]')
+
     def _setup(self) -> None:
         self._matchingTags = ['incoming', 'outgoing', 'internal', 'relay']
         self._requiredFields = [
-            constants.PHD_MXIN_QID,
-            constants.PHD_MXIN_TIME,
             constants.MESSAGEID,
             'size',
             'sender',
@@ -28,13 +32,26 @@ class VerifyDelivery(BaseVerifyProcessor):
     def _get_additional_fields(self, obj: ProcessorData) -> list:
         fields = []
 
+        def add_mxin_qid_time():
+            fields.extend([
+                constants.PHD_MXIN_QID,
+                constants.PHD_MXIN_TIME
+            ])
+
         messageid = obj.data.get(constants.MESSAGEID)
 
-        if messageid != '':
-            fields.extend([
-                'virusresult',
-                'virusaction'
-            ])
+        if not (is_mailinglist(obj.data.get('sender')) and
+                check_value(
+                    obj.data.get('loglines'),
+                    lambda x: self.__imapLocalhostClientRegex.search(x) is not None
+                )):
+            add_mxin_qid_time()
+
+            if messageid != '':
+                fields.extend([
+                    'virusresult',
+                    'virusaction'
+                ])
 
         virusresult = obj.data.get('virusresult')
         if messageid != '' and virusresult is not None and 'Blocked INFECTED' not in virusresult:
