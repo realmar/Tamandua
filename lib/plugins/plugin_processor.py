@@ -1,5 +1,6 @@
 """Helper classes of the processor plugins."""
 
+import types
 from enum import Enum
 from abc import ABCMeta, abstractmethod
 
@@ -51,9 +52,16 @@ class BaseVerifyProcessor(IProcessorPlugin, metaclass=ABCMeta):
 
     self._requiredFields = [
         'sender',                       # check if the field 'sender' is present
-        'recipient',                    # require the field 'recipient' to be present
+
+        ('uid', 3)                      # check if 'uid' is present and
+                                        # it is exactly equal to 3
+
         ('deliverystatus', 'sent')      # check if the field 'deliverystatus' is present
-                                        # AND if its value is equal to 'sent'
+                                        # and if it is found somewhere in 'sent'
+
+        ('spamscore', lambda x: x > 5)  # check if 'spamscore' is present and
+                                        # verify its content using a
+                                        # predicate of type Callable[[str], bool]
     ]
     """
 
@@ -136,7 +144,17 @@ class BaseVerifyProcessor(IProcessorPlugin, metaclass=ABCMeta):
                     add_tag(obj.data, 'incomplete')
                     return
                 else:
-                    if content is not None and not content in obj.data[f]:
-                        add_tag(obj.data, 'incomplete')
+                    if content is not None:
+                        if isinstance(content, types.LambdaType):
+                            if not content(obj.data[f]):
+                                add_tag(obj.data, 'incomplete')
+                        else:
+                            if isinstance(content, str):
+                                comp = lambda x, y: x in y
+                            else:
+                                comp = lambda x, y: x == y
+
+                            if not comp(content, obj.data[f]):
+                                add_tag(obj.data, 'incomplete')
                         return
 
