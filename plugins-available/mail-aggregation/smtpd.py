@@ -2,9 +2,9 @@
 
 import re
 
-from lib.plugins.simple_plugin import SimplePlugin
-from lib.plugins.plugin_base import RegexFlags
-from lib import constants
+from src.plugins.simple_plugin import SimplePlugin
+from src.plugins.plugin_base import RegexFlags
+from src import constants
 
 
 class Smtpd(SimplePlugin):

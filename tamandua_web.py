@@ -16,12 +16,12 @@ sys.path.append(BASEDIR)
 from flask import Flask, render_template
 from flask_restful import Api
 
-from lib.web.data_finder import DataFinder
-from lib.config import Config
-from lib.constants import CONFIGFILE
-from lib.exceptions import print_exception
-from lib.web.exceptions import errors as api_errors
-import lib.web.rest_api as rest_api
+from src.web.data_finder import DataFinder
+from src.config import Config
+from src.constants import CONFIGFILE
+from src.exceptions import print_exception
+from src.web.exceptions import errors as api_errors
+import src.web.rest_api as rest_api
 
 
 app = Flask(

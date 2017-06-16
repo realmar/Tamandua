@@ -1,9 +1,9 @@
 """Postprocessor plugin."""
 
 
-from lib.interfaces import IProcessorPlugin
-from lib.plugins.plugin_processor import ProcessorData
-from lib.plugins.plugin_helpers import \
+from src.interfaces import IProcessorPlugin
+from src.plugins.plugin_processor import ProcessorData
+from src.plugins.plugin_helpers import \
                                         add_tag, \
                                         is_dphys_subdomain, \
                                         check_value, \

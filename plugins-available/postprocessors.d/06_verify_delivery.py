@@ -2,9 +2,9 @@
 
 import re
 
-from lib.plugins.plugin_processor import BaseVerifyProcessor, ProcessorData
-from lib.plugins.plugin_helpers import has_tag, is_rejected, get_max, is_mailinglist, check_value
-import lib.constants as constants
+from src.plugins.plugin_processor import BaseVerifyProcessor, ProcessorData
+from src.plugins.plugin_helpers import has_tag, is_rejected, get_max, is_mailinglist, check_value
+import src.constants as constants
 
 
 class VerifyDelivery(BaseVerifyProcessor):

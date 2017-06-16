@@ -20,11 +20,11 @@ if sys.version_info[1] < 5:
 else:
     from json import JSONDecodeError
 
-from lib.plugins.plugin_manager import PluginManager
-from lib.config import Config
-from lib.serialization.serializer import Serializer
-from lib.constants import CONFIGFILE
-from lib.exceptions import print_exception
+from src.plugins.plugin_manager import PluginManager
+from src.config import Config
+from src.serialization.serializer import Serializer
+from src.constants import CONFIGFILE
+from src.exceptions import print_exception
 
 
 def main():

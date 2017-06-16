@@ -1,8 +1,8 @@
 """Postprocessor plugin which adds action tags."""
 
-from lib.interfaces import IProcessorPlugin
-from lib.plugins.plugin_processor import ProcessorData
-from lib.plugins.plugin_helpers import add_tag, check_value, is_rejected
+from src.interfaces import IProcessorPlugin
+from src.plugins.plugin_processor import ProcessorData
+from src.plugins.plugin_helpers import add_tag, check_value, is_rejected
 
 
 class TagAction(IProcessorPlugin):

@@ -2,8 +2,8 @@
 
 import re
 
-from lib.plugins.simple_plugin import SimplePlugin
-from lib import constants
+from src.plugins.simple_plugin import SimplePlugin
+from src import constants
 
 
 class Delivery(SimplePlugin):
