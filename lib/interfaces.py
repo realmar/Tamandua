@@ -42,12 +42,31 @@ class IProcessorPlugin(IAbstractPlugin, metaclass=ABCMeta):
 
     @abstractmethod
     def process(self, obj: object) -> None:
+        """
+        Process a given object.
+
+        This method is called by the framework.
+
+        The type of 'obj' is a covariant argument.
+        (aka obj may be any derived type of 'object'.
+        This is not typesafe but allows for greater
+        flexibility.)
+        """
         pass
 
 
 class IRequiresPlugins(metaclass=ABCMeta):
+    """
+    This class requires plugins and therefore the PluginManager.
+
+    IDataContainer may require plugins to do its work. Therefore
+    DataReceiver needs a mean to detect that and assign the
+    PluginManager. This interface does exactly that.
+    """
+
     @abstractmethod
     def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
+        """Assign the PluginManager."""
         pass
 
 

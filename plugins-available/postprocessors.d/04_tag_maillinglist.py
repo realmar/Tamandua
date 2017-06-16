@@ -7,7 +7,8 @@ from lib.plugins.plugin_processor import ProcessorData
 from lib.plugins.plugin_helpers import add_tag, is_mailinglist
 
 
-class TagIncomingOutgoing(IProcessorPlugin):
+class TagMailinglist(IProcessorPlugin):
+    """Tag mail from mailinglists."""
 
     def process(self, obj: ProcessorData) -> None:
         sender = obj.data.get('sender')

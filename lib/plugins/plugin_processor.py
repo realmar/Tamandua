@@ -5,22 +5,35 @@ from enum import Enum
 from abc import ABCMeta, abstractmethod
 
 from ..interfaces import IProcessorPlugin
-from .plugin_helpers import add_tag, has_tag
+from .plugin_helpers import add_tag, has_tag 
 
 
 class ProcessorAction(Enum):
+    """Enum which hints external action which should accur on a object given to a processor."""
+
     KEEP = 1
     DELETE = 2
     NONE = 3
 
 
 class ProcessorData():
+    """
+    Wrapper class for data passed to processors.
+
+    It supports hints which may provoke additional logic in the caller.
+    Eg. deleting the object given to the processor. Note that
+    this is completely dependant on the implementation of the client (caller).
+    Eg. MailContainer supports this behavior.
+    """
+
     def __init__(self, data: dict):
+        """Constructor of ProcessorData."""
         self.__data = data
         self.action = ProcessorAction.KEEP
 
     @property
     def data(self):
+        """Get stored data."""
         return self.__data
 
 
