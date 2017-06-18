@@ -15,7 +15,7 @@ class Statistics(IDataContainer):
             'total_irrelevant': 0,
             'total': 0,
             'total_unknown': 0
-            }
+        }
 
     @property
     def subscribedFolder(self) -> str:
@@ -53,7 +53,6 @@ class Statistics(IDataContainer):
                     # if the value we want to add is None
                     # then we ignore it and continue with the next
                     continue
-
 
                 for subname in separateNames:
                     currIteration += 1

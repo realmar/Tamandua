@@ -14,6 +14,7 @@ else:
 
 # used for the pre regex
 import re
+from typing import cast
 
 from os.path import join as path_join
 from os.path import split as path_split
@@ -43,7 +44,7 @@ class PluginManager():
         self.dataReceiver = DataReceiver(self)
         # This regex is used to extract generic information from each
         # log line. Eg. hostname
-        self.__preRegex = re.compile(config.get('preregex'))
+        self.__preRegex = re.compile(cast(str, config.get('preregex')))
 
         self.plugins = []
         self._chains = []
@@ -132,7 +133,8 @@ class PluginManager():
                 if not issubclass(cls, IProcessorPlugin):
                     # if the plugin is not a processor then
                     # we will ignore it and warn the user
-                    print_warning('Trying to register a processor plugin which is not a processor: ' + folderName + '/' + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
+                    print_warning('Trying to register a processor plugin which is not a processor: ' + folderName + '/'
+                                  + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
                     continue
 
                 rname = folderName[:-2]
@@ -145,7 +147,8 @@ class PluginManager():
                 if not issubclass(cls, IPlugin):
                     # if the plugin is not a data collection plugin
                     # we will ignore it and warn the user
-                    print_warning('Trying to register a data collection plugin which is not a data collection plugin: ' + folderName + '/' + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
+                    print_warning('Trying to register a data collection plugin which is not a data collection plugin: '
+                                  + folderName + '/' + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
                     continue
 
                 self.plugins.append((folderName, cls()))

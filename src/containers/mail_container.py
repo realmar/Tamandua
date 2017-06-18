@@ -113,7 +113,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             target[id] = data
 
         if not isinstance(target[id].get(constants.LOGLINES), list):
-            target[id][constants.LOGLINES] = [ logline ]
+            target[id][constants.LOGLINES] = [logline]
         else:
             target[id][constants.LOGLINES].append(logline)
 

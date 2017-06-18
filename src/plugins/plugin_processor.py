@@ -162,12 +162,19 @@ class BaseVerifyProcessor(IProcessorPlugin, metaclass=ABCMeta):
                             if not content(obj.data[f]):
                                 add_tag(obj.data, 'incomplete')
                         else:
-                            if isinstance(content, str):
-                                comp = lambda x, y: x in y
-                            else:
-                                comp = lambda x, y: x == y
 
-                            if not comp(content, obj.data[f]):
+                            def equal():
+                                return content == obj.data[f]
+
+                            def contains():
+                                return content in obj.data[f]
+
+                            if isinstance(content, str):
+                                comp = contains
+                            else:
+                                comp = equal
+
+                            if not comp():
                                 add_tag(obj.data, 'incomplete')
                         return
 

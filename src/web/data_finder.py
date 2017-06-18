@@ -128,7 +128,6 @@ class DataFinder():
             except Exception as e:
                 raise ExpressionInvalid("To datetime format is invalid: " + str(endTimeRaw))
 
-
         """
         Datafiltering
         """
@@ -201,7 +200,6 @@ class DataFinder():
                     mismatch = not startComp
                 elif endComp is not None:
                     mismatch = not endComp
-
 
             if mismatch:
                 continue

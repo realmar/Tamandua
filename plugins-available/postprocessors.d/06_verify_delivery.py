@@ -12,7 +12,8 @@ class VerifyDelivery(BaseVerifyProcessor):
 
     # regex which matches loglines on phd-imap which show localhost as connecting client
     # those loglines hit a mail from a mailinglist directly from imap
-    __imapLocalhostClientRegex = re.compile(r'phd-imap\spostfix\/smtpd\[[^\]]+?\]:\s[^\:]+?\:\sclient=localhost\[[^\]]+?\]')
+    __imapLocalhostClientRegex = re.compile(r'''phd-imap\spostfix\/smtpd\[[^\]]+?\]:
+                                                \s[^\:]+?\:\sclient=localhost\[[^\]]+?\]''', re.X)
 
     def _setup(self) -> None:
         self._matchingTags = ['incoming', 'outgoing', 'internal', 'relay']
