@@ -6,7 +6,8 @@ from .plugin_base import PluginBase
 class SimplePlugin(PluginBase):
     """Simplifies the implementation of PluginBase."""
 
-    def _format_hostname(self, hostname: str) -> str:
+    @staticmethod
+    def _format_hostname(hostname: str) -> str:
         return hostname.replace('-', '')
 
     def _specify_regex_group_name(self, dataRegexMatches: dict, preRegexMatches: dict) -> dict:
