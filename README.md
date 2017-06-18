@@ -22,8 +22,8 @@ Usage
 -----
 ### Parser
 ```sh
-(ve) $ tamandua_parser   <logfile>
-                    --help      # show all options
+(ve) $ tamandua_parser  <logfile>
+                        --help      # show all options
 ```
 
 ### Web
@@ -114,12 +114,8 @@ class IUpperCamelCase(metaclass=ABCMeta):
         pass
 ```
 
-Writing Code
-------------
-
-### Containers
-_NOTE: In order to write new containers, advanced python and SE knowledge is recommended._
-
+Containers
+----------
 Data Collection classes are containers which handle the extracted data from the plugins. Those containers may use plugins called `Processors` to delegate processing of the data. Those containers are therefore called data containers.
 
 Each container has a `subscribedFolder` property, this property defines which data it receives. This string has to match to the folder name of the plugins which generate data for a given container. Eg.: a container whose `subscribedFolder` is equal to `example` will receive all data from plugins in following folder: `plugins-available/example/`.
@@ -158,7 +154,7 @@ def __init__(self, pluginManager: 'PluginManager'):
 Now we are good to go! We just need to write some data collection plugins.
 
 
-#### Serialization
+### Serialization
 If you want to serialize your data container, you need to inherit from `src.interfaces.ISerializable` and implement the interface:
 
 ```python
@@ -174,7 +170,7 @@ class ExampleContainer(IDataContainer, ISerializable):
 
 The framework will now serialize your data container!
 
-#### Use Processor Plugins in a data container
+### Use Processor Plugins in a data container
 You may use processor plugins in your data container by inheriting from `src.interfaces.IRequiresPlugins` and implementing the interface:
 
 ```python
@@ -209,10 +205,11 @@ class ExampleContainer(IDataContainer, IRequiresPlugins):
 
 The framework will now setup your data container with the plugin manager. (Dependency Injection)
 
-### Plugins
+Plugins
+-------
 Tamandua differentiates between two types of plugins: data collection and processor plugins. As the name suggests the first ones are used to gather data from logfiles and the second ones are used for additional data processing. (eg. postprocessing)
 
-#### Data Collection
+### Data Collection
 Data collection plugins are located in folders in `plugins-available` without ending to `.d`. They may inherit from different base classes or directly from the `src.interfaces.IPlugin` interface: (It is recommended to inherit from a base class for generic plugin logic)
 
 Lets create a new plugin:
@@ -221,18 +218,99 @@ First we have to decide to which data container we want to send the data extract
 
 At the time of writing this readme there are two data containers: `MailContainer` and `Statistics` which subscribe to `mail-container` and `statistics`. The plugins written for both data containers are almost the same:
 
-##### Mail-Aggregation
+#### Mail-Aggregation
 
 ```python
+class ExampleDataCollection(SimplePlugin):
+    def check_subscription(self, line: str) -> bool:
+        pass
+
+    def gather_data(self, line: str, preRegexMatches: dict) -> dict:
+        pass
 ```
 
-##### Statistics
+#### Statistics
+The statistics plugin is implemented the same way as the mail aggregation plugins, the only difference is that you will want to inherit from `src.plugins.plugin_base.PluginBase` instead of `SimplePlugin`. This is because the base class `PluginBase` offers great means to extend your regexp group names.
 
-##### Generic data collection plugin
-If you do not want to reuse any functionality of 
+```python
+class ExampleDataCollection(PluginBase):
+    def check_subscription(self, line: str) -> bool:
+        pass
 
-#### Processors
+    def gather_data(self, line: str, preRegexMatches: dict) -> dict:
+        pass
+```
 
+#### Generic data collection plugin
+If you do not want to reuse any functionality of any of those base classes, you may inherit directly from the `src.interfaces.IPlugin` interface and implements its members. The pluginManager will now know how to treat your "custom" plugin.
+
+Eg.:
+```python
+class CustomPlugin(IPlugin):
+    def check_subscription(self, line: str) -> bool:
+        pass
+
+    def gather_data(self, line: str, preRegexMatches: dict) -> dict:
+        pass
+```
+
+### Processors
+The most basic Processor inherits from `src.interfaces.IProcessorPlugin`.
+```python
+class ExampleProcessor(IProcessorPlugin):
+    def process(self, obj: object) -> None:
+        pass
+```
+
+#### Processors are chained
+A given type of processors are put together to a chain of responsibility by the PluginManager. Then a responsibility (string) is assigned to this chain. Clients can then get those chains by their responsibility:
+
+Client code:
+```python
+chain = pluginManager.get_chain_with_responsibility('example_resp')
+```
+
+A client can then give an object to the chain which will in turn give this object to all processors in a given order.
+
+```python
+chain.process(object)
+```
+
+Processor plugins are located in plugin folders ending to `.d`. (eg. `postprocessors.d`) The name of their responsibility is this foldername minus the `.d` at the end. (eg. folder: `postprocessors.d` --> responsibility: `postprocessors`)
+
+For each of this responsibilities a `Chain` is created.
+
+#### Order of execution
+Each `Chain` sorts its processors by the filename of the file in which their were found.
+
+For Example:
+```sh
+.
+└── postprocessors.d
+    ├── 01_remover.py
+    ├── 02_tag_delivery.py
+    ├── 03_tag_action.py
+    ├── 04_tag_maillinglist.py
+    ├── 05_tag_spam.py
+    └── 06_verify_delivery.py
+```
+
+Plugins in those folder will be executed in the order shown. Note that plugins are classes in those files, this means, that if a file contains multiple plugins, they will not have a specific order.
+
+#### Using metadata with Processors
+You may want to trigger external logic from within a processor. This is done via a wrapper class (`ProcessorData`) which holds this metadata.
+
+For example you may want to delete a given object, this can be done as follow:
+```python
+class ExampleProcessor(IProcessorPlugin):
+    def process(self, obj: ProcessorData) -> None:
+        obj.action = ProcessorAction.DELETE
+```
+
+The `Chain` will detect, that a given plugin has marked its data to be deleted. So it will stop iterating over its processor and give control back to the caller immediately. (Who then will do the actual deletion)
+
+### Introduce a new type of plugin
+If a new type of plugins are required, then the internals of `src.plugins.plugin_manager.PluginManager` have to be adapted. Every plugin has to inherit from the marker interface `src.interfaces.IAbstractPlugin`. Classes of this type are detected by the PluginManager as plugins. After all those plugins are loaded you have to decide what to do with them. Data collection plugins inherit from `IPlugin` and Processors inherit from `IProcessorPlugin`, so you need to create a new interface for the new plugin type, eg. `IExamplePlugin` and tell the PluginManager what to do with those plugins.
 
 Appendix
 ========
