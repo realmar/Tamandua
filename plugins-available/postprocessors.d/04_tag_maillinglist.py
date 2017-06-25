@@ -1,7 +1,5 @@
 """Postprocessor plugin which tags mails from a mailinglist."""
 
-import re
-
 from src.interfaces import IProcessorPlugin
 from src.plugins.plugin_processor import ProcessorData
 from src.plugins.plugin_helpers import add_tag, is_mailinglist

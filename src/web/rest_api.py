@@ -1,6 +1,5 @@
 """This module contains all resource classes used by the REST interface."""
 
-
 from flask import request
 from flask_restful import Resource
 from .data_finder import DataFinder
@@ -39,7 +38,6 @@ class Search(BaseResource):
     """
 
     def post(self, page: int, size: int) -> dict:
-        r = request
         expression = request.get_json()
         page_start = page * size
 

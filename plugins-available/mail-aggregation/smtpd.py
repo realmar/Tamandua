@@ -24,7 +24,9 @@ class Smtpd(SimplePlugin):
 
             # no saslauth
 
-            (re.compile(r':\s(?P<' + constants.HOSTNAME_QID + r'>[^:]*):\sclient=(?P<connectclient>[^\]]+?)\[(?P<connectip>[^\]]+?)\]'), (RegexFlags.STORETIME,)),
+            (re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):
+                            \sclient=(?P<connectclient>[^\]]+?)\[(?P<connectip>[^\]]+?)\]''',
+                        re.X), (RegexFlags.STORETIME,)),
 
             # reject RCPT and VRFY
             (re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s

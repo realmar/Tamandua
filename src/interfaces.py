@@ -1,6 +1,5 @@
 """This Module contains all interfaces used within Tamandua."""
 
-
 from abc import ABCMeta, abstractmethod
 
 

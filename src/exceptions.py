@@ -30,7 +30,9 @@ class MissingConfigField(Exception):
 
 class InvalidConfigField(Exception):
     def __init__(self, field, allowedValues):
-        super().__init__("The following field in the config is wrong: " + field + " allowed values are following: " + str(allowedValues))
+        super().__init__(
+            "The following field in the config is wrong: " + field + " allowed values are following: " + str(
+                allowedValues))
 
 
 class MultipleDataSetsUnknown(Exception):
@@ -45,7 +47,8 @@ class InvalidRegexFlag(Exception):
         super().__init__("Invalid regex-flag in: " + clsname + " pattern: " + pattern)
 
 
-def print_exception(e: Exception, cause: str, measure: str, fatal: bool=False, description: str="Not available") -> None:
+def print_exception(e: Exception, cause: str, measure: str, fatal: bool = False,
+                    description: str = "Not available") -> None:
     """Prints an exception and additional information."""
 
     preStr = ''

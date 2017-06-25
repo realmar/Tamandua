@@ -3,7 +3,7 @@
 import re
 from typing import Union, List, Callable
 
-from ..constants import DPHYS_DOMAINS, PHD_MXIN_QID
+from ..constants import DPHYS_DOMAINS
 
 dphysDomainRegexps = [re.compile(r'@' + x + r'$', re.IGNORECASE) for x in DPHYS_DOMAINS]
 maillinglistRegex = re.compile(r'@lists.phys.ethz.ch$', re.IGNORECASE)

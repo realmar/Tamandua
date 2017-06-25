@@ -24,8 +24,8 @@ class SerializationFactory():
         """Return an instance of a serialization method."""
         path = path_join(config.get('basepath'), config.get('store_path'))
 
-        method = cls\
-            ._serializationMethods\
+        method = cls \
+            ._serializationMethods \
             .get(config.get('store_type').lower())
 
         if not issubclass(method, ISerializationMethod):

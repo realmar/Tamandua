@@ -8,7 +8,6 @@ If you are writing plugins: please use those constants when defining
 domain specific stuff. (eg. in regexps)
 """
 
-
 # Hostnames
 
 PHD_MXIN = 'phdmxin'

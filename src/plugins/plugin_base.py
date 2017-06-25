@@ -58,7 +58,6 @@ class PluginBase(IPlugin, metaclass=abc.ABCMeta):
             newDataRegex.append(dataRegex)
         self._dataRegex = newDataRegex
 
-
         r, info = self.__check_data_regex_group_names()
         if r:
             raise RegexGroupsMissing(self.__class__.__name__, info)

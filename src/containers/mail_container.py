@@ -42,7 +42,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
     def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
         self._pluginManager = pluginManager
 
-    def _merge_data(self, target: dict, origin: dict) -> None:
+    @staticmethod
+    def _merge_data(target: dict, origin: dict) -> None:
         """Generic merge method."""
         for key, value in origin.items():
             if value is None:
@@ -113,7 +114,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             target[id] = data
 
         if not isinstance(target[id].get(constants.LOGLINES), list):
-            target[id][constants.LOGLINES] = [ logline ]
+            target[id][constants.LOGLINES] = [logline]
         else:
             target[id][constants.LOGLINES].append(logline)
 
