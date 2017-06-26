@@ -34,7 +34,7 @@ class Smtpd(SimplePlugin):
                            (?P<rejectstage>[^\s]*)\sfrom\s
                            (?P<connectclient>[^\[]*)\[(?P<connectip>[^\]]*)\]:\s
                            (?P<statuscode>[^\s]*)[^\:]*\:\s
-                           (?P<rejectreason>[^\;]*)\;\s
+                           (?P<rejectreason>[^\;]*).+?
                            (from=<(?P<sender>[^>]*)>\s)?        # VRFY has no from field
                            to=<(?P<recipient>[^>]*)''', re.X), (RegexFlags.STORETIME,)),
 
