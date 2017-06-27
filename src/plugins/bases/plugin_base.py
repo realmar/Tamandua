@@ -4,8 +4,8 @@ import abc
 from enum import Enum
 from ast import literal_eval
 
-from ..exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
-from ..interfaces import IPlugin
+from ...exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
+from ...interfaces import IPlugin
 
 
 class RegexFlags(Enum):

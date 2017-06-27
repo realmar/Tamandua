@@ -1,12 +1,11 @@
 """This module contains the PluginManager."""
 
 
-from typing import List
-
 # used to dynamically import the plugins
 import inspect
 import os
 import sys
+from typing import List
 
 # for an explanation please refer to the comments in __loadPlugin
 if sys.version_info[1] < 5:
@@ -25,9 +24,9 @@ from os.path import sep as path_sep
 
 from ..containers.data_receiver import DataReceiver
 from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin, IDataContainer
-from .plugin_base import PluginBase
-from .simple_plugin import SimplePlugin
-from .plugin_processor import BaseVerifyProcessor
+from .bases.plugin_base import PluginBase
+from .bases.simple_plugin import SimplePlugin
+from .bases.plugin_processor import BaseVerifyProcessor
 from .plugin_collections import PluginAssociator, PluginData
 from .chain import Chain
 from ..exceptions import print_exception

@@ -2,8 +2,8 @@
 
 import re
 
-from src.plugins.simple_plugin import SimplePlugin
 from src import constants
+from src.plugins.bases.simple_plugin import SimplePlugin
 
 
 class Amavis(SimplePlugin):

@@ -1,7 +1,8 @@
 """Dovecot statistics plugin."""
 
-from src.plugins.plugin_base import PluginBase
 import re
+
+from src.plugins.bases.plugin_base import PluginBase
 
 
 class Dovecot(PluginBase):

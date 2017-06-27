@@ -3,8 +3,9 @@
 import re
 
 from src.plugins.plugin_base import RegexFlags
-from src.plugins.simple_plugin import SimplePlugin
+
 from src import constants
+from src.plugins.bases.simple_plugin import SimplePlugin
 
 
 class Pickup(SimplePlugin):

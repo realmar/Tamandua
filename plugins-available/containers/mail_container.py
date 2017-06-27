@@ -1,15 +1,17 @@
 """Module which contains the MailContainer class."""
 
+import copy
 from datetime import datetime
 from typing import List, Dict
-import copy
+
 import colorama
+
 colorama.init(autoreset=True)
 
 from src.interfaces import IDataContainer, ISerializable, IRequiresPlugins
 from src import constants
-from src.plugins.plugin_base import RegexFlags
-from src.plugins.plugin_processor import ProcessorData, ProcessorAction
+from src.plugins.bases.plugin_base import RegexFlags
+from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
 
 
 class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):

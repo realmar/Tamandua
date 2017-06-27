@@ -1,7 +1,7 @@
 """Postprocessor plugin which adds spam tags."""
 
 from src.interfaces import IProcessorPlugin
-from src.plugins.plugin_processor import ProcessorData
+from src.plugins.bases.plugin_processor import ProcessorData
 from src.plugins.plugin_helpers import add_tag, check_value
 
 

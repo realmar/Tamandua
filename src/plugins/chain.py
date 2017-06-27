@@ -2,8 +2,9 @@
 
 
 from typing import List, Tuple
+
+from .bases.plugin_processor import ProcessorData, ProcessorAction
 from ..interfaces import IProcessorPlugin
-from .plugin_processor import ProcessorData, ProcessorAction
 
 
 class Chain():

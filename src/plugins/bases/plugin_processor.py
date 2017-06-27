@@ -4,8 +4,8 @@ import types
 from enum import Enum
 from abc import ABCMeta, abstractmethod
 
-from ..interfaces import IProcessorPlugin
-from .plugin_helpers import add_tag, has_tag 
+from ...interfaces import IProcessorPlugin
+from ...plugins.plugin_helpers import add_tag, has_tag
 
 
 class ProcessorAction(Enum):
