@@ -69,7 +69,7 @@ class IRequiresPlugins(metaclass=ABCMeta):
         pass
 
 
-class IDataContainer(metaclass=ABCMeta):
+class IDataContainer(IAbstractPlugin, metaclass=ABCMeta):
     """Public interface of a DataContainer."""
 
     @property

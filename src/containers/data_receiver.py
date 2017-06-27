@@ -1,24 +1,16 @@
 """DataReceiver receives extracted data from logfiles and distributes them between IDataContainers."""
 
-from .statistics import Statistics
-from .mail_container import MailContainer
+from typing import List
+
 from ..exceptions import print_warning
-from ..interfaces import IRequiresPlugins
+from ..interfaces import IDataContainer
 
 
 class DataReceiver():
     """Distribute extracted data from the loglines between data containers."""
 
-    def __init__(self, pluginManager: 'PluginManager'):
-        self.containers = []
-
-        cs = [Statistics, MailContainer]
-
-        for c in cs:
-            ci = c()
-            if issubclass(c, IRequiresPlugins):
-                ci.set_pluginmanager(pluginManager)
-            self.containers.append(ci)
+    def __init__(self, containers: List[IDataContainer]):
+        self.containers = containers
 
     def get_conainers_of_type(self, t: type) -> list:
         """Get a list of containers of a specific type."""

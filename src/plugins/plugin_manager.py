@@ -1,5 +1,8 @@
 """This module contains the PluginManager."""
 
+
+from typing import List
+
 # used to dynamically import the plugins
 import inspect
 import os
@@ -21,12 +24,13 @@ from os.path import split as path_split
 from os.path import sep as path_sep
 
 from ..containers.data_receiver import DataReceiver
-from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin
+from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin, IDataContainer
 from .plugin_base import PluginBase
 from .simple_plugin import SimplePlugin
 from .plugin_processor import BaseVerifyProcessor
+from .plugin_collections import PluginAssociator, PluginData
 from .chain import Chain
-from ..exceptions import print_exception, print_warning
+from ..exceptions import print_exception
 
 # used in annotation
 from ..config import Config
@@ -35,23 +39,40 @@ from ..config import Config
 class PluginManager():
     """Load, instantiate and use all plugins."""
 
+    __framework_plugin_base_classes = [
+        IAbstractPlugin,
+        IPlugin,
+        IProcessorPlugin,
+        SimplePlugin,
+        PluginBase,
+        BaseVerifyProcessor,
+        IDataContainer
+    ]
+
     def __init__(self, absPluginsPath: str, config: Config):
         """"Constructor of PluginManager."""
         self.__limitHosts = config.get('limit_hosts')
         if self.__limitHosts is None:
             self.__limitHosts = []
 
-        self.dataReceiver = DataReceiver(self)
         # This regex is used to extract generic information from each
-        # log line. Eg. hostname
+        # log line: currently: datetime and hostname
         self.__preRegex = re.compile(cast(str, config.get('preregex')))
 
-        self.plugins = []
-        self._chains = []
-        self.__load_plugins(absPluginsPath)
+        self._pluginAssociator = PluginAssociator(self)
 
-    def __load_plugins(self, absPluginsPath: str) -> None:
-        """Load all plugins found in the plugins-enabled folder and its subfolders."""
+        # load all plugins into self._plugin_* variables
+        self._load_plugins(absPluginsPath)
+
+        # setup data receivers
+        self.dataReceiver = DataReceiver(
+            # type checker doesn't realise that this is typesafe:
+            # --> IDataContainer is polymorphic to IAbstractPlugin
+            cast(List[IDataContainer], self._pluginAssociator.get_collection(IDataContainer).plugins)
+        )
+
+    def _load_plugins(self, absPluginsPath: str) -> None:
+        """Load all plugins found in the _plugins-enabled folder and its subfolders."""
         pluginClasses = []
         modules = []
         # find all files in the plugins-enabled subdir
@@ -109,58 +130,26 @@ class PluginManager():
             pluginClasses.extend(
                 [(module[2], module[3], cls) for name, cls in classes])
 
-        chains = {}
         for info in pluginClasses:
-            folderName = info[0]
-            fileName = info[1]
+            foldername = info[0]
+            filename = info[1]
             cls = info[2]
 
-            exludePluginTypes = \
-                [
-                    IAbstractPlugin,
-                    IPlugin,
-                    IProcessorPlugin,
-                    SimplePlugin,
-                    PluginBase,
-                    BaseVerifyProcessor
-                ]
-
-            if cls in exludePluginTypes:
+            if cls in self.__framework_plugin_base_classes:
                 # if the plugin is any of our base classes we will ignore it.
                 continue
 
-            if folderName[-2:] == '.d':
-                if not issubclass(cls, IProcessorPlugin):
-                    # if the plugin is not a processor then
-                    # we will ignore it and warn the user
-                    print_warning('Trying to register a processor plugin which is not a processor: ' + folderName + '/'
-                                  + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
-                    continue
+            self._pluginAssociator.add_plugin(PluginData(foldername, filename, cls))
 
-                rname = folderName[:-2]
-                handler = (fileName, cls())
-                if chains.get(rname) is None:
-                    chains[rname] = [handler]
-                else:
-                    chains[rname].append(handler)
-            else:
-                if not issubclass(cls, IPlugin):
-                    # if the plugin is not a data collection plugin
-                    # we will ignore it and warn the user
-                    print_warning('Trying to register a data collection plugin which is not a data collection plugin: '
-                                  + folderName + '/' + fileName + '::' + cls.__name__ + ' - Ignoring plugin.')
-                    continue
-
-                self.plugins.append((folderName, cls()))
-
-        for responsibility, handlers in chains.items():
-            self._chains.append(Chain(responsibility, handlers))
 
     def get_chain_with_responsibility(self, responsibility: str) -> Chain:
-        for c in self._chains:
+        for c in cast(List[Chain], self._pluginAssociator.get_collection(IProcessorPlugin).plugins):
             if c.responsibility == responsibility:
                 return c
 
+    # TODO: refactor this method to another class
+    # SRP:  plugin manager should not be responsible for handling
+    #       logfile data but for "managing the plugins" (not handling data)
     def process_line(self, line: str) -> None:
         """Extract data from one logline."""
         folderToData = {}
@@ -177,7 +166,8 @@ class PluginManager():
         if hostname is not None and hostname not in self.__limitHosts or hostname is None:
             return
 
-        for folderName, plugin in self.plugins:
+        # again: IPlugin is polymorphic to IAbstractPlugin
+        for folderName, plugin in self._pluginAssociator.get_collection(IPlugin).plugins:
             if plugin.check_subscription(line):
                 if folderToData.get(folderName) is None:
                     folderToData[folderName] = {

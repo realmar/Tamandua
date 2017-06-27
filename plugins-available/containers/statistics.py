@@ -1,8 +1,8 @@
 """Here are the statistics composed and stored."""
 
 from pprint import pprint
-from ..exceptions import MultipleDataSetsUnknown
-from ..interfaces import IDataContainer
+from src.exceptions import MultipleDataSetsUnknown
+from src.interfaces import IDataContainer
 
 
 class Statistics(IDataContainer):

@@ -6,10 +6,10 @@ import copy
 import colorama
 colorama.init(autoreset=True)
 
-from ..interfaces import IDataContainer, ISerializable, IRequiresPlugins
-from .. import constants
-from ..plugins.plugin_base import RegexFlags
-from ..plugins.plugin_processor import ProcessorData, ProcessorAction
+from src.interfaces import IDataContainer, ISerializable, IRequiresPlugins
+from src import constants
+from src.plugins.plugin_base import RegexFlags
+from src.plugins.plugin_processor import ProcessorData, ProcessorAction
 
 
 class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
