@@ -20,7 +20,7 @@ class MongoRepository(IRepository):
         """"""
         # TODO: this should go into the config
         self._server = 'localhost'
-        self.port = 27017
+        self._port = 27017
 
         """
         In MongoDB there are databases, collections and documents.
@@ -45,7 +45,7 @@ class MongoRepository(IRepository):
             'collection_incomplete': 'incomplete'
         }
 
-        self._client = MongoClient(self._server, self.port)
+        self._client = MongoClient(self._server, self._port)
 
         self._database = self._client[self._dbconfig['database']]
         self._collection_complete = self._database[self._dbconfig['collection_complete']]
