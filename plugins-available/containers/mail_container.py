@@ -8,13 +8,14 @@ import colorama
 
 colorama.init(autoreset=True)
 
-from src.plugins.interfaces import IDataContainer, IRequiresPlugins
+from src.plugins.interfaces import IDataContainer, IRequiresPlugins, IRequiresRepository
+from src.repository.interfaces import IRepository
 from src import constants
 from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
 
 
-class MailContainer(IDataContainer, IRequiresPlugins):
+class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
     """
     Container which aggregates and stores mail objects.
 
@@ -35,6 +36,7 @@ class MailContainer(IDataContainer, IRequiresPlugins):
         self._aggregated_mails = []
 
         self._pluginManager = None
+        self._repository = None
 
     @property
     def subscribedFolder(self) -> str:
@@ -43,6 +45,9 @@ class MailContainer(IDataContainer, IRequiresPlugins):
 
     def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
         self._pluginManager = pluginManager
+
+    def set_repository(self, repository: IRepository) -> None:
+        self._repository = repository
 
     @staticmethod
     def _merge_data(target: dict, origin: dict) -> None:

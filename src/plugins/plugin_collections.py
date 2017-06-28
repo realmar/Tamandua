@@ -4,8 +4,16 @@
 from abc import ABCMeta, abstractmethod
 from typing import cast, List
 
-from .interfaces import IDataContainer, IPlugin, IProcessorPlugin, IRequiresPlugins, IAbstractPlugin
+from .interfaces import IDataContainer,     \
+                        IPlugin,            \
+                        IProcessorPlugin,   \
+                        IRequiresPlugins,   \
+                        IRequiresRepository,\
+                        IAbstractPlugin
 from .chain import Chain
+
+# TODO: DO NOT HARDCODE!!!! use a factory or something
+from ..repository.mongo import MongoRepository
 
 try:
     # new in python 3.5.3 #bleedingedge
@@ -106,6 +114,10 @@ class ContainerPluginCollection(BasePluginCollection):
 
         if issubclass(data.cls, IRequiresPlugins):
             inst.set_pluginmanager(self.__pluginManager)
+
+        if issubclass(data.cls, IRequiresRepository):
+            # TODO: DO NOT HARDCODE!!!!! This has to go into a factory or something
+            inst.set_repository(MongoRepository({}))
 
         self._plugins.append(inst)
 

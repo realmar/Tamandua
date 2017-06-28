@@ -69,6 +69,18 @@ class IRequiresPlugins(metaclass=ABCMeta):
         pass
 
 
+class IRequiresRepository(metaclass=ABCMeta):
+    """
+    Inherit from this interface if you require a repository
+    for storing data to a persistent medium.
+    """
+
+    @abstractmethod
+    def set_repository(self, repository: 'IRepository') -> None:
+        """Assign the repository."""
+        pass
+
+
 class IDataContainer(IAbstractPlugin, metaclass=ABCMeta):
     """Public interface of a DataContainer."""
 
