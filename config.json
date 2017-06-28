@@ -6,6 +6,4 @@
     "phd-maildb"
   ],
   "preregex": "^(?P<month>[^\\s]*?)\\s{1,2}(?P<day>[^\\s]*?)\\s(?P<time>[^\\s]*?)\\s(?P<hostname>[^\/\\s]*?)[^\\w-]+?",
-  "store_type": "pyobj-store",
-  "store_path": "mails.data"
 }

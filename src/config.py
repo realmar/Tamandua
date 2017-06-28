@@ -1,8 +1,7 @@
 """Config model."""
 
 import json
-from .exceptions import MissingConfigField, InvalidConfigField
-from .serialization.factory import SerializationFactory
+from .exceptions import MissingConfigField
 
 
 class Config():
@@ -23,12 +22,12 @@ class Config():
 
     def __validate(self) -> None:
         """Validate the config and raise exceptions."""
-        for name in ('preregex', 'store_type', 'store_path'):
+        for name in ('preregex',):
             if self.__config.get(name) is None:
                 raise MissingConfigField(name)
 
-        if self.__config.get('store_type') not in SerializationFactory.get_methods():
-            raise InvalidConfigField('store_type', SerializationFactory.get_methods())
+        if not isinstance(self.__config.get('limit_hosts'), list):
+            self.__config['limit_hosts'] = []
 
     def get(self, key: str) -> object:
         """Get a config attribute."""
