@@ -2,10 +2,19 @@
 
 
 from abc import ABCMeta, abstractmethod
-from typing import ClassVar, cast, List
+from typing import TypeVar, cast, List
 
 from .chain import Chain
 from ..interfaces import IDataContainer, IPlugin, IProcessorPlugin, IRequiresPlugins, IAbstractPlugin
+
+try:
+    # new in python 3.5.3 #bleedingedge
+    # https://docs.python.org/3/library/typing.html#typing.ClassVar
+    from typing import ClassVar
+except ImportError as e:
+    # create a type alias
+    from typing import Callable
+    ClassVar = Callable
 
 
 class NoPluginCollectionFound(Exception):
