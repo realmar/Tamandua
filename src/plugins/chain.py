@@ -3,8 +3,8 @@
 
 from typing import List, Tuple
 
+from .interfaces import IProcessorPlugin
 from .bases.plugin_processor import ProcessorData, ProcessorAction
-from ..interfaces import IProcessorPlugin
 
 
 class Chain():

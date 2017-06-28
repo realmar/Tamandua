@@ -23,7 +23,7 @@ from os.path import split as path_split
 from os.path import sep as path_sep
 
 from ..containers.data_receiver import DataReceiver
-from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin, IDataContainer
+from .interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin, IDataContainer
 from .bases.plugin_base import PluginBase
 from .bases.simple_plugin import SimplePlugin
 from .bases.plugin_processor import BaseVerifyProcessor

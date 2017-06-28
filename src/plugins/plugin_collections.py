@@ -2,10 +2,10 @@
 
 
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, cast, List
+from typing import cast, List
 
+from .interfaces import IDataContainer, IPlugin, IProcessorPlugin, IRequiresPlugins, IAbstractPlugin
 from .chain import Chain
-from ..interfaces import IDataContainer, IPlugin, IProcessorPlugin, IRequiresPlugins, IAbstractPlugin
 
 try:
     # new in python 3.5.3 #bleedingedge

@@ -1,12 +1,12 @@
 """Postprocessor plugin."""
 
 
-from src.interfaces import IProcessorPlugin
 from src.plugins.bases.plugin_processor import ProcessorData
-from src.plugins.plugin_helpers import  add_tag,            \
-                                        is_dphys_subdomain, \
-                                        check_value,        \
-                                        is_rejected
+from src.plugins.interfaces import IProcessorPlugin
+from src.plugins.plugin_helpers import add_tag, \
+    is_dphys_subdomain, \
+    check_value, \
+    is_rejected
 
 
 class TagDelivery(IProcessorPlugin):

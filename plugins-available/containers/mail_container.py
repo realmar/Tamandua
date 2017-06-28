@@ -8,7 +8,7 @@ import colorama
 
 colorama.init(autoreset=True)
 
-from src.interfaces import IDataContainer, IRequiresPlugins
+from src.plugins.interfaces import IDataContainer, IRequiresPlugins
 from src import constants
 from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
