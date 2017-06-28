@@ -1,4 +1,4 @@
-"""This Module contains all interfaces used within Tamandua."""
+"""This Module contains all interfaces used for the plugins."""
 
 from abc import ABCMeta, abstractmethod
 
