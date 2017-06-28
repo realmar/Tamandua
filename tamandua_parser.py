@@ -22,7 +22,6 @@ else:
 
 from src.plugins.plugin_manager import PluginManager
 from src.config import Config
-from src.serialization.serializer import Serializer
 from src.constants import CONFIGFILE
 from src.exceptions import print_exception
 
@@ -151,16 +150,6 @@ def main():
                     'Printing container to stdout: ' + container.__class__.__name__,
                     'ignoring current container')
 
-    # serialize data
-    try:
-        serializer = Serializer(config)
-    except Exception as e:
-        print_exception(e, "Trying to create an instance of Serializer", "Discard serialization")
-    else:
-        try:
-            serializer.store(pluginManager.dataReceiver)
-        except Exception as e:
-            print_exception(e, "Trying to serialize the collected data", "Discard serialization")
         
 """We only start with the executation if we are the main."""
 if __name__ == '__main__':

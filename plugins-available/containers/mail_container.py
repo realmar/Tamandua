@@ -8,13 +8,13 @@ import colorama
 
 colorama.init(autoreset=True)
 
-from src.interfaces import IDataContainer, ISerializable, IRequiresPlugins
+from src.interfaces import IDataContainer, IRequiresPlugins
 from src import constants
 from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
 
 
-class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
+class MailContainer(IDataContainer, IRequiresPlugins):
     """
     Container which aggregates and stores mail objects.
 
@@ -436,7 +436,3 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             loglines = mail.get(constants.LOGLINES)
             if loglines is not None:
                 print_list(constants.LOGLINES, loglines)
-
-    def get_serializable_data(self) -> object:
-        """Return data which should and can be serialized."""
-        return self._aggregated_mails
