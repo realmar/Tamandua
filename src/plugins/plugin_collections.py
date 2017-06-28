@@ -146,7 +146,11 @@ class ProcessorPluginCollection(BasePluginCollection):
         if self.__chains.get(responsibility) is None:
             self.__chains[responsibility] = Chain(responsibility, [handler])
         else:
-            self.__chains[responsibility].add_handler(data.filename, handler)
+            self.__chains[responsibility].add_handler(*handler)
+
+    @property
+    def plugins(self):
+        return self.__chains.values()
 
     @property
     def subscribed_cls(self) -> type:

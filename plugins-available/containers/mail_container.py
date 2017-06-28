@@ -13,6 +13,7 @@ from src.repository.interfaces import IRepository
 from src import constants
 from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
+from src.repository.misc import SearchScope
 
 
 class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
@@ -32,8 +33,6 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         # this will store all mailfragments which where "sent" by the pickup service
         # map : imap_qid -> mail-fragment
         self._map_pickup = {}
-
-        self._aggregated_mails = []
 
         self._pluginManager = None
         self._repository = None
@@ -204,6 +203,21 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 chain.process(pd)
                 return pd.action
 
+    def __process_aggregated_mail(self, mail: dict) -> None:
+        isIncomplete = True
+
+        tags = mail.get('tags')
+        if isinstance(tags, list):
+            if 'incomplete' not in tags:
+                isIncomplete = False
+
+        if isIncomplete:
+            scope = SearchScope.INCOMPLETE
+        else:
+            scope = SearchScope.COMPLETE
+
+        self._repository.insert_or_update(mail, scope)
+
     def __aggregate_mails(self,
                           fragments: Dict[str, dict],
                           fragmentChain: List[Dict[str, dict]],
@@ -265,7 +279,16 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
 
             # create aggregate target
             # all data is aggregated into this dict
-            target = copy.deepcopy(frag)
+            try:
+                initialID = frag.get(keyChain[0])
+                target = self._repository.find(
+                    {
+                        keyChain[0]: str(initialID)
+                    },
+                    SearchScope.INCOMPLETE
+                )[0]
+            except IndexError as e:
+                target = copy.deepcopy(frag)
 
             # the current fragment is now copied to the target
             # so we can start merging the fragmentChain:
@@ -322,7 +345,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         def merge_pickup_wrapp(target: dict):
             self.__merge_pickup(target, target.get(constants.MESSAGEID))
             if self.__postprocessing(target) != ProcessorAction.DELETE:
-                self._aggregated_mails.append(target)
+                self.__process_aggregated_mail(target)
 
         """
         Procedure start
@@ -379,15 +402,26 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             []
         )
 
-        for m in self._map_pickup.values():
-            if self.__postprocessing(m) != ProcessorAction.DELETE:
-                self._aggregated_mails.append(m)
+        for id, mail in self._map_pickup.items():
+            try:
+                target = self._repository.find(
+                    {
+                        constants.PHD_IMAP_QID: id
+                    },
+                    SearchScope.INCOMPLETE
+                )[0]
+            except IndexError as e:
+                target = mail
+
+            if self.__postprocessing(target) != ProcessorAction.DELETE:
+                self.__process_aggregated_mail(target)
 
         self._map_pickup.clear()
 
     def represent(self) -> None:
         """Print the contents of this container in a human readable format to stdout."""
 
+        """
         def print_title(**kv):
             finalStr = '---- '
             for k, v in kv.items():
@@ -441,3 +475,6 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             loglines = mail.get(constants.LOGLINES)
             if loglines is not None:
                 print_list(constants.LOGLINES, loglines)
+        """
+
+        pass
