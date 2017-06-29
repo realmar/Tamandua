@@ -42,12 +42,14 @@ class MongoRepository(IRepository):
         self._client = MongoClient(self._server, self._port)
 
         self._database = self._client[Config().get('database_name')]
+
         self._collection_complete = self._database[Config().get('collection_complete')]
         self._collection_incomplete = self._database[Config().get('collection_incomplete')]
+        self._collection_metadata = self._database[Config().get('collection_metadata')]
 
     @staticmethod
     def get_config_fields() -> List[str]:
-        return ['database_name', 'collection_complete', 'collection_incomplete', 'dbserver', 'dbport']
+        return ['database_name', 'collection_complete', 'collection_incomplete', 'collection_metadata', 'dbserver', 'dbport']
 
     def __resolveScope(self, scope: SearchScope):
         if scope == SearchScope.COMPLETE:

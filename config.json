@@ -11,6 +11,7 @@
   "database_name": "tamandua",
   "collection_complete": "complete",
   "collection_incomplete": "incomplete",
+  "collection_metadata": "metadata",
   "dbserver": "localhost",
   "dbport": 27017
 }
