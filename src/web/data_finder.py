@@ -102,9 +102,29 @@ class DataFinder():
             for k, v in f.items():
                 queryData[k] = self._repository.make_regexp(v)
 
+        if start is not None or end is not None:
+            queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)
+
         results = list(self._repository.find(queryData, SearchScope.COMPLETE))
 
         for r in results:
             self._repository.remove_metadata(r)
 
+            timeMap = {
+                constants.PHD_MXIN_TIME: r.get(constants.PHD_MXIN_TIME),
+                constants.PHD_IMAP_TIME: r.get(constants.PHD_IMAP_TIME)
+            }
+
+            for key, value in timeMap.items():
+                if value is not None:
+                    if isinstance(value, list):
+                        tmp = []
+                        for v in value:
+                            tmp.append(datetime.strftime(v, constants.TIME_FORMAT))
+
+                        r[key] = tmp
+                    else:
+                        r[key] = datetime.strftime(value, constants.TIME_FORMAT)
+
         return results
+

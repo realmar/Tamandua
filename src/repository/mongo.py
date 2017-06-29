@@ -3,12 +3,14 @@
 
 from pymongo import MongoClient
 from bson.code import Code
+from datetime import datetime
 
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from .interfaces import IRepository
 from .misc import SearchScope
 from .js import Loader
 from ..config import Config
+from ..constants import TIME_FORMAT
 
 
 class TargetCollectionNotFound(Exception):
@@ -143,6 +145,19 @@ class MongoRepository(IRepository):
     def make_regexp(self, pattern: str) -> object:
         """"""
         return {'$regex': pattern}
+
+    def make_datetime_comparison(self, start: datetime, end: datetime) -> object:
+        """"""
+
+        obj = {}
+
+        if start is not None:
+            obj['$gte'] = start
+
+        if end is not None:
+            obj['$lte'] = end
+
+        return obj
 
     def get_all_keys(self) -> List[str]:
         """"""

@@ -2,6 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 from typing import List, Dict
+from datetime import datetime
 
 from .misc import SearchScope
 
@@ -55,6 +56,11 @@ class IRepository(metaclass=ABCMeta):
 
     @abstractmethod
     def make_regexp(self, pattern: str) -> object:
+        """"""
+        pass
+
+    @abstractmethod
+    def make_datetime_comparison(self, start: datetime, end: datetime) -> object:
         """"""
         pass
 
