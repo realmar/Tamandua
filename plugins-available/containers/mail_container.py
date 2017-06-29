@@ -295,6 +295,9 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             do_query = partial(self._repository.find, queryData)
 
             if initialID == constants.NOQUEUE:
+                if len(self._repository.find(frag, SearchScope.ALL)) > 0:
+                    raise AlreadyInRepository()
+
                 target = copy.deepcopy(frag)
             else:
                 try:
@@ -305,7 +308,17 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                     # remove this data as it may be complete afterwards
                     self._repository.delete(queryData, SearchScope.INCOMPLETE)
                 except IndexError as e:
-                    if len(do_query(SearchScope.COMPLETE)) > 0:
+                    res = do_query(SearchScope.COMPLETE)
+                    if len(res) > 0:
+
+                        res = res[0]
+
+                        for i in range(1, len(keyChain)):
+                            try:
+                                del fragmentChain[i][res.get(keyChain[i])]
+                            except Exception as e:
+                                continue
+
                         raise AlreadyInRepository()
 
                     target = copy.deepcopy(frag)
@@ -451,18 +464,9 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         )
 
         for id, mail in self._map_pickup.items():
-            try:
-                target = self._repository.find(
-                    {
-                        constants.PHD_IMAP_QID: id
-                    },
-                    SearchScope.INCOMPLETE
-                )[0]
-            except IndexError as e:
-                target = mail
-
-            if self.__postprocessing(target) != ProcessorAction.DELETE:
-                self.__process_aggregated_mail(target)
+            if len(self._repository.find({constants.PHD_IMAP_QID: id},SearchScope.ALL)) == 0:
+                if self.__postprocessing(mail) != ProcessorAction.DELETE:
+                    self.__process_aggregated_mail(mail)
 
         self._map_pickup.clear()
 
