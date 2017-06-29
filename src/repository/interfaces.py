@@ -42,3 +42,13 @@ class IRepository(metaclass=ABCMeta):
     def remove_metadata(self, data: dict) -> None:
         """"""
         pass
+
+    @abstractmethod
+    def save_position_of_last_read_byte(self, pos: int) -> None:
+        """"""
+        pass
+
+    @abstractmethod
+    def get_position_of_last_read_byte(self) -> int:
+        """"""
+        pass

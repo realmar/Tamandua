@@ -16,6 +16,8 @@ class TargetCollectionNotFound(Exception):
 class MongoRepository(IRepository):
     """"""
 
+    __lastBytePosName = 'lastbytepos'
+
 
     def __init__(self):
         """"""
@@ -115,3 +117,23 @@ class MongoRepository(IRepository):
             del data['_id']
         except KeyError as e:
             pass
+
+    def __get_last_bypte_post_cursor(self) -> dict:
+        return self._collection_metadata.find_one({self.__lastBytePosName: {'$exists': True}})
+
+    def save_position_of_last_read_byte(self, pos: int) -> None:
+        """"""
+        lastpos = self.__get_last_bypte_post_cursor()
+        if lastpos is None:
+            self._collection_metadata.insert_one({self.__lastBytePosName: pos})
+        else:
+            lastpos[self.__lastBytePosName] = pos
+            self._collection_metadata.update({'_id': lastpos['_id']}, lastpos)
+
+    def get_position_of_last_read_byte(self) -> int:
+        """"""
+        lastpos = self.__get_last_bypte_post_cursor()
+        if lastpos is None:
+            return 0
+        else:
+            return lastpos[self.__lastBytePosName]

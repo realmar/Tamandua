@@ -24,6 +24,7 @@ from src.plugins.plugin_manager import PluginManager
 from src.config import Config
 from src.constants import CONFIGFILE
 from src.exceptions import print_exception
+from src.repository.factory import RepositoryFactory
 
 
 def main():
@@ -31,11 +32,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Tamandua parser aggregates from logfile data")
     parser.add_argument(
-        'files',
-        nargs='+',
+        'logfile',
         metavar='LOGFILE',
         type=str,
-        help='Logfiles to be parsed')
+        help='Logfile to be parsed')
     parser.add_argument(
         '--config',
         '-c',
@@ -106,24 +106,31 @@ def main():
             fatal=True)
         sys.exit(1)
 
-    for logfile in args.files:
-        with open(logfile, 'r') as f:
-            try:
-                for line in f:
-                    pluginManager.process_line(line)
-            except UnicodeDecodeError as e:
-                print_exception(
-                    e,
-                    "Trying to read a line from the given logfile.",
-                    "Continue with the next line")
-                continue
-            except Exception as e:
-                print_exception(
-                    e,
-                    "Trying to read a line from the given logfile",
-                    "Quit application",
-                    fatal=True)
-                sys.exit(9)
+    repository = RepositoryFactory.create_repository()
+    currByte = repository.get_position_of_last_read_byte()
+
+    logfilehandle = open(args.logfile, 'r')
+    logfilehandle.seek(max(0, currByte - 1000))      # clamp byte: 0 - infinity
+
+    try:
+        for line in logfilehandle:
+            pluginManager.process_line(line)
+    except UnicodeDecodeError as e:
+        print_exception(
+            e,
+            "Trying to read a line from the given logfile.",
+            "Aborting")
+    except Exception as e:
+        print_exception(
+            e,
+            "Trying to read a line from the given logfile",
+            "Quit application",
+            fatal=True)
+        sys.exit(9)
+
+    # save the current byte position
+
+    repository.save_position_of_last_read_byte(logfilehandle.tell())
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
