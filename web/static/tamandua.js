@@ -503,7 +503,7 @@ function on_search_button_click() {
      */
 
     var expression = {
-        fields: [{'complete': 'True'}],
+        fields: [],
         datetime: {
             start: '',
             end: ''

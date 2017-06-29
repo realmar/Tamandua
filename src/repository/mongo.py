@@ -2,10 +2,12 @@
 
 
 from pymongo import MongoClient
+from bson.code import Code
 
 from typing import List, Dict
 from .interfaces import IRepository
 from .misc import SearchScope
+from .js import Loader
 from ..config import Config
 
 
@@ -137,3 +139,17 @@ class MongoRepository(IRepository):
             return 0
         else:
             return lastpos[self.__lastBytePosName]
+
+    def make_regexp(self, pattern: str) -> object:
+        """"""
+        return {'$regex': pattern}
+
+    def get_all_keys(self) -> List[str]:
+        """"""
+        result = self._collection_complete.map_reduce(
+            Code(Loader.load_js('mongo_js.mapper')),
+            Code(Loader.load_js('mongo_js.reducer')),
+            "results"
+        )
+
+        return result.distinct('_id')

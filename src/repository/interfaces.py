@@ -52,3 +52,13 @@ class IRepository(metaclass=ABCMeta):
     def get_position_of_last_read_byte(self) -> int:
         """"""
         pass
+
+    @abstractmethod
+    def make_regexp(self, pattern: str) -> object:
+        """"""
+        pass
+
+    @abstractmethod
+    def get_all_keys(self) -> List[str]:
+        """"""
+        pass

@@ -30,10 +30,10 @@ app = Flask(
     static_folder='web/static')
 api = Api(app, errors=api_errors)
 
-config = Config(os.path.join(BASEDIR, CONFIGFILE), BASEDIR)
+Config().setup(os.path.join(BASEDIR, CONFIGFILE), BASEDIR)
 
 try:
-    dataFinder = DataFinder(config)
+    dataFinder = DataFinder()
 except Exception as e:
     print_exception(e, "Trying to create an instance of DataFinder", "Exiting application", fatal=True)
     sys.exit(1)
