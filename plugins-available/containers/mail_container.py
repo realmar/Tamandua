@@ -165,9 +165,10 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 dt = dt.replace(year=datetime.today().year)
 
                 # bring datetime in a portable format
-                newDtStr = dt.strftime(constants.TIME_FORMAT)
+                # we can handle this datetime objects now
+                # newDtStr = dt.strftime(constants.TIME_FORMAT)
                 try:
-                    d[constants.HOSTNAME_TIME_MAP[hostname]] = newDtStr
+                    d[constants.HOSTNAME_TIME_MAP[hostname]] = dt
                 except Exception as e:
                     pass
 
