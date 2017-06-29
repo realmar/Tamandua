@@ -105,7 +105,7 @@ class DataFinder():
         if start is not None or end is not None:
             queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)
 
-        results = list(self._repository.find(queryData, SearchScope.COMPLETE))
+        results = list(self._repository.find(queryData, SearchScope.ALL))
 
         for r in results:
             self._repository.remove_metadata(r)
