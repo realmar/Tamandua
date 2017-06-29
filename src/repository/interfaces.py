@@ -2,6 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 from typing import List, Dict
+
 from .misc import SearchScope
 
 
@@ -29,4 +30,9 @@ class IRepository(metaclass=ABCMeta):
         """
         D: Delete
         """
+        pass
+
+    @abstractmethod
+    def remove_metadata(self, data: dict) -> None:
+        """"""
         pass

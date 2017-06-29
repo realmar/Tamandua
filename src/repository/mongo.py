@@ -56,6 +56,19 @@ class MongoRepository(IRepository):
             return self._collection_complete
         elif scope == SearchScope.INCOMPLETE:
             return self._collection_incomplete
+        elif scope == SearchScope.ALL:
+            class CollectionAggregate():
+                @staticmethod
+                def find(query: dict, data: dict):
+                    res = list(
+                        self._collection_complete.find(query, data))
+
+                    res.extend(
+                        list(
+                            self._collection_incomplete(query, data)))
+
+                    return res
+
         else:
             raise TargetCollectionNotFound()
 
@@ -71,6 +84,11 @@ class MongoRepository(IRepository):
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""
+        if scope == SearchScope.ALL:
+            # we do not support inserting or updating multiple
+            # collections at the same time
+            raise NotImplementedError()
+        
         collection = self.__resolveScope(scope)
 
         if data.get('_id') is not None:
@@ -82,5 +100,17 @@ class MongoRepository(IRepository):
 
     def delete(self, query: dict, scope: SearchScope) -> None:
         """"""
+        if scope == SearchScope.ALL:
+            # we do not support deleting the same document
+            # in multiple collections at the same time
+            raise NotImplementedError()
+
         collection = self.__resolveScope(scope)
         collection.remove(query)
+
+    def remove_metadata(self, data: dict) -> None:
+        """"""
+        try:
+            del data['_id']
+        except KeyError as e:
+            pass
