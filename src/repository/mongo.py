@@ -59,16 +59,17 @@ class MongoRepository(IRepository):
         elif scope == SearchScope.ALL:
             class CollectionAggregate():
                 @staticmethod
-                def find(query: dict, data: dict):
+                def find(query: dict):
                     res = list(
-                        self._collection_complete.find(query, data))
+                        self._collection_complete.find(query))
 
                     res.extend(
                         list(
-                            self._collection_incomplete(query, data)))
+                            self._collection_incomplete.find(query)))
 
                     return res
 
+            return CollectionAggregate
         else:
             raise TargetCollectionNotFound()
 
