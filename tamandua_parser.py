@@ -79,7 +79,7 @@ def main():
 
     try:
         pluginManager = PluginManager(
-            absPluginsPath=os.path.join(BASEDIR, 'plugins-available'))
+            absPluginsPath=os.path.join(BASEDIR, 'plugins-enabled'))
     except Exception as e:
         print_exception(
             e,
