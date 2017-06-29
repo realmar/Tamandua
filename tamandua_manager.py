@@ -31,7 +31,7 @@ manager = Manager()
 @manager.command
 def reset_last_logfile_pos():
     """Reset the reader position of the logfile to 0."""
-    RepositoryFactory()                     \
+    RepositoryFactory                       \
         .create_repository()                \
         .save_position_of_last_read_byte(0)
 
@@ -41,14 +41,14 @@ def reset_last_logfile_pos():
 @manager.command
 def remove_incomplete():
     """Delete all incomplete data."""
-    RepositoryFactory().create_repository().delete({}, SearchScope.INCOMPLETE)
+    RepositoryFactory.create_repository().delete({}, SearchScope.INCOMPLETE)
     print('Successfully deleted all incomplete data.')
 
 
 @manager.command
 def remove_complete():
     """Delete all complete data."""
-    RepositoryFactory().create_repository().delete({}, SearchScope.COMPLETE)
+    RepositoryFactory.create_repository().delete({}, SearchScope.COMPLETE)
     print('Successfully deleted all complete data.')
 
 
