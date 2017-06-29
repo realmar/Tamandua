@@ -294,18 +294,21 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             queryData = { keyChain[0]: str(initialID) }
             do_query = partial(self._repository.find, queryData)
 
-            try:
-                target = do_query(SearchScope.INCOMPLETE)[0]
-                self._repository.remove_metadata(target)
-                self.__preprocessing(target)
-
-                # remove this data as it may be complete afterwards
-                self._repository.delete(queryData, SearchScope.INCOMPLETE)
-            except IndexError as e:
-                if len(do_query(SearchScope.COMPLETE)) > 0:
-                    raise AlreadyInRepository()
-
+            if initialID == constants.NOQUEUE:
                 target = copy.deepcopy(frag)
+            else:
+                try:
+                    target = do_query(SearchScope.INCOMPLETE)[0]
+                    self._repository.remove_metadata(target)
+                    self.__preprocessing(target)
+
+                    # remove this data as it may be complete afterwards
+                    self._repository.delete(queryData, SearchScope.INCOMPLETE)
+                except IndexError as e:
+                    if len(do_query(SearchScope.COMPLETE)) > 0:
+                        raise AlreadyInRepository()
+
+                    target = copy.deepcopy(frag)
 
             # the current fragment is now copied to the target
             # so we can start merging the fragmentChain:
