@@ -71,14 +71,16 @@ class MongoRepository(IRepository):
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""
-        try:
-            searchCollection = self.__resolveScope(scope)
-        except TargetCollectionNotFound as e:
-            raise TypeError()
+        collection = self.__resolveScope(scope)
 
         if data.get('_id') is not None:
-            searchCollection.update({
+            collection.update({
                 '_id': data['_id']
             }, data)
         else:
-            searchCollection.insert_one(data)
+            collection.insert_one(data)
+
+    def delete(self, query: dict, scope: SearchScope) -> None:
+        """"""
+        collection = self.__resolveScope(scope)
+        collection.remove(query)
