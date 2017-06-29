@@ -44,20 +44,6 @@ def main():
         type=str,
         help='Path to the configfile')
     parser.add_argument(
-        '--outpath',
-        '-o',
-        dest='store_path',
-        default=None,
-        type=str,
-        help='Path to the output file')
-    parser.add_argument(
-        '--outformat',
-        '-f',
-        dest='store_type',
-        default=None,
-        type=str,
-        help='Output format: can be either pyobj-store or json')
-    parser.add_argument(
         '--no-print',
         dest='noprint',
         default=False,
@@ -68,11 +54,7 @@ def main():
     try:
         Config().setup(
             args.configfile,
-            BASEDIR,
-            {
-                'store_path': args.store_path,
-                'store_type': args.store_type
-            }
+            BASEDIR
         )
     except FileNotFoundError as e:
         print_exception(
