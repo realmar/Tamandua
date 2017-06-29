@@ -11,9 +11,7 @@ from .interfaces import IDataContainer,     \
                         IRequiresRepository,\
                         IAbstractPlugin
 from .chain import Chain
-
-# TODO: DO NOT HARDCODE!!!! use a factory or something
-from ..repository.mongo import MongoRepository
+from ..repository.factory import RepositoryFactory
 
 try:
     # new in python 3.5.3 #bleedingedge
@@ -84,13 +82,6 @@ class PluginAssociator():
 
         raise NoPluginCollectionFound(cast(type, cls))
 
-        """
-        try:
-            return self.__collection_map[cls]
-        except Exception as e:
-            raise NoPluginCollectionFound(cast(type, cls))
-        """
-
 
 class BasePluginCollection(IPluginCollection):
     def __init__(self):
@@ -117,7 +108,7 @@ class ContainerPluginCollection(BasePluginCollection):
 
         if issubclass(data.cls, IRequiresRepository):
             # TODO: DO NOT HARDCODE!!!!! This has to go into a factory or something
-            inst.set_repository(MongoRepository({}))
+            inst.set_repository(RepositoryFactory.create_repository())
 
         self._plugins.append(inst)
 

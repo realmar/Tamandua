@@ -16,11 +16,11 @@ class TargetCollectionNotFound(Exception):
 class MongoRepository(IRepository):
     """"""
 
-    def __init__(self, config: Config):
+
+    def __init__(self):
         """"""
-        # TODO: this should go into the config
-        self._server = 'localhost'
-        self._port = 27017
+        self._server = Config().get('dbserver')
+        self._port = Config().get('dbport')
 
         """
         In MongoDB there are databases, collections and documents.
@@ -39,17 +39,15 @@ class MongoRepository(IRepository):
         very nice and logical.
         """
 
-        self._dbconfig = {
-            'database': 'tamandua',
-            'collection_complete': 'complete',
-            'collection_incomplete': 'incomplete'
-        }
-
         self._client = MongoClient(self._server, self._port)
 
-        self._database = self._client[self._dbconfig['database']]
-        self._collection_complete = self._database[self._dbconfig['collection_complete']]
-        self._collection_incomplete = self._database[self._dbconfig['collection_incomplete']]
+        self._database = self._client[Config().get('database_name')]
+        self._collection_complete = self._database[Config().get('collection_complete')]
+        self._collection_incomplete = self._database[Config().get('collection_incomplete')]
+
+    @staticmethod
+    def get_config_fields() -> List[str]:
+        return ['database_name', 'collection_complete', 'collection_incomplete', 'dbserver', 'dbport']
 
     def __resolveScope(self, scope: SearchScope):
         if scope == SearchScope.COMPLETE:

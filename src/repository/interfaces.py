@@ -9,6 +9,12 @@ from .misc import SearchScope
 class IRepository(metaclass=ABCMeta):
     """CRUD"""
 
+    @staticmethod
+    @abstractmethod
+    def get_config_fields() -> List[str]:
+        """"""
+        pass
+
     @abstractmethod
     def find(self, query: dict, scope: SearchScope) -> List[Dict]:
         """

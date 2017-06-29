@@ -5,5 +5,12 @@
     "phd-mailscan",
     "phd-maildb"
   ],
-  "preregex": "^(?P<month>[^\\s]*?)\\s{1,2}(?P<day>[^\\s]*?)\\s(?P<time>[^\\s]*?)\\s(?P<hostname>[^\/\\s]*?)[^\\w-]+?"
+  "preregex": "^(?P<month>[^\\s]*?)\\s{1,2}(?P<day>[^\\s]*?)\\s(?P<time>[^\\s]*?)\\s(?P<hostname>[^\/\\s]*?)[^\\w-]+?",
+
+  "database_type": "mongo",
+  "database_name": "tamandua",
+  "collection_complete": "complete",
+  "collection_incomplete": "incomplete",
+  "dbserver": "localhost",
+  "dbport": 27017
 }

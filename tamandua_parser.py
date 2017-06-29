@@ -66,13 +66,14 @@ def main():
     args = parser.parse_args()
 
     try:
-        config = Config(
+        Config().setup(
             args.configfile,
             BASEDIR,
             {
                 'store_path': args.store_path,
                 'store_type': args.store_type
-            })
+            }
+        )
     except FileNotFoundError as e:
         print_exception(
             e,
@@ -96,8 +97,7 @@ def main():
 
     try:
         pluginManager = PluginManager(
-            absPluginsPath=os.path.join(BASEDIR, 'plugins-available'),
-            config=config)
+            absPluginsPath=os.path.join(BASEDIR, 'plugins-available'))
     except Exception as e:
         print_exception(
             e,

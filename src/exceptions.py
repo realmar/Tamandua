@@ -24,8 +24,8 @@ class RegexGroupsMissing(Exception):
 
 
 class MissingConfigField(Exception):
-    def __init__(self, field):
-        super().__init__("The following field is missing from the config: " + field)
+    def __init__(self, fields):
+        super().__init__("The following fields are missing from the config: " + fields)
 
 
 class InvalidConfigField(Exception):
