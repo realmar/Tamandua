@@ -33,11 +33,11 @@ class DefaultArgs():
     configfile = os.path.join(BASEDIR, CONFIGFILE)
 
 
-def main(args: DefaultArgs, configfile=CONFIGFILE):
+def main(args: DefaultArgs):
     """Entry point of the application."""
     try:
         Config().setup(
-            configfile,
+            args.configfile,
             BASEDIR
         )
     except FileNotFoundError as e:
@@ -151,7 +151,4 @@ if __name__ == '__main__':
     args = DefaultArgs()
     parser.parse_args(namespace=args)
 
-    main(
-        args=args,
-        configfile=args.configfile
-    )
+    main(args)
