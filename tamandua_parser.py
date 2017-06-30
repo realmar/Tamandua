@@ -27,33 +27,20 @@ from src.exceptions import print_exception
 from src.repository.factory import RepositoryFactory
 
 
-def main():
+def main(configfile=CONFIGFILE, args=None, logfile=None):
     """Entry point of the application."""
-    parser = argparse.ArgumentParser(
-        description="Tamandua parser aggregates from logfile data")
-    parser.add_argument(
-        'logfile',
-        metavar='LOGFILE',
-        type=str,
-        help='Logfile to be parsed')
-    parser.add_argument(
-        '--config',
-        '-c',
-        dest='configfile',
-        default=os.path.join(BASEDIR, CONFIGFILE),
-        type=str,
-        help='Path to the configfile')
-    parser.add_argument(
-        '--no-print',
-        dest='noprint',
-        default=False,
-        action='store_true',
-        help='Do not print results to stdout')
-    args = parser.parse_args()
+    if args is None and logfile is None:
+        print_exception(
+            Exception("main called with too few parameters"),
+            "Application is not beeing used correctly. This is an internal misue!",
+            "Exiting application",
+            fatal=True
+        )
+        return
 
     try:
         Config().setup(
-            args.configfile,
+            configfile,
             BASEDIR
         )
     except FileNotFoundError as e:
@@ -91,7 +78,10 @@ def main():
     repository = RepositoryFactory.create_repository()
     currByte = repository.get_position_of_last_read_byte()
 
-    logfilehandle = open(args.logfile, 'r')
+    if args is not None:
+        logfile = args.logfile
+
+    logfilehandle = open(logfile, 'r')
     logfilehandle.seek(max(0, currByte - 1000))      # clamp byte: 0 - infinity
 
     try:
@@ -113,6 +103,9 @@ def main():
     # save the current byte position
 
     repository.save_position_of_last_read_byte(logfilehandle.tell())
+
+    if args is None:
+        return
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
@@ -142,4 +135,29 @@ def main():
         
 """We only start with the executation if we are the main."""
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        description="Tamandua parser aggregates from logfile data")
+    parser.add_argument(
+        'logfile',
+        metavar='LOGFILE',
+        type=str,
+        help='Logfile to be parsed')
+    parser.add_argument(
+        '--config',
+        '-c',
+        dest='configfile',
+        default=os.path.join(BASEDIR, CONFIGFILE),
+        type=str,
+        help='Path to the configfile')
+    parser.add_argument(
+        '--no-print',
+        dest='noprint',
+        default=False,
+        action='store_true',
+        help='Do not print results to stdout')
+    args = parser.parse_args()
+
+    main(
+        configfile=args.configfile,
+        args=args
+    )
