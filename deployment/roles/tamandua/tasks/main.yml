@@ -8,16 +8,54 @@
     - python3-flask
     - python3-flask-restful
     - python3-typing
+    - python3-pymongo
+
+- name: install tamandua pip dependencies
+  pip:
+    name: "{{ item }}"
+    state: latest
+    executable: pip3
+  with_items:
+    - manage.py
 
 - name: clone tamandua git repository into opt
   git:
     repo: git@gitlab.phys.ethz.ch:amartako/Tamandua.git
-    dest: /opt/Tamandua
+    dest: "{{ tamandua_dir }}"
     accept_hostkey: yes
     clone: yes
 
-- name: run tamandua mail parser
-  command: /opt/Tamandua/tamandua_parser.py /opt/Tamandua/mock_logs/extern-intern_to_intern.log --no-print creates=/opt/Tamandua/mails.data
+- name: Create Tamandua user
+  user:
+    name: tamandua
+    createhome: no
+    state: present
+
+- name: Set permissions of Tamandua folder
+  file:
+    path: "{{ tamandua_dir }}"
+    recursive: yes
+    owner: tamandua
+    group: tamandua
+
+- name: Add MongoDB repo key
+  apt_key:
+    keyserver: keyserver.ubuntu.com:80
+    id: 0C49F3730359A14518585931BC711F9BA15703C6
+
+- name: Add MongoDB repo
+  apt_repository:
+    repo: deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse
+    state: present
+    filename: mongodb-org-3.4.list
+    update_cache: yes
+
+- name: Install MongoDB packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - mongodb-org
 
 - name: install apache2 package
   package:
@@ -49,3 +87,9 @@
     state: link
   notify:
     - restart apache2
+
+- name: install tamandua cronjob
+  template:
+    src: tamandua_cron
+    dest: /etc/cron.d/tamandua_cron
+    mode: 644
