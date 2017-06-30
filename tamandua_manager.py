@@ -52,5 +52,13 @@ def remove_complete():
     print('Successfully deleted all complete data.')
 
 
+@manager.command
+def reset_all():
+    """Delete all data from the database and reset the reader position."""
+    remove_complete()
+    remove_incomplete()
+    reset_last_logfile_pos()
+
+
 if __name__ == '__main__':
     manager.main()
