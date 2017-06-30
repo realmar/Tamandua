@@ -14,7 +14,6 @@ source:   https://github.com/Birdback/manage.py
 see also: requirements_manager.txt
 """
 from manager import Manager
-from ast import literal_eval
 
 from src.repository.factory import RepositoryFactory
 from src.repository.misc import SearchScope
@@ -45,8 +44,8 @@ def remove_pid():
     os.remove(pidfile)
 
 
-@manager.command
-def reset_last_logfile_pos():
+@manager.command(namespace='reset')
+def logfile_pos():
     """Reset the reader position of the logfile to 0."""
     RepositoryFactory                       \
         .create_repository()                \
@@ -55,8 +54,18 @@ def reset_last_logfile_pos():
     print('Reset last logfile position to 0 successful.')
 
 
-@manager.command
-def remove_incomplete():
+@manager.command(namespace='reset')
+def logfile_size():
+    """Reset the last size of the logfile to 0."""
+    RepositoryFactory                       \
+        .create_repository()                \
+        .save_size_of_last_logfile(0)
+
+    print('Reset last logfile size to 0 successful.')
+
+
+@manager.command(namespace='remove')
+def incomplete():
     """Delete all incomplete data."""
     RepositoryFactory                       \
         .create_repository()                \
@@ -65,8 +74,8 @@ def remove_incomplete():
     print('Successfully deleted all incomplete data.')
 
 
-@manager.command
-def remove_complete():
+@manager.command(namespace='remove')
+def complete():
     """Delete all complete data."""
     RepositoryFactory                       \
         .create_repository()                \
@@ -75,18 +84,19 @@ def remove_complete():
     print('Successfully deleted all complete data.')
 
 
+@manager.command(namespace='remove')
+def all():
+    """Delete all data from the database and reset the reader position."""
+    complete()
+    incomplete()
+    logfile_pos()
+    logfile_size()
+
+
 @manager.command
-def cleanup_old():
+def cleanup():
     """Deletes entries which are older than n days."""
     pass
-
-
-@manager.command
-def reset_all():
-    """Delete all data from the database and reset the reader position."""
-    remove_complete()
-    remove_incomplete()
-    reset_last_logfile_pos()
 
 
 @manager.command
@@ -117,7 +127,7 @@ def run():
     currlogfilesize = os.path.getsize(logfilename)
     if currlogfilesize < lastlogfilesize:
         print('New logfile detected, reading from beginning.')
-        reset_last_logfile_pos()
+        logfile_pos()
 
     repository.save_size_of_last_logfile(currlogfilesize)
 
