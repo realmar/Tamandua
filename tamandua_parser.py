@@ -146,6 +146,8 @@ if __name__ == '__main__':
         default=False,
         action='store_true',
         help='Do not print results to stdout')
+
+    # https://docs.python.org/3/library/argparse.html#argparse.Namespace
     args = DefaultArgs()
     parser.parse_args(namespace=args)
 
