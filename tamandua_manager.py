@@ -14,6 +14,8 @@ source:   https://github.com/Birdback/manage.py
 see also: requirements_manager.txt
 """
 from manager import Manager
+from ast import literal_eval
+
 from src.repository.factory import RepositoryFactory
 from src.repository.misc import SearchScope
 from src.config import Config
@@ -25,7 +27,22 @@ Config().setup(
     BASEDIR
 )
 
+pidfile = os.path.join(BASEDIR, 'tamandua.pid')
+
 manager = Manager()
+
+
+def exit_if_already_running():
+    if os.path.exists(pidfile):
+        print('There is already a tamandua process running. Exiting.')
+        sys.exit(1)
+
+    with open(pidfile, 'w') as f:
+        f.write(str(os.getpid()))
+
+
+def remove_pid():
+    os.remove(pidfile)
 
 
 @manager.command
@@ -59,6 +76,12 @@ def remove_complete():
 
 
 @manager.command
+def cleanup_old():
+    """Deletes entries which are older than n days."""
+    pass
+
+
+@manager.command
 def reset_all():
     """Delete all data from the database and reset the reader position."""
     remove_complete()
@@ -66,5 +89,51 @@ def reset_all():
     reset_last_logfile_pos()
 
 
+@manager.command
+def run():
+    """Get logfile and run the parser. This can be used within cronjobs."""
+    repository = RepositoryFactory.create_repository()
+
+    logfilename = os.path.join(BASEDIR, 'logfile')
+    lastlogfilesize = repository.get_size_of_last_logfile()
+
+    import subprocess
+    with open(logfilename, 'wb') as f:
+        process = subprocess.Popen(
+            [
+                'ssh',
+                '-o',
+                'IdentitiesOnly=yes',
+                '-i',
+                '~/.ssh/remotesshwrapper',
+                'root@phd-systemxen',
+                '/usr/local/bin/remotesshwrapper',
+                'tamandua'
+            ],
+            stdout=f
+        )
+        process.wait()
+
+    currlogfilesize = os.path.getsize(logfilename)
+    if currlogfilesize < lastlogfilesize:
+        print('New logfile detected, reading from beginning.')
+        reset_last_logfile_pos()
+
+    repository.save_size_of_last_logfile(currlogfilesize)
+
+    from tamandua_parser import main as tamandua_main
+    from tamandua_parser import DefaultArgs
+
+    args = DefaultArgs()
+    args.logfile = logfilename
+    args.noprint = True
+
+    tamandua_main(args)
+
+    os.remove(logfilename)
+
+
 if __name__ == '__main__':
+    exit_if_already_running()
     manager.main()
+    remove_pid()
