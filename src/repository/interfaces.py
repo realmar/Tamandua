@@ -55,6 +55,16 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def save_size_of_last_logfile(self, pos: int) -> None:
+        """"""
+        pass
+
+    @abstractmethod
+    def get_size_of_last_logfile(self) -> int:
+        """"""
+        pass
+
+    @abstractmethod
     def make_regexp(self, pattern: str) -> object:
         """"""
         pass

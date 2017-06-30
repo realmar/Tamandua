@@ -20,6 +20,7 @@ class MongoRepository(IRepository):
     """"""
 
     __lastBytePosName = 'lastbytepos'
+    __lastLogfileSizeName = 'lastlogfilesize'
 
 
     def __init__(self):
@@ -121,25 +122,44 @@ class MongoRepository(IRepository):
         except KeyError as e:
             pass
 
-    def __get_last_bypte_post_cursor(self) -> dict:
-        return self._collection_metadata.find_one({self.__lastBytePosName: {'$exists': True}})
+
+    def __get_metadata(self, field: str) -> dict:
+        return self._collection_metadata.find_one({field: {'$exists': True}})
+
+
+    def __save_metadata(self, field: str, value: object) -> None:
+        data = self.__get_metadata(field)
+
+        if data is None:
+            self._collection_metadata.insert_one({field: value})
+        else:
+            data[field] = value
+            self._collection_metadata.update({'_id': data['_id']}, data)
+
+    def __get_metadata_wrapp(self, field: str, default: object) -> object:
+        data = self.__get_metadata(field)
+        if data is None:
+            return default
+        else:
+            return data[field]
 
     def save_position_of_last_read_byte(self, pos: int) -> None:
         """"""
-        lastpos = self.__get_last_bypte_post_cursor()
-        if lastpos is None:
-            self._collection_metadata.insert_one({self.__lastBytePosName: pos})
-        else:
-            lastpos[self.__lastBytePosName] = pos
-            self._collection_metadata.update({'_id': lastpos['_id']}, lastpos)
+        self.__save_metadata(self.__lastBytePosName, pos)
 
     def get_position_of_last_read_byte(self) -> int:
         """"""
-        lastpos = self.__get_last_bypte_post_cursor()
-        if lastpos is None:
-            return 0
-        else:
-            return lastpos[self.__lastBytePosName]
+        return self.__get_metadata_wrapp(self.__lastBytePosName, 0)
+
+
+    def save_size_of_last_logfile(self, size: int) -> None:
+        """"""
+        self.__save_metadata(self.__lastLogfileSizeName, size)
+
+    def get_size_of_last_logfile(self) -> int:
+        """"""
+        return self.__get_metadata_wrapp(self.__lastLogfileSizeName, 0)
+
 
     def make_regexp(self, pattern: str) -> object:
         """"""
