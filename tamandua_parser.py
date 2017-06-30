@@ -27,7 +27,13 @@ from src.exceptions import print_exception
 from src.repository.factory import RepositoryFactory
 
 
-def main(args: argparse.Namespace, configfile=CONFIGFILE):
+class DefaultArgs():
+    logfile = 'mock_logs' + os.path.sep + 'extern-intern_to_intern.log'
+    noprint = False
+    configfile = os.path.join(BASEDIR, CONFIGFILE)
+
+
+def main(args: DefaultArgs, configfile=CONFIGFILE):
     """Entry point of the application."""
     try:
         Config().setup(
@@ -140,7 +146,8 @@ if __name__ == '__main__':
         default=False,
         action='store_true',
         help='Do not print results to stdout')
-    args = parser.parse_args()
+    args = DefaultArgs()
+    parser.parse_args(namespace=args)
 
     main(
         args=args,
