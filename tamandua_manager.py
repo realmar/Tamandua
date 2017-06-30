@@ -41,14 +41,20 @@ def reset_last_logfile_pos():
 @manager.command
 def remove_incomplete():
     """Delete all incomplete data."""
-    RepositoryFactory.create_repository().delete({}, SearchScope.INCOMPLETE)
+    RepositoryFactory                       \
+        .create_repository()                \
+        .delete({}, SearchScope.INCOMPLETE)
+
     print('Successfully deleted all incomplete data.')
 
 
 @manager.command
 def remove_complete():
     """Delete all complete data."""
-    RepositoryFactory.create_repository().delete({}, SearchScope.COMPLETE)
+    RepositoryFactory                       \
+        .create_repository()                \
+        .delete({}, SearchScope.COMPLETE)
+
     print('Successfully deleted all complete data.')
 
 
