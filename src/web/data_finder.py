@@ -97,15 +97,26 @@ class DataFinder():
                 raise ExpressionInvalid("To datetime format is invalid: " + str(endTimeRaw))
 
         queryData = {}
+        isDateTimeSearch = start is not None or end is not None
 
         for f in fields:
             for k, v in f.items():
                 queryData[k] = self._repository.make_regexp(v)
 
-        if start is not None or end is not None:
+        if isDateTimeSearch:
             queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)
 
-        results = list(self._repository.find(queryData, SearchScope.ALL))
+        def do_search():
+            return list(self._repository.find(queryData, SearchScope.ALL))
+
+        results = do_search()
+
+        # if we didnt find any results we will search again using imap datetime
+        if len(results) == 0 and isDateTimeSearch:
+            del queryData[constants.PHD_MXIN_TIME]
+            queryData[constants.PHD_IMAP_TIME] = self._repository.make_datetime_comparison(start, end)
+
+        results = do_search()
 
         for r in results:
             self._repository.remove_metadata(r)
