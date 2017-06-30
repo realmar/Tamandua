@@ -15,11 +15,12 @@ source:   https://github.com/Birdback/manage.py
 see also: requirements_manager.txt
 """
 from manager import Manager
+from datetime import datetime, timedelta
 
 from src.repository.factory import RepositoryFactory
 from src.repository.misc import SearchScope
 from src.config import Config
-from src.constants import CONFIGFILE
+from src.constants import CONFIGFILE, PHD_MXIN_TIME, PHD_IMAP_TIME
 
 
 Config().setup(
@@ -106,7 +107,14 @@ def all():
 @manager.command
 def cleanup(days=30):
     """Deletes entries which are older than n days."""
-    pass
+    repository = RepositoryFactory.create_repository()
+    keepDate = datetime.today() - timedelta(days=days)
+    date = repository.make_datetime_comparison(start=None, end=keepDate)
+
+    repository.delete({PHD_MXIN_TIME: date}, SearchScope.ALL)
+    repository.delete({PHD_IMAP_TIME: date}, SearchScope.ALL)
+
+    print('Deleted all data older than ' + str(days) + ' days successful.')
 
 
 @manager.command
@@ -149,6 +157,7 @@ def run():
     args.noprint = True
 
     tamandua_main(args)
+    cleanup()
 
     os.remove(logfilename)
 
