@@ -65,7 +65,7 @@ class MongoRepository(IRepository):
         elif scope == SearchScope.ALL:
             class CollectionAggregate():
                 @staticmethod
-                def find(query: dict):
+                def find(query: dict) -> list:
                     res = list(
                         self._collection_complete.find(query))
 
@@ -74,6 +74,11 @@ class MongoRepository(IRepository):
                             self._collection_incomplete.find(query)))
 
                     return res
+
+                @staticmethod
+                def remove(query: dict) -> None:
+                    self._collection_complete.remove(query)
+                    self._collection_incomplete.remove(query)
 
             return CollectionAggregate
         else:
@@ -107,11 +112,6 @@ class MongoRepository(IRepository):
 
     def delete(self, query: dict, scope: SearchScope) -> None:
         """"""
-        if scope == SearchScope.ALL:
-            # we do not support deleting the same document
-            # in multiple collections at the same time
-            raise NotImplementedError()
-
         collection = self.__resolveScope(scope)
         collection.remove(query)
 
