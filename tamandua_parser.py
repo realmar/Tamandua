@@ -27,17 +27,8 @@ from src.exceptions import print_exception
 from src.repository.factory import RepositoryFactory
 
 
-def main(configfile=CONFIGFILE, args=None, logfile=None):
+def main(args: argparse.Namespace, configfile=CONFIGFILE):
     """Entry point of the application."""
-    if args is None and logfile is None:
-        print_exception(
-            Exception("main called with too few parameters"),
-            "Application is not beeing used correctly. This is an internal misue!",
-            "Exiting application",
-            fatal=True
-        )
-        return
-
     try:
         Config().setup(
             configfile,
@@ -78,10 +69,7 @@ def main(configfile=CONFIGFILE, args=None, logfile=None):
     repository = RepositoryFactory.create_repository()
     currByte = repository.get_position_of_last_read_byte()
 
-    if args is not None:
-        logfile = args.logfile
-
-    logfilehandle = open(logfile, 'r')
+    logfilehandle = open(args.logfile, 'r')
     logfilehandle.seek(max(0, currByte - 1000))      # clamp byte: 0 - infinity
 
     try:
@@ -103,9 +91,6 @@ def main(configfile=CONFIGFILE, args=None, logfile=None):
     # save the current byte position
 
     repository.save_position_of_last_read_byte(logfilehandle.tell())
-
-    if args is None:
-        return
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
@@ -158,6 +143,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(
-        configfile=args.configfile,
-        args=args
+        args=args,
+        configfile=args.configfile
     )
