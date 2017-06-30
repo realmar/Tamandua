@@ -5,6 +5,7 @@
 
 import os
 import sys
+import atexit
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
@@ -30,18 +31,26 @@ pidfile = os.path.join(BASEDIR, 'tamandua.pid')
 
 manager = Manager()
 
+global cleanupPID
+cleanupPID = True
+
 
 def exit_if_already_running():
     if os.path.exists(pidfile):
         print('There is already a tamandua process running. Exiting.')
+        global cleanupPID
+        cleanupPID = False
         sys.exit(1)
 
     with open(pidfile, 'w') as f:
         f.write(str(os.getpid()))
 
 
+@atexit.register
 def remove_pid():
-    os.remove(pidfile)
+    global cleanupPID
+    if cleanupPID:
+        os.remove(pidfile)
 
 
 @manager.command(namespace='reset')
@@ -93,8 +102,9 @@ def all():
     logfile_size()
 
 
+@manager.arg('days', help='Number of days to keep')
 @manager.command
-def cleanup():
+def cleanup(days=30):
     """Deletes entries which are older than n days."""
     pass
 
@@ -146,4 +156,3 @@ def run():
 if __name__ == '__main__':
     exit_if_already_running()
     manager.main()
-    remove_pid()
