@@ -20,7 +20,7 @@
 
 - name: clone tamandua git repository into opt
   git:
-    repo: git@gitlab.phys.ethz.ch:amartako/Tamandua.git
+    repo: git@gitlab.phys.ethz.ch:mailserver/Tamandua.git
     dest: "{{ tamandua_dir }}"
     accept_hostkey: yes
     clone: yes
