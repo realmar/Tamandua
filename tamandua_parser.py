@@ -22,58 +22,24 @@ else:
 
 from src.plugins.plugin_manager import PluginManager
 from src.config import Config
-from src.serialization.serializer import Serializer
 from src.constants import CONFIGFILE
 from src.exceptions import print_exception
+from src.repository.factory import RepositoryFactory
 
 
-def main():
+class DefaultArgs():
+    logfile = 'mock_logs' + os.path.sep + 'extern-intern_to_intern.log'
+    noprint = False
+    configfile = os.path.join(BASEDIR, CONFIGFILE)
+
+
+def main(args: DefaultArgs):
     """Entry point of the application."""
-    parser = argparse.ArgumentParser(
-        description="Tamandua parser aggregates from logfile data")
-    parser.add_argument(
-        'files',
-        nargs='+',
-        metavar='LOGFILE',
-        type=str,
-        help='Logfiles to be parsed')
-    parser.add_argument(
-        '--config',
-        '-c',
-        dest='configfile',
-        default=os.path.join(BASEDIR, CONFIGFILE),
-        type=str,
-        help='Path to the configfile')
-    parser.add_argument(
-        '--outpath',
-        '-o',
-        dest='store_path',
-        default=None,
-        type=str,
-        help='Path to the output file')
-    parser.add_argument(
-        '--outformat',
-        '-f',
-        dest='store_type',
-        default=None,
-        type=str,
-        help='Output format: can be either pyobj-store or json')
-    parser.add_argument(
-        '--no-print',
-        dest='noprint',
-        default=False,
-        action='store_true',
-        help='Do not print results to stdout')
-    args = parser.parse_args()
-
     try:
-        config = Config(
+        Config().setup(
             args.configfile,
-            BASEDIR,
-            {
-                'store_path': args.store_path,
-                'store_type': args.store_type
-            })
+            BASEDIR
+        )
     except FileNotFoundError as e:
         print_exception(
             e,
@@ -97,8 +63,7 @@ def main():
 
     try:
         pluginManager = PluginManager(
-            absPluginsPath=os.path.join(BASEDIR, 'plugins-available'),
-            config=config)
+            absPluginsPath=os.path.join(BASEDIR, 'plugins-enabled'))
     except Exception as e:
         print_exception(
             e,
@@ -107,24 +72,31 @@ def main():
             fatal=True)
         sys.exit(1)
 
-    for logfile in args.files:
-        with open(logfile, 'r') as f:
-            try:
-                for line in f:
-                    pluginManager.process_line(line)
-            except UnicodeDecodeError as e:
-                print_exception(
-                    e,
-                    "Trying to read a line from the given logfile.",
-                    "Continue with the next line")
-                continue
-            except Exception as e:
-                print_exception(
-                    e,
-                    "Trying to read a line from the given logfile",
-                    "Quit application",
-                    fatal=True)
-                sys.exit(9)
+    repository = RepositoryFactory.create_repository()
+    currByte = repository.get_position_of_last_read_byte()
+
+    logfilehandle = open(args.logfile, 'r')
+    logfilehandle.seek(max(0, currByte - 1000))      # clamp byte: 0 - infinity
+
+    try:
+        for line in logfilehandle:
+            pluginManager.process_line(line)
+    except UnicodeDecodeError as e:
+        print_exception(
+            e,
+            "Trying to read a line from the given logfile.",
+            "Aborting")
+    except Exception as e:
+        print_exception(
+            e,
+            "Trying to read a line from the given logfile",
+            "Quit application",
+            fatal=True)
+        sys.exit(9)
+
+    # save the current byte position
+
+    repository.save_position_of_last_read_byte(logfilehandle.tell())
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
@@ -151,17 +123,32 @@ def main():
                     'Printing container to stdout: ' + container.__class__.__name__,
                     'ignoring current container')
 
-    # serialize data
-    try:
-        serializer = Serializer(config)
-    except Exception as e:
-        print_exception(e, "Trying to create an instance of Serializer", "Discard serialization")
-    else:
-        try:
-            serializer.store(pluginManager.dataReceiver)
-        except Exception as e:
-            print_exception(e, "Trying to serialize the collected data", "Discard serialization")
         
 """We only start with the executation if we are the main."""
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        description="Tamandua parser aggregates from logfile data")
+    parser.add_argument(
+        'logfile',
+        metavar='LOGFILE',
+        type=str,
+        help='Logfile to be parsed')
+    parser.add_argument(
+        '--config',
+        '-c',
+        dest='configfile',
+        default=os.path.join(BASEDIR, CONFIGFILE),
+        type=str,
+        help='Path to the configfile')
+    parser.add_argument(
+        '--no-print',
+        dest='noprint',
+        default=False,
+        action='store_true',
+        help='Do not print results to stdout')
+
+    # https://docs.python.org/3/library/argparse.html#argparse.Namespace
+    args = DefaultArgs()
+    parser.parse_args(namespace=args)
+
+    main(args)

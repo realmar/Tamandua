@@ -1,10 +1,10 @@
 """Helper classes of the processor plugins."""
 
 import types
-from enum import Enum
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 
-from ...interfaces import IProcessorPlugin
+from ...plugins.interfaces import IProcessorPlugin
 from ...plugins.plugin_helpers import add_tag, has_tag
 
 

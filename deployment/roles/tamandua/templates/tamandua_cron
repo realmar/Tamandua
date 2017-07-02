@@ -1,0 +1,2 @@
+SHELL=/bin/sh
+*/5 * * * * tamandua {{ tamandua_dir }}/tamandua_manager.py run

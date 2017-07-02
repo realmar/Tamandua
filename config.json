@@ -6,6 +6,12 @@
     "phd-maildb"
   ],
   "preregex": "^(?P<month>[^\\s]*?)\\s{1,2}(?P<day>[^\\s]*?)\\s(?P<time>[^\\s]*?)\\s(?P<hostname>[^\/\\s]*?)[^\\w-]+?",
-  "store_type": "pyobj-store",
-  "store_path": "mails.data"
+
+  "database_type": "mongo",
+  "database_name": "tamandua",
+  "collection_complete": "complete",
+  "collection_incomplete": "incomplete",
+  "collection_metadata": "metadata",
+  "dbserver": "localhost",
+  "dbport": 27017
 }

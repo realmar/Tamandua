@@ -1,11 +1,11 @@
 """Here are the base classes of every Plugin."""
 
 import abc
-from enum import Enum
 from ast import literal_eval
+from enum import Enum
 
+from ..interfaces import IPlugin
 from ...exceptions import NoSubscriptionRegex, NoDataRegex, RegexGroupsMissing, InvalidRegexFlag
-from ...interfaces import IPlugin
 
 
 class RegexFlags(Enum):

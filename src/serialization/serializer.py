@@ -1,11 +1,10 @@
 """Module which contains the serializer."""
 
+from .interfaces import ISerializable
 from .factory import SerializationFactory
-from ..interfaces import ISerializable
-
+from ..config import Config
 # used in annotation
 from ..containers.data_receiver import DataReceiver
-from ..config import Config
 
 
 class Serializer():

@@ -3,7 +3,7 @@
 import json
 import pickle
 
-from ..interfaces import ISerializationMethod
+from .interfaces import ISerializationMethod
 
 
 class BaseSerialization(ISerializationMethod):

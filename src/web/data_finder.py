@@ -1,53 +1,20 @@
 """Module used by the webapp: backend to search the data."""
 
 from datetime import datetime
-from ast import literal_eval
 
-from ..serialization.serializer import Serializer
 from .. import constants
 from .exceptions import ExpressionInvalid
-
-# used in annotation
-from ..config import Config
+from ..repository.factory import RepositoryFactory
+from ..repository.misc import SearchScope
 
 
 class DataFinder():
     """DataFinder searches given data by fields and/or time."""
 
-    def __init__(self, config: Config) -> None:
-        self._config = config
-        self._data = []
-        self.availableFields = []
+    def __init__(self):
+        self._repository = RepositoryFactory.create_repository()
+        self.availableFields = self._repository.get_all_keys()
 
-        self.load_data()
-
-    @staticmethod
-    def _get_keys(inputData: list) -> list:
-        """Return a list of all uniq keys."""
-
-        tmpAvailableFields = {}
-
-        for data in inputData:
-            for key, value in data.items():
-                if tmpAvailableFields.get(key) is None:
-                    tmpAvailableFields[key] = True
-
-        return sorted(tmpAvailableFields.keys())
-
-    def load_data(self) -> None:
-        """Load data from the data store into memory."""
-
-        self._data = Serializer(self._config).load()['MailContainer']
-        self.analise_data()
-
-    def analise_data(self) -> None:
-        """
-        Analise the data.
-        
-        Uses _get_keys to get all keys in _data. This method is called from load_data.
-        """
-
-        self.availableFields = self._get_keys(self._data)
 
     def search(self, expression: dict) -> list:
         """Search for specific mails."""
@@ -129,85 +96,46 @@ class DataFinder():
             except Exception as e:
                 raise ExpressionInvalid("To datetime format is invalid: " + str(endTimeRaw))
 
-        """
-        Datafiltering
-        """
+        queryData = {}
+        isDateTimeSearch = start is not None or end is not None
 
-        filteredData = []
+        for f in fields:
+            for k, v in f.items():
+                queryData[k] = self._repository.make_regexp(v)
 
-        for data in self._data:
-            mismatch = False
+        if isDateTimeSearch:
+            queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)
 
-            for field in fields:
-                for key, value in field.items():
-                    try:
-                        value = literal_eval(value)
-                    except Exception as e:
-                        pass
+        def do_search():
+            return list(self._repository.find(queryData, SearchScope.ALL))
 
-                    if value == '' or value is None:
-                        continue
+        results = do_search()
 
-                    fieldData = data.get(key)
+        # if we didnt find any results we will search again using imap datetime
+        if len(results) == 0 and isDateTimeSearch:
+            del queryData[constants.PHD_MXIN_TIME]
+            queryData[constants.PHD_IMAP_TIME] = self._repository.make_datetime_comparison(start, end)
 
-                    if fieldData is None:
-                        mismatch = True
-                        break
+        results = do_search()
 
-                    if isinstance(fieldData, str):
-                        if value not in str(fieldData).lower():
-                            mismatch = True
-                            break
+        for r in results:
+            self._repository.remove_metadata(r)
+
+            timeMap = {
+                constants.PHD_MXIN_TIME: r.get(constants.PHD_MXIN_TIME),
+                constants.PHD_IMAP_TIME: r.get(constants.PHD_IMAP_TIME)
+            }
+
+            for key, value in timeMap.items():
+                if value is not None:
+                    if isinstance(value, list):
+                        tmp = []
+                        for v in value:
+                            tmp.append(datetime.strftime(v, constants.TIME_FORMAT))
+
+                        r[key] = tmp
                     else:
-                        if value != fieldData:
-                            mismatch = True
-                            break
+                        r[key] = datetime.strftime(value, constants.TIME_FORMAT)
 
-                if mismatch:
-                    break
+        return results
 
-            if mismatch:
-                continue
-
-            if start is not None or end is not None:
-                try:
-                    mxinTime = datetime.strptime(data.get(constants.PHD_MXIN_TIME), constants.TIME_FORMAT)
-                except Exception as e:
-                    mxinTime = None
-
-                try:
-                    imapTime = datetime.strptime(data.get(constants.PHD_IMAP_TIME), constants.TIME_FORMAT)
-                except Exception as e:
-                    imapTime = None
-
-                if mxinTime is None and imapTime is None:
-                    continue
-
-                def check_time(t1, t2):
-                    if t1 is not None and t2 is not None:
-                        return t1 >= t2
-
-                    return None
-
-                # get the time where this Mail is first encountered
-                dtime = min(x for x in (imapTime, mxinTime) if x is not None)
-
-                startComp = check_time(dtime, start)
-                endComp = check_time(end, dtime)
-
-                if startComp is not None and endComp is not None:
-                    mismatch = not (startComp & endComp)
-                elif startComp is not None:
-                    mismatch = not startComp
-                elif endComp is not None:
-                    mismatch = not endComp
-
-            if mismatch:
-                continue
-
-            # if we reached this point there is no missmatch
-            # so we add the data to the list of the filtered mails
-
-            filteredData.append(data)
-
-        return filteredData

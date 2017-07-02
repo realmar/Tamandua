@@ -3,18 +3,25 @@
 import copy
 from datetime import datetime
 from typing import List, Dict
+from functools import partial
 
 import colorama
 
 colorama.init(autoreset=True)
 
-from src.interfaces import IDataContainer, ISerializable, IRequiresPlugins
+from src.plugins.interfaces import IDataContainer, IRequiresPlugins, IRequiresRepository
+from src.repository.interfaces import IRepository
 from src import constants
 from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
+from src.repository.misc import SearchScope
 
 
-class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
+class AlreadyInRepository(Exception):
+    pass
+
+
+class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
     """
     Container which aggregates and stores mail objects.
 
@@ -32,9 +39,8 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         # map : imap_qid -> mail-fragment
         self._map_pickup = {}
 
-        self._aggregated_mails = []
-
         self._pluginManager = None
+        self._repository = None
 
     @property
     def subscribedFolder(self) -> str:
@@ -43,6 +49,9 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
     def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
         self._pluginManager = pluginManager
+
+    def set_repository(self, repository: IRepository) -> None:
+        self._repository = repository
 
     @staticmethod
     def _merge_data(target: dict, origin: dict) -> None:
@@ -156,9 +165,10 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                 dt = dt.replace(year=datetime.today().year)
 
                 # bring datetime in a portable format
-                newDtStr = dt.strftime(constants.TIME_FORMAT)
+                # we can handle this datetime objects now
+                # newDtStr = dt.strftime(constants.TIME_FORMAT)
                 try:
-                    d[constants.HOSTNAME_TIME_MAP[hostname]] = newDtStr
+                    d[constants.HOSTNAME_TIME_MAP[hostname]] = dt
                 except Exception as e:
                     pass
 
@@ -190,17 +200,38 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                     del self._map_pickup[qid]
                     return
 
-    def __postprocessing(self, mail: dict) -> ProcessorAction:
-        """Apply postprocessing plugins to a mail-object."""
+    def __processing_porocessors(self, mail: dict, responsibility: str) -> ProcessorAction:
         if self._pluginManager is not None:
-            chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
+            chain = self._pluginManager.get_chain_with_responsibility(responsibility)
             if chain is not None:
                 pd = ProcessorData(mail)
                 chain.process(pd)
                 return pd.action
 
+    def __preprocessing(self, mail: dict) -> ProcessorAction:
+        """Apply preprocessing plugins to a mail-object."""
+        return self.__processing_porocessors(mail, 'preprocessors')
+
+    def __postprocessing(self, mail: dict) -> ProcessorAction:
+        """Apply postprocessing plugins to a mail-object."""
+        return self.__processing_porocessors(mail, 'postprocessors')
+
+    def __process_aggregated_mail(self, mail: dict) -> None:
+        isIncomplete = True
+
+        tags = mail.get('tags')
+        if isinstance(tags, list):
+            if 'incomplete' not in tags:
+                isIncomplete = False
+
+        if isIncomplete:
+            scope = SearchScope.INCOMPLETE
+        else:
+            scope = SearchScope.COMPLETE
+
+        self._repository.insert_or_update(mail, scope)
+
     def __aggregate_mails(self,
-                          fragments: Dict[str, dict],
                           fragmentChain: List[Dict[str, dict]],
                           keyChain: List[str]) -> None:
         """
@@ -260,14 +291,45 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
 
             # create aggregate target
             # all data is aggregated into this dict
-            target = copy.deepcopy(frag)
+            initialID = frag.get(keyChain[0])
+            queryData = { keyChain[0]: str(initialID) }
+            do_query = partial(self._repository.find, queryData)
+
+            if initialID == constants.NOQUEUE:
+                if len(self._repository.find(frag, SearchScope.ALL)) > 0:
+                    raise AlreadyInRepository()
+
+                target = copy.deepcopy(frag)
+            else:
+                try:
+                    target = do_query(SearchScope.INCOMPLETE)[0]
+                    self._repository.remove_metadata(target)
+                    self.__preprocessing(target)
+
+                    # remove this data as it may be complete afterwards
+                    self._repository.delete(queryData, SearchScope.INCOMPLETE)
+                except IndexError as e:
+                    res = do_query(SearchScope.COMPLETE)
+                    if len(res) > 0:
+
+                        res = res[0]
+
+                        for i in range(1, len(keyChain)):
+                            try:
+                                del fragmentChain[i][res.get(keyChain[i])]
+                            except Exception as e:
+                                continue
+
+                        raise AlreadyInRepository()
+
+                    target = copy.deepcopy(frag)
 
             # the current fragment is now copied to the target
             # so we can start merging the fragmentChain:
 
             # we will iterate over the keyChain, as we want to aggregate
             # the fragment in order of succession
-            for index in range(len(keyChain)):
+            for index in range(1, len(keyChain)):
                 # extract the data given by a key
                 # in the keyChain from the target
                 nextid = target.get(keyChain[index])
@@ -286,6 +348,24 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
                         if otherFrag is not None:
                             # if the fragment is not None (aka if it exists)
                             # we will merge it with the target
+
+                            queryData = {keyChain[index]: id}
+                            do_query = partial(self._repository.find, queryData)
+
+                            def gather_existing_data(scope: SearchScope):
+                                try:
+                                    data = do_query(scope)[0]
+                                    self._repository.remove_metadata(data)
+                                    self.__preprocessing(data)
+                                    self._merge_data(target, data)
+
+                                    self._repository.delete(queryData, scope)
+                                except IndexError as e:
+                                    pass
+
+                            gather_existing_data(SearchScope.INCOMPLETE)
+                            gather_existing_data(SearchScope.COMPLETE)
+
                             self._merge_data(target, otherFrag)
                             # we can not delete the merged fragment now, as it would
                             # break the iteration, so we have to cache its indexes
@@ -317,7 +397,7 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         def merge_pickup_wrapp(target: dict):
             self.__merge_pickup(target, target.get(constants.MESSAGEID))
             if self.__postprocessing(target) != ProcessorAction.DELETE:
-                self._aggregated_mails.append(target)
+                self.__process_aggregated_mail(target)
 
         """
         Procedure start
@@ -326,63 +406,75 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
         # as we want to aggregate each fragment in fragments with some fragments
         # in the fragmentChain given by the keys in the keyChain we will iterate
         # over the fragments:
-        for id, frag in fragments.items():
+        for id, frag in fragmentChain[0].items():
             # if the fragment is a list then we need to iterate over
             # this list, as the actual fragments are in this list
             # This happens when multiple fragments have the same id
             # in the case of NOQUEUE (rejected mails)
-            if isinstance(frag, list):
-                for f in frag:
-                    merge_pickup_wrapp(agg_wrapp(f))
+            try:
+                if isinstance(frag, list):
+                    for f in frag:
+                        merge_pickup_wrapp(agg_wrapp(f))
 
-            else:
-                # if the fragment is not a list, then it is
-                # a dict, so we can just aggregate it
-                merge_pickup_wrapp(agg_wrapp(frag))
+                else:
+                    # if the fragment is not a list, then it is
+                    # a dict, so we can just aggregate it
+                    merge_pickup_wrapp(agg_wrapp(frag))
+            except AlreadyInRepository as e:
+                # if we already stored this fragment in the repo
+                # we will continue with the next
+                continue
 
         # all fragments have been aggregated now, we will therefore
         # clear the list of fragments
-        fragments.clear()
+        fragmentChain[0].clear()
 
     def build_final(self) -> None:
         """Aggregate data to mail objects."""
         self.__aggregate_mails(
-            self._map_qid_mxin,
+            [
+                self._map_qid_mxin,
+                self._map_qid_imap,
+                self._map_msgid
+            ],
+            [
+                constants.PHD_MXIN_QID,
+                constants.PHD_IMAP_QID,
+                constants.MESSAGEID
+            ]
+        )
+
+        self.__aggregate_mails(
             [
                 self._map_qid_imap,
                 self._map_msgid
             ],
             [
                 constants.PHD_IMAP_QID,
-                constants.MESSAGEID,
+                constants.MESSAGEID
             ]
         )
 
         self.__aggregate_mails(
-            self._map_qid_imap,
             [
-                self._map_msgid
+                self._map_msgid,
             ],
             [
                 constants.MESSAGEID
             ]
         )
 
-        self.__aggregate_mails(
-            self._map_msgid,
-            [],
-            []
-        )
-
-        for m in self._map_pickup.values():
-            if self.__postprocessing(m) != ProcessorAction.DELETE:
-                self._aggregated_mails.append(m)
+        for id, mail in self._map_pickup.items():
+            if len(self._repository.find({constants.PHD_IMAP_QID: id},SearchScope.ALL)) == 0:
+                if self.__postprocessing(mail) != ProcessorAction.DELETE:
+                    self.__process_aggregated_mail(mail)
 
         self._map_pickup.clear()
 
     def represent(self) -> None:
         """Print the contents of this container in a human readable format to stdout."""
 
+        """
         def print_title(**kv):
             finalStr = '---- '
             for k, v in kv.items():
@@ -436,7 +528,6 @@ class MailContainer(IDataContainer, ISerializable, IRequiresPlugins):
             loglines = mail.get(constants.LOGLINES)
             if loglines is not None:
                 print_list(constants.LOGLINES, loglines)
+        """
 
-    def get_serializable_data(self) -> object:
-        """Return data which should and can be serialized."""
-        return self._aggregated_mails
+        pass

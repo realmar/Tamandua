@@ -2,8 +2,8 @@
 
 from typing import List
 
+from ..plugins.interfaces import IDataContainer
 from ..exceptions import print_warning
-from ..interfaces import IDataContainer
 
 
 class DataReceiver():

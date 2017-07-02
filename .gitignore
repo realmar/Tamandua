@@ -13,3 +13,7 @@ logdump/*
 
 # Deployment
 */.vagrant/*
+
+# Generated Files
+logfile
+tamandua.pid

@@ -23,7 +23,7 @@ from os.path import split as path_split
 from os.path import sep as path_sep
 
 from ..containers.data_receiver import DataReceiver
-from ..interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin, IDataContainer
+from .interfaces import IAbstractPlugin, IPlugin, IProcessorPlugin, IDataContainer
 from .bases.plugin_base import PluginBase
 from .bases.simple_plugin import SimplePlugin
 from .bases.plugin_processor import BaseVerifyProcessor
@@ -48,15 +48,15 @@ class PluginManager():
         IDataContainer
     ]
 
-    def __init__(self, absPluginsPath: str, config: Config):
+    def __init__(self, absPluginsPath: str):
         """"Constructor of PluginManager."""
-        self.__limitHosts = config.get('limit_hosts')
+        self.__limitHosts = Config().get('limit_hosts')
         if self.__limitHosts is None:
             self.__limitHosts = []
 
         # This regex is used to extract generic information from each
         # log line: currently: datetime and hostname
-        self.__preRegex = re.compile(cast(str, config.get('preregex')))
+        self.__preRegex = re.compile(cast(str, Config().get('preregex')))
 
         self._pluginAssociator = PluginAssociator(self)
 

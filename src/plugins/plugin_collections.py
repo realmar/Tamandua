@@ -2,10 +2,16 @@
 
 
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, cast, List
+from typing import cast, List
 
+from .interfaces import IDataContainer,     \
+                        IPlugin,            \
+                        IProcessorPlugin,   \
+                        IRequiresPlugins,   \
+                        IRequiresRepository,\
+                        IAbstractPlugin
 from .chain import Chain
-from ..interfaces import IDataContainer, IPlugin, IProcessorPlugin, IRequiresPlugins, IAbstractPlugin
+from ..repository.factory import RepositoryFactory
 
 try:
     # new in python 3.5.3 #bleedingedge
@@ -76,13 +82,6 @@ class PluginAssociator():
 
         raise NoPluginCollectionFound(cast(type, cls))
 
-        """
-        try:
-            return self.__collection_map[cls]
-        except Exception as e:
-            raise NoPluginCollectionFound(cast(type, cls))
-        """
-
 
 class BasePluginCollection(IPluginCollection):
     def __init__(self):
@@ -106,6 +105,10 @@ class ContainerPluginCollection(BasePluginCollection):
 
         if issubclass(data.cls, IRequiresPlugins):
             inst.set_pluginmanager(self.__pluginManager)
+
+        if issubclass(data.cls, IRequiresRepository):
+            # TODO: DO NOT HARDCODE!!!!! This has to go into a factory or something
+            inst.set_repository(RepositoryFactory.create_repository())
 
         self._plugins.append(inst)
 
@@ -134,7 +137,11 @@ class ProcessorPluginCollection(BasePluginCollection):
         if self.__chains.get(responsibility) is None:
             self.__chains[responsibility] = Chain(responsibility, [handler])
         else:
-            self.__chains[responsibility].add_handler(data.filename, handler)
+            self.__chains[responsibility].add_handler(*handler)
+
+    @property
+    def plugins(self):
+        return self.__chains.values()
 
     @property
     def subscribed_cls(self) -> type:

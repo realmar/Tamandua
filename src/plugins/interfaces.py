@@ -1,4 +1,4 @@
-"""This Module contains all interfaces used within Tamandua."""
+"""This Module contains all interfaces used for the plugins."""
 
 from abc import ABCMeta, abstractmethod
 
@@ -69,6 +69,18 @@ class IRequiresPlugins(metaclass=ABCMeta):
         pass
 
 
+class IRequiresRepository(metaclass=ABCMeta):
+    """
+    Inherit from this interface if you require a repository
+    for storing data to a persistent medium.
+    """
+
+    @abstractmethod
+    def set_repository(self, repository: 'IRepository') -> None:
+        """Assign the repository."""
+        pass
+
+
 class IDataContainer(IAbstractPlugin, metaclass=ABCMeta):
     """Public interface of a DataContainer."""
 
@@ -91,27 +103,4 @@ class IDataContainer(IAbstractPlugin, metaclass=ABCMeta):
     @abstractmethod
     def represent(self) -> None:
         """Print container to STDOUT."""
-        pass
-
-
-class ISerializable(metaclass=ABCMeta):
-    """Every class which can be serialized has to implement this interface."""
-
-    @abstractmethod
-    def get_serializable_data(self) -> object:
-        """Get the data which should be serialized."""
-        pass
-
-
-class ISerializationMethod(metaclass=ABCMeta):
-    """Every serialization method has to implement this interface, eg. JSON or PyObjStore."""
-
-    @abstractmethod
-    def save(self, data: object) -> None:
-        """Serialize data."""
-        pass
-
-    @abstractmethod
-    def load(self) -> object:
-        """Deserialize data and return it."""
         pass

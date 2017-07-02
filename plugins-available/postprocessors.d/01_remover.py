@@ -1,7 +1,7 @@
 """Postprocessor plugin which removed unwanted mail-objects."""
 
-from src.interfaces import IProcessorPlugin
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
+from src.plugins.interfaces import IProcessorPlugin
 from src.plugins.plugin_helpers import check_value
 
 
