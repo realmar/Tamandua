@@ -1,2 +1,2 @@
 SHELL=/bin/sh
-*/5 * * * * tamandua {{ tamandua_dir }}/tamandua_manager.py run
+*/5 * * * * tamandua {{ tamandua_dir }}/tamandua_manager.py run > /dev/null
