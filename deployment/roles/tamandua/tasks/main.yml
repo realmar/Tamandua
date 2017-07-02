@@ -58,6 +58,12 @@
   with_items:
     - mongodb-org
 
+- name: enable and start mongod service
+  service:
+     name: mongod
+     state: started
+     enabled: yes
+
 - name: install apache2 package
   package:
     name: "{{ item }}"
