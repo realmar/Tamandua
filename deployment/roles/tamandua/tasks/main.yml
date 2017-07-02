@@ -72,10 +72,23 @@
     - apache2
     - libapache2-mod-wsgi-py3
 
+- name: create apache sites-common folder
+  file:
+    state: directory
+    path: /etc/apache2/sites-common
+
+- name: populate apache2 common config
+  copy:
+    src: sites-common/tamandua.conf
+    dest: /etc/apache2/sites-common/tamandua.conf
+
 - name: populate apache2 config
   copy:
     src: tamandua.conf
     dest: /etc/apache2/sites-available/tamandua.conf
+
+- name: generating self signed certificate
+  command: creates="/opt/certs/tamandua.crt" openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /opt/certs/tamandua.key -out /opt/certs/tamandua.crt
 
 - name: enable wsgi apache2 module
   apache2_module:
