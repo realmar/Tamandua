@@ -1,0 +1,5 @@
+manage.py
+colorama
+pymongo
+Flask
+flask-restful
