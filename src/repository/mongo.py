@@ -2,6 +2,8 @@
 
 
 from pymongo import MongoClient
+import pymongo.errors as pymongo_errors
+
 from bson.code import Code
 from datetime import datetime
 
@@ -180,10 +182,13 @@ class MongoRepository(IRepository):
 
     def get_all_keys(self) -> List[str]:
         """"""
-        result = self._collection_complete.map_reduce(
-            Code(Loader.load_js('mongo_js.mapper')),
-            Code(Loader.load_js('mongo_js.reducer')),
-            "results"
-        )
+        try:
+            result = self._collection_complete.map_reduce(
+                Code(Loader.load_js('mongo_js.mapper')),
+                Code(Loader.load_js('mongo_js.reducer')),
+                "results"
+            )
+        except pymongo_errors.OperationFailure as e:
+            return []
 
         return result.distinct('_id')
