@@ -4,10 +4,10 @@
     state: latest
   with_items:
     - python3
+    - python3-pip
     - python3-colorama
     - python3-flask
     - python3-flask-restful
-    - python3-typing
     - python3-pymongo
 
 - name: install tamandua pip dependencies
@@ -28,19 +28,19 @@
 - name: Create Tamandua user
   user:
     name: tamandua
-    createhome: no
+    createhome: yes
     state: present
 
 - name: Set permissions of Tamandua folder
   file:
     path: "{{ tamandua_dir }}"
-    recursive: yes
+    recurse: yes
     owner: tamandua
     group: tamandua
 
 - name: Add MongoDB repo key
   apt_key:
-    keyserver: keyserver.ubuntu.com:80
+    keyserver: keyserver.ubuntu.com
     id: 0C49F3730359A14518585931BC711F9BA15703C6
 
 - name: Add MongoDB repo
