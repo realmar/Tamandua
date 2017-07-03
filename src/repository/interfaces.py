@@ -85,6 +85,11 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_all_tags(self) -> List[str]:
+        """"""
+        pass
+
+    @abstractmethod
     def save_time_of_last_run(self, dt: datetime):
         """"""
         pass

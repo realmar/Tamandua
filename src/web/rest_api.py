@@ -17,6 +17,13 @@ class Columns(BaseResource):
         return self._dataFinder.availableFields
 
 
+class Tags(BaseResource):
+    """"""
+
+    def get(self) -> list:
+        return self._dataFinder.availableTags
+
+
 class Search(BaseResource):
     """Resource which provides searching mechanisms."""
 

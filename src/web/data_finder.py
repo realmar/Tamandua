@@ -28,6 +28,7 @@ class DataFinder():
         ]
 
         fields = self._repository.get_all_keys()
+        self.availableTags = self._repository.get_all_tags()
 
         for f in reversed(importantFields):
             try:
