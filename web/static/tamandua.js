@@ -317,7 +317,10 @@ function append_rows(expression, columns, callback) {
                             '</div>';
 
                         if(columns[i] === 'loglines') {
-                            loglines = tmp;
+                            loglines =
+                            '<div class="inline tab-row">' +
+                                '<div class="inline tab-col-right" style="width: 100%;">' + rowData + '</div>' +
+                            '</div>';
                         }else{
                             childRow += tmp;
                         }
