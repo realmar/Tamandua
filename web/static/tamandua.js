@@ -280,12 +280,12 @@ function append_rows(expression, columns, callback) {
 
                 var childRow =
                     '<tr class="tablesorter-childRow">' +
-                        '<td colspan="' + (visibleColumns.length + 1) + '">' +
+                        '<td colspan="' + (columns.length + 1) + '">' +
                             '<div>';
 
                 var loglines = '';
                 var childRowEnd = '</div></td>';
-                var visibleRowMap = {};
+                var rowsMap = {};
 
                 for (var i in columns) {
                     var rowData = '';
@@ -302,61 +302,51 @@ function append_rows(expression, columns, callback) {
                         }
                     }
 
-                    if(visibleColumns.indexOf(columns[i]) === -1) {
-                        var tmp = '';
+                    var tmp = '';
 
-                        if(columns[i] === 'loglines') {
-                            rowData = rowData.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            rowData = '<pre><code>' + rowData + '</code></pre>';
-                        }
-
-                        tmp =
-                            '<div class="inline tab-row">' +
-                                '<div class="inline tab-col-left">' + columns[i] + '</div>' +
-                                '<div class="inline tab-col-right">' + rowData + '</div>' +
-                            '</div>';
-
-                        if(columns[i] === 'loglines') {
-                            loglines =
-                            '<div class="inline tab-row">' +
-                                '<div class="inline tab-col-right" style="width: 100%;">' + rowData + '</div>' +
-                            '</div>';
-                        }else{
-                            childRow += tmp;
-                        }
-                    }else{
-                        visibleRowMap[columns[i]] = rowData;
+                    if(columns[i] === 'loglines') {
+                        rowData = rowData.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        rowData = '<pre><code>' + rowData + '</code></pre>';
                     }
+
+                    tmp =
+                        '<div class="inline tab-row">' +
+                            '<div class="inline tab-col-left">' + columns[i] + '</div>' +
+                            '<div class="inline tab-col-right">' + rowData + '</div>' +
+                        '</div>';
+
+                    if(columns[i] === 'loglines') {
+                        loglines =
+                        '<div class="inline tab-row">' +
+                            '<div class="inline tab-col-right" style="width: 100%;">' + rowData + '</div>' +
+                        '</div>';
+                    }else{
+                        childRow += tmp;
+                    }
+
+                    rowsMap[columns[i]] = rowData;
                 }
 
                 var isFirst = true;
-                for(var j in visibleColumns) {
-                    if(visibleRowMap.hasOwnProperty(visibleColumns[j])) {
-                        if(isFirst) {
-                            visibleRow += visibleRowMap[visibleColumns[j]] + '</td>';
+                for(var j in columns) {
+                    if(columns[j] === 'loglines') {
+                        continue;
+                    }
+
+                    if(isFirst) {
+                        visibleRow += rowsMap[columns[j]] + '</td>';
                         isFirst = false;
-                        }else{
-                            visibleRow += '<td class="tab-col-visible">' + visibleRowMap[visibleColumns[j]] + '</td>';
-                        }
                     }else{
-                        if(isFirst) {
-                            visibleRow += '</td>';
-                            isFirst = false;
-                        }else{
-                            visibleRow += '<td class="tab-col-visible"></td>';
-                        }
+
+                        visibleRow += '<td class="tab-col-visible">' + rowsMap[columns[j]] + '</td>';
                     }
                 }
 
+                visibleRow += '<td class="tab-col-visible">' + rowsMap['loglines'] + '</td>';
                 rows += visibleRow + '</tr>' + childRow  + loglines + childRowEnd + '</tr>';
             }
 
             result_table_tbody.append($(rows));
-
-            /* return [
-                data['total_rows'],
-                $(rows)
-            ]; */
         }
         callback();
     })
@@ -396,9 +386,19 @@ function reset_table(expression, callback) {
 
         // add headers
 
-        for(var i in visibleColumns) {
-            tr_head.append('<th>' + visibleColumns[i] + '</th>');
+        for(var i in columns) {
+            if(columns[i] === 'loglines') {
+                continue;
+            }
+
+            extraClass = '';
+            if(!visibleColumns.hasOwnProperty(columns[i])) {
+                extraClass = 'columnSelector-false'
+            }
+            tr_head.append('<th class="' + extraClass + '">' + columns[i] + '</th>');
         }
+
+        tr_head.append('<th class="columnSelector-false">loglines</th>');
 
         append_rows(expression, columns, callback);
     })
@@ -421,7 +421,7 @@ function initialize_table(expression, columns) {
 
             cssChildRow: 'tablesorter-childRow',
 
-            widgets: [ 'zebra', 'filter' ],
+            widgets: [ 'zebra', 'filter', 'columnSelector' ],
             widgetOptions : {
                 zebra : [ 'normal-row', 'alt-row' ],
 
@@ -429,7 +429,25 @@ function initialize_table(expression, columns) {
                 filter_childRows  : true,
                 filter_cssFilter  : 'tablesorter-filter',
                 filter_startsWith : false,
-                filter_ignoreCase : true
+                filter_ignoreCase : true,
+
+                columnSelector_container : $('#columnSelector'),
+                columnSelector_columns : {
+                    0: 'disable'
+                },
+                columnSelector_saveColumns: true,
+                columnSelector_layout : '<label><input type="checkbox">{name}</label>',
+                columnSelector_layoutCustomizer : null,
+                columnSelector_name  : 'data-selector-name',
+                columnSelector_mediaquery: true,
+                columnSelector_mediaqueryName: 'Auto: ',
+                columnSelector_mediaqueryState: true,
+                columnSelector_mediaqueryHidden: true,
+                columnSelector_maxVisible: null,
+                columnSelector_minVisible: null,
+                columnSelector_breakpoints : [ '20em', '30em', '40em', '50em', '60em', '70em' ],
+                columnSelector_priority : 'data-priority',
+                columnSelector_cssChecked : 'checked'
             }
         })
         .tablesorterPager({
@@ -455,7 +473,15 @@ function initialize_table(expression, columns) {
 
     jTable.trigger('pageSet', 0);
 
+    $('#popover')
+        .popover({
+            placement: 'right',
+            html: true,
+            content: $('#popover-target')
+        });
+
     hide_child_rows();
+    $(".columnSelectorWrapper").show();
     hide_loading_spinner();
 }
 
