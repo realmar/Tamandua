@@ -192,7 +192,13 @@ class MongoRepository(IRepository):
         except pymongo_errors.OperationFailure as e:
             return []
 
-        return result.distinct('_id')
+        res = result.distinct('_id')
+        try:
+            del res['_id']
+        except KeyError as e:
+            pass
+
+        return res
 
 
     def save_time_of_last_run(self, dt: datetime):
