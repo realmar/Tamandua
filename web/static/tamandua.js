@@ -113,7 +113,6 @@ function hide_loading_spinner() {
 function setup_selectizer(item) {
     var $select = item.selectize({
         create: true,
-        sortField: 'text',
         onFocus: function () {
             if(!item.data('noclear')) {
                 this.clear(true);

@@ -14,7 +14,29 @@ class DataFinder():
 
     def __init__(self):
         self._repository = RepositoryFactory.create_repository()
-        self.availableFields = self._repository.get_all_keys()
+
+        importantFields = [
+            'recipient',
+            'sender',
+            'spamscore',
+            'orig_recipient',
+            'rejectreason',
+            'size',
+            'uid',
+            'username',
+            'virusresult'
+        ]
+
+        fields = self._repository.get_all_keys()
+
+        for f in reversed(importantFields):
+            try:
+                fields.remove(f)
+                fields.insert(0, f)
+            except ValueError as e:
+                continue
+
+        self.availableFields = fields
 
 
     def search(self, expression: dict) -> list:
