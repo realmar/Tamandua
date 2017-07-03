@@ -194,8 +194,8 @@ class MongoRepository(IRepository):
 
         res = result.distinct('_id')
         try:
-            del res['_id']
-        except KeyError as e:
+            res.remove('_id')
+        except Exception as e:
             pass
 
         return res
