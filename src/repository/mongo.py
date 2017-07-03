@@ -217,16 +217,24 @@ class MongoRepository(IRepository):
 
     def get_all_tags(self) -> List[str]:
         """"""
-        try:
-            result = self._collection_complete.map_reduce(
-                Code(Loader.load_js('mongo_js.tags_mapper')),
-                Code(Loader.load_js('mongo_js.reducer')),
-                "results"
-            )
-        except pymongo_errors.OperationFailure as e:
-            return []
+        targetCollections = [
+            self._collection_complete,
+            self._collection_incomplete
+        ]
 
-        return list(result.distinct('_id'))
+        result = set()
+
+        for tc in targetCollections:
+            try:
+                result.update(list(tc.map_reduce(
+                    Code(Loader.load_js('mongo_js.tags_mapper')),
+                    Code(Loader.load_js('mongo_js.reducer')),
+                    "results"
+                ).distinct('_id')))
+            except pymongo_errors.OperationFailure as e:
+                return []
+
+        return list(result)
 
     def save_time_of_last_run(self, dt: datetime):
         """"""
