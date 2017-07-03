@@ -3,6 +3,7 @@
  */
 var expressionLineTemplate = null;
 var expressionLines = [];
+var allColumns = [];
 
 var datetimeFormat = 'YYYY/MM/DD HH:mm:ss';
 
@@ -20,6 +21,7 @@ var maxPageSize = 200;
 
 var api = {
     columns: '/api/columns',
+    tags: '/api/tags',
     search: '/api/search/0/' + maxPageSize
 };
 
@@ -104,6 +106,14 @@ function show_loading_spinner() {
 
 function hide_loading_spinner() {
     $('#search-loading').hide();
+}
+
+function hide_on_search() {
+    $(".hide-on-search").hide();
+}
+
+function show_on_finished_search() {
+    $('.hide-on-search').show();
 }
 
 /*
@@ -224,6 +234,7 @@ function handle_ajax_error(jqxhr, textStatus, error) {
 
 function empty_table() {
     show_loading_spinner();
+    hide_on_search();
     remove_all_messages();
 
     $('#results').find('.remove').remove();
@@ -240,6 +251,8 @@ function empty_table() {
 }
 
 function append_rows(expression, columns, callback) {
+    allColumns = columns;
+
     $.ajax({
         url: api.search,
         type: methods.post,
@@ -411,6 +424,60 @@ function hide_child_rows() {
     $("#result-table > thead").show();
 }
 
+function update_tags() {
+    var tagsContainer = $("#tags-container");
+    tagsContainer.empty();
+
+    $.getJSON(api.tags, function (tags) {
+        var btn_click = function () {
+            var ia = $(this).data('isactive');
+            if(ia == 0) {
+                $(this).data('isactive', '1');
+            }else{
+                $(this).data('isactive', '0');
+            }
+
+            $(this).toggleClass('btn-primary');
+
+            var tagsContainer = $("#tags-container");
+            allbuttons = tagsContainer.find('.button-tag');
+            query = '';
+
+            allbuttons.each(function () {
+                if($(this).data('isactive') == 0) {
+                    query += '!' + $(this).html() + ' && '
+                }
+            });
+
+            query = query.slice(0, -4);
+
+            var result_table = $('#result-table');
+
+            var filters = $.tablesorter.getFilters(result_table, true);
+            filters[allColumns.indexOf('tags') - 1] = query;
+            $.tablesorter.setFilters(result_table, filters, true);
+        };
+
+        for(i in tags) {
+            var isActive = '1';
+            var extraClass = 'btn-primary';
+
+            if(tags[i] === 'incomplete') {
+                isActive = '0';
+                extraClass = '';
+            }
+
+            var btn= $('<button type="button" class="btn btn-default margin-right-1 button-tag ' + extraClass + '" data-isactive="' + isActive + '">' + tags[i] + '</button>');
+
+            btn.click(btn_click);
+            tagsContainer.append(btn)
+        }
+
+        // lets wait for time before filtering
+        setTimeout(btn_click, 500);
+    });
+}
+
 function initialize_table(expression, columns) {
     var jTable = $('#result-table');
 
@@ -426,7 +493,7 @@ function initialize_table(expression, columns) {
                 zebra : [ 'normal-row', 'alt-row' ],
 
                 filter_placeholder: { search : 'Search...' },
-                filter_childRows  : true,
+                filter_childRows  : false,
                 filter_cssFilter  : 'tablesorter-filter',
                 filter_startsWith : false,
                 filter_ignoreCase : true,
@@ -482,6 +549,8 @@ function initialize_table(expression, columns) {
 
     hide_child_rows();
     $(".columnSelectorWrapper").show();
+    show_on_finished_search();
+    update_tags();
     hide_loading_spinner();
 }
 

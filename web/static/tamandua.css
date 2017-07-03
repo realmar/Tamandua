@@ -62,6 +62,10 @@ hr {
     display: inline-block;
 }
 
+.margin-right-1 {
+    margin-right: 0.2em;
+}
+
 .margin-bottom-1 {
     margin-bottom: 1em;
 }
