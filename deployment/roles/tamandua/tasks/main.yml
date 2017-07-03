@@ -87,13 +87,24 @@
     src: tamandua.conf
     dest: /etc/apache2/sites-available/tamandua.conf
 
-- name: generating self signed certificate
-  command: creates="/opt/certs/tamandua.crt" openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /opt/certs/tamandua.key -out /opt/certs/tamandua.crt
+- name: create /opt/certs folder for certificates
+  file:
+    state: directory
+    path: /opt/certs
 
-- name: enable wsgi apache2 module
+- name: generating self signed certificate
+  command: creates="/opt/certs/tamandua.crt" openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /opt/certs/tamandua.key -out /opt/certs/tamandua.crt -subj "/C=CH/ST=Switzerland/L=Zurich/O=ETHZ/OU=ISG D-PHYS/CN=tamandua.ethz.ch"
+
+- name: enable apache2 modules
   apache2_module:
-    name: wsgi
+    name: "{{ item }}"
     state: present
+  with_items:
+    - ldap
+    - authnz_ldap
+    - wsgi
+    - rewrite
+    - ssl
 
 - name: disable default apache2 site
   file:
