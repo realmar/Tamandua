@@ -81,11 +81,24 @@
   copy:
     src: sites-common/tamandua.conf
     dest: /etc/apache2/sites-common/tamandua.conf
+  notify:
+    - restart apache2
+
 
 - name: populate apache2 config
   copy:
     src: tamandua.conf
     dest: /etc/apache2/sites-available/tamandua.conf
+  notify:
+    - restart apache2
+
+
+- name: populate apache2 conf-available
+  copy:
+    src: ldaps-certificate.conf
+    dest: /etc/apache2/conf-available/ldaps-certificate.conf
+  notify:
+    - restart apache2
 
 - name: create /opt/certs folder for certificates
   file:
@@ -105,16 +118,28 @@
     - wsgi
     - rewrite
     - ssl
+  notify:
+    - restart apache2
 
 - name: disable default apache2 site
   file:
     dest: /etc/apache2/sites-enabled/000-default.conf
     state: absent
+  notify:
+    - restart apache2
 
 - name: enable tamandua apache2 site
   file:
     src: /etc/apache2/sites-available/tamandua.conf
     dest: /etc/apache2/sites-enabled/tamandua.conf
+    state: link
+  notify:
+    - restart apache2
+
+- name: enable apache2 conf-available
+  file:
+    src: /etc/apache2/conf-available/ldaps-certificate.conf
+    dest: /etc/apache2/conf-enabled/ldaps-certificate.conf
     state: link
   notify:
     - restart apache2
