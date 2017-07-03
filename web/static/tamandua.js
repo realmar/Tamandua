@@ -506,12 +506,7 @@ function initialize_table(expression, columns) {
                 columnSelector_layout : '<label><input type="checkbox">{name}</label>',
                 columnSelector_layoutCustomizer : null,
                 columnSelector_name  : 'data-selector-name',
-                columnSelector_mediaquery: true,
-                columnSelector_mediaqueryName: 'Auto: ',
-                columnSelector_mediaqueryState: true,
-                columnSelector_mediaqueryHidden: true,
-                columnSelector_maxVisible: null,
-                columnSelector_minVisible: null,
+                columnSelector_mediaquery: false,
                 columnSelector_breakpoints : [ '20em', '30em', '40em', '50em', '60em', '70em' ],
                 columnSelector_priority : 'data-priority',
                 columnSelector_cssChecked : 'checked'
