@@ -159,6 +159,8 @@ def run():
     tamandua_main(args)
     cleanup()
 
+    repository.save_time_of_last_run(datetime.now())
+
     os.remove(logfilename)
 
 

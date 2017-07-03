@@ -23,6 +23,7 @@ class MongoRepository(IRepository):
 
     __lastBytePosName = 'lastbytepos'
     __lastLogfileSizeName = 'lastlogfilesize'
+    __lastRunDateTimeName = 'lastrundatetime'
 
 
     def __init__(self):
@@ -192,3 +193,8 @@ class MongoRepository(IRepository):
             return []
 
         return result.distinct('_id')
+
+
+    def save_time_of_last_run(self, dt: datetime):
+        """"""
+        self.__save_metadata(self.__lastRunDateTimeName, dt)

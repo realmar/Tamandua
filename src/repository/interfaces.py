@@ -78,3 +78,8 @@ class IRepository(metaclass=ABCMeta):
     def get_all_keys(self) -> List[str]:
         """"""
         pass
+
+    @abstractmethod
+    def save_time_of_last_run(self, dt: datetime):
+        """"""
+        pass
