@@ -1,11 +1,12 @@
 """Module used by the webapp: backend to search the data."""
 
 from datetime import datetime
+from ast import literal_eval
 
 from .. import constants
 from .exceptions import ExpressionInvalid
 from ..repository.factory import RepositoryFactory
-from ..repository.misc import SearchScope
+from ..repository.misc import SearchScope, Comparator
 
 
 class DataFinder():
@@ -24,8 +25,16 @@ class DataFinder():
         
         {
             "fields": [
-                { "field1": "value1" },
-                { "field2": "value2" }
+                { "field1": {
+                        "comparator": "=|<|>",
+                        "value": "value1"
+                    }
+                },
+                { "field2": {
+                        "comparator": "=|<|>",
+                        "value": "value2"
+                    }
+                }
                 ...
             ],
             
@@ -60,6 +69,14 @@ class DataFinder():
                 else:
                     if len(f) > 1:
                         raise ExpressionInvalid(currField + 'has more than 1 key value pair')
+
+                v = next(iter(f.values()))
+
+                if v.get('value') is None:
+                    raise ExpressionInvalid(currField +  'has no value key')
+
+                if v.get('comparator') is None:
+                    raise ExpressionInvalid(currField +  'has no comparator key')
 
                 counter += 1
 
@@ -101,7 +118,30 @@ class DataFinder():
 
         for f in fields:
             for k, v in f.items():
-                queryData[k] = self._repository.make_regexp(v)
+                value = v['value']
+                comparator = Comparator(v['comparator'])
+
+                try:
+                    value = literal_eval(value)
+                except Exception as e:
+                    pass
+
+                if comparator.comparator == Comparator.equal:
+                    if isinstance(value, str):
+                        tmp = self._repository.make_regexp(value)
+                    else:
+                        tmp = value
+
+                    if queryData.get(k) is not None:
+                        queryData[k].update(tmp)
+                    else:
+                        queryData[k] = tmp
+                else:
+                    tmp = self._repository.make_comparison(k, value, comparator)
+                    if queryData.get(k) is not None:
+                        queryData[k].update(tmp[k])
+                    else:
+                        queryData[k] = tmp[k]
 
         if isDateTimeSearch:
             queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)

@@ -11,7 +11,8 @@ class SearchScope(Enum):
 
 
 class StringIsNotAComperator(Exception):
-    pass
+    def __init__(self):
+        super().__init__("The given string is not a comparator")
 
 
 class Comparator():

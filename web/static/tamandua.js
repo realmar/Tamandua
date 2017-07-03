@@ -142,6 +142,9 @@ function add_expression_line() {
     var newExp = expressionLineTemplate.clone();
     newExp.appendTo('#expression-container');
 
+    newExp.find(".expression-comparator-button").click(on_comperator_button_click);
+    newExp.find(".expression-comparator-button").trigger('click');
+
     instance = setup_selectizer(newExp.find('.expression-select'));
 
     newExp.find('.expression-remove-button').click(function () {
@@ -510,6 +513,12 @@ function on_search_button_click() {
         }
     };
 
+    var comparatorMap = {
+        '&gt;': '>',
+        '&lt;': '<',
+        '=': '='
+    };
+
     $.each(expressionLines, function () {
         var jq = this[0];
         var s = this[1];
@@ -518,7 +527,11 @@ function on_search_button_click() {
         var value = jq.find('.expression-input').val();
 
         var h = {};
-        h[key] = value;
+        h[key] = {
+            "comparator": comparatorMap[jq.find(".expression-comparator-button").html()],
+            "value": value
+        };
+
 
         expression.fields.push(h);
     });
@@ -527,6 +540,29 @@ function on_search_button_click() {
     expression.datetime.end = getToDT();
 
     reset_table(expression, initialize_table);
+}
+
+function on_comperator_button_click() {
+    cycle = [
+        '=',
+        '&lt;',
+        '&gt;'
+    ];
+
+    var currCycle = $(this).html();
+    var currCursor = 0;
+    for(var i in cycle) {
+        if(currCycle === cycle[i]) {
+            currCursor = ++i;
+            break;
+        }
+    }
+
+    if(currCursor >= cycle.length) {
+        currCursor = 0;
+    }
+
+    $(this).html(cycle[currCursor]);
 }
 
 /*

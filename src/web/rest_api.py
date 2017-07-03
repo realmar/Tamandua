@@ -24,7 +24,10 @@ class Search(BaseResource):
     # for debugging
     expression = {
         "fields" : [
-            { "sender": "lionel" }
+            { "sender": {
+                "comparator: "=",
+                "value": "lionel" 
+            }
         ],
 
         "datetime": {

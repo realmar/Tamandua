@@ -172,8 +172,8 @@ class MongoRepository(IRepository):
         """"""
         comparatorMap = {
             Comparator.equal: '$eq',
-            Comparator.greater: '$gte',
-            Comparator.less: '$lte'
+            Comparator.greater: '$gt',
+            Comparator.less: '$lt'
         }
 
         return {
