@@ -9,7 +9,7 @@ from datetime import datetime
 
 from typing import List, Dict
 from .interfaces import IRepository
-from .misc import SearchScope
+from .misc import SearchScope, Comparator
 from .js import Loader
 from ..config import Config
 
@@ -168,16 +168,31 @@ class MongoRepository(IRepository):
         """"""
         return {'$regex': pattern}
 
+    def make_comparison(self, key: str, value: object, comparator: Comparator) -> object:
+        """"""
+        comparatorMap = {
+            Comparator.equal: '$eq',
+            Comparator.greater: '$gte',
+            Comparator.less: '$lte'
+        }
+
+        return {
+            key: {
+                comparatorMap[comparator.comparator]: value
+            }
+        }
+
     def make_datetime_comparison(self, start: datetime, end: datetime) -> object:
         """"""
-
         obj = {}
 
         if start is not None:
-            obj['$gte'] = start
+            tmp = self.make_comparison('dt', start, Comparator(Comparator.greater))
+            obj.update(tmp['dt'])
 
         if end is not None:
-            obj['$lte'] = end
+            tmp = self.make_comparison('dt', start, Comparator(Comparator.less))
+            obj.update(tmp['dt'])
 
         return obj
 
