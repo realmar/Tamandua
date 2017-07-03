@@ -568,6 +568,7 @@ function main() {
     setup_datetimepicker($('#dt-from-picker'));
     setup_datetimepicker($('#dt-to-picker'));
     setup_selectizer($(".pagesize"));
+    add_expression_line();
 }
 
 $(document).ready(main);
