@@ -294,7 +294,8 @@ function append_rows(expression, columns, callback) {
                 var childRow =
                     '<tr class="tablesorter-childRow">' +
                         '<td colspan="' + (columns.length + 1) + '">' +
-                            '<div>';
+                            '<div class="relative">' +
+                            '<button class="hide-show-empty-fields-button btn btn-default" data-shown="0">Toggle Empty Fields</button>';
 
                 var loglines = '';
                 var childRowEnd = '</div></td>';
@@ -359,7 +360,29 @@ function append_rows(expression, columns, callback) {
                 rows += visibleRow + '</tr>' + childRow  + loglines + childRowEnd + '</tr>';
             }
 
-            result_table_tbody.append($(rows));
+            var rows_i = $(rows);
+
+            rows_i.on('click', 'button.hide-show-empty-fields-button', function () {
+                var show_empty = $(this).data('shown') == 1;
+                $(this).siblings('.tab-row').each(function () {
+                  var tab_col_right_content = $(this).find('.tab-col-right').html();
+                   if(tab_col_right_content === '' && !show_empty) {
+                      $(this).hide();
+                   }else{
+                      $(this).show();
+                   }
+                });
+
+                if(show_empty) {
+                    $(this).data('shown', '0');
+                }else{
+                    $(this).data('shown', '1');
+                }
+            });
+
+            rows_i.find('button.hide-show-empty-fields-button').trigger('click');
+
+            result_table_tbody.append(rows_i);
         }
         callback();
     })

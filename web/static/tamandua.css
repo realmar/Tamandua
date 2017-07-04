@@ -138,6 +138,15 @@ hr {
     font-weight: bold;
 }
 
+.relative {
+    position: relative;
+}
+
+button.hide-show-empty-fields-button {
+    position: absolute;
+    right: 0px;
+}
+
 /* tablesorter custom css */
 
 table.tablesorter tbody tr.normal-row td {
