@@ -242,11 +242,7 @@
 <div id="expression-templates" class="container" style="display: none">
     <div class="row expression-line">
         <div class="col-xs-4 col-md-4 padding-1-right">
-            <select class="expression-select">
-                {% for name in fieldnames %}
-                    <option value="{{ name }}">{{ name }}</option>
-                {% endfor %}
-            </select>
+            <select class="expression-select"></select>
         </div>
         <div class="col-xs-1 col-md-1 padding-0-left padding-1-right">
             <button type="button" class="btn btn-default width-100 expression-comparator-button bold"></button>

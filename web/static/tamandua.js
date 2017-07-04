@@ -688,6 +688,37 @@ function init_global_variables() {
     expressionLineTemplate = $('#expression-templates > .expression-line');
 }
 
+function init_expression_template() {
+    var importantFields = [
+            'recipient',
+            'sender',
+            'spamscore',
+            'orig_recipient',
+            'rejectreason',
+            'size',
+            'uid',
+            'username',
+            'virusresult'
+        ];
+
+    $.getJSON(api.columns, function (columns) {
+
+        for(var i in importantFields) {
+            $('.expression-select').append('<option value="' + importantFields[i] + '">'  + importantFields[i] +'</option>')
+        }
+
+        for(var i in columns) {
+            if(importantFields.indexOf(columns[i]) !== -1) {
+                continue;
+            }
+
+            $('.expression-select').append('<option value="' + columns[i] + '">'  + columns[i] +'</option>')
+        }
+
+        add_expression_line();
+    });
+}
+
 function register_event_handlers() {
     /* expression builder */
     $('#add-expression-line-button').click(on_add_expression_line_button_click);
@@ -721,10 +752,10 @@ function register_event_handlers() {
 function main() {
     init_global_variables();
     register_event_handlers();
+    init_expression_template();
     setup_datetimepicker($('#dt-from-picker'));
     setup_datetimepicker($('#dt-to-picker'));
     setup_selectizer($(".pagesize"));
-    add_expression_line();
 }
 
 $(document).ready(main);

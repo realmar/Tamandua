@@ -16,30 +16,8 @@ class DataFinder():
     def __init__(self):
         self._repository = RepositoryFactory.create_repository()
 
-        importantFields = [
-            'recipient',
-            'sender',
-            'spamscore',
-            'orig_recipient',
-            'rejectreason',
-            'size',
-            'uid',
-            'username',
-            'virusresult'
-        ]
-
-        fields = self._repository.get_all_keys()
+        self.availableFields = self._repository.get_all_keys()
         self.availableTags = self._repository.get_all_tags()
-
-        for f in reversed(importantFields):
-            try:
-                fields.remove(f)
-                fields.insert(0, f)
-            except ValueError as e:
-                continue
-
-        self.availableFields = fields
-
 
     def search(self, expression: dict, page_start: int, page_size: int) -> CountableIterator[Dict]:
         """Search for specific mails."""
