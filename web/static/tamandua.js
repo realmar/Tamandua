@@ -405,7 +405,7 @@ function reset_table(expression, callback) {
             }
 
             extraClass = '';
-            if(!visibleColumns.hasOwnProperty(columns[i])) {
+            if($.inArray(columns[i], visibleColumns) === -1) {
                 extraClass = 'columnSelector-false'
             }
             tr_head.append('<th class="' + extraClass + '">' + columns[i] + '</th>');
