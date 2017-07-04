@@ -421,8 +421,18 @@ function append_rows(expression, columns, callback) {
 
                     var indexes = [];
 
-                    while ((match = regexp.exec(loglinesHTML)) !== null) {
+                    /*while ((match = regexp.exec(loglinesHTML)) !== null) {
                         indexes.push(match.index);
+                    }*/
+
+                    var currentIndex = 0;
+                    while((match = loglinesHTML.indexOf(searchValue, currentIndex)) > -1) {
+                        if(match === currentIndex) {
+                            break;
+                        }
+
+                        indexes.push(match);
+                        currentIndex = ++match;
                     }
 
                     var newHTML = '';
