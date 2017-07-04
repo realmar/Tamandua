@@ -397,13 +397,12 @@ function append_rows(expression, columns, callback) {
                 var parent = $(this).parent();
 
                 if(parent.hasClass('tab-col-visible')) {
-                   var loglines = parent.find('.loglines').find('code');
+                   var loglines = parent.parent().next().find('.loglines').find('code');
                 }else if (parent.hasClass('tab-col-right')) {
                    var loglines = parent.parent().parent().find('.loglines').find('code');
                 }else{
                    return;
                 }
-
 
                 var searchValue = $(this).html();
 
@@ -417,13 +416,7 @@ function append_rows(expression, columns, callback) {
                     $(this).css({ 'background-color' : ''});
                 }else {
                     var loglinesHTML = loglines.html();
-                    var regexp = new RegExp(searchValue, 'g');
-
                     var indexes = [];
-
-                    /*while ((match = regexp.exec(loglinesHTML)) !== null) {
-                        indexes.push(match.index);
-                    }*/
 
                     var currentIndex = 0;
                     while((match = loglinesHTML.indexOf(searchValue, currentIndex)) > -1) {
