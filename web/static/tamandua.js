@@ -9,8 +9,8 @@ var datetimeFormat = 'YYYY/MM/DD HH:mm:ss';
 
 var visibleColumns = [
     'phdmxin_time',
-    'sender',
-    'recipient'
+    'recipient',
+    'sender'
 ];
 
 var comparatorMap = {
@@ -416,23 +416,30 @@ function reset_table(expression, callback) {
         result_table_thead.append('<tr></tr>');
         var tr_head = result_table_thead.find('tr');
 
-        // validate received data
+        var vctmp = visibleColumns.reverse();
+
+        for(var vc in vctmp) {
+            var i = columns.indexOf(vctmp[vc]);
+            if(i > -1) {
+                columns.splice(i, 1);
+                columns.splice(0, 0, vctmp[vc])
+            }
+        }
 
         for(var i in columns) {
+            // validate received data
             if($.type(columns[i]) !== 'string') {
                 empty_table();
                 show_message(uiresponses.errors.receivedinvalid, uiresponses.none);
                 hide_loading_spinner();
                 return;
             }
-        }
 
-        // add headers
-
-        for(var i in columns) {
             if(columns[i] === 'loglines') {
                 continue;
             }
+
+            // add headers
 
             extraClass = '';
             if($.inArray(columns[i], visibleColumns) === -1) {
@@ -515,6 +522,8 @@ function initialize_table(expression, columns) {
         .tablesorter({
             theme : 'default',
             widthFixed: true,
+
+            sortList: [[0, 0]],
 
             cssChildRow: 'tablesorter-childRow',
 
