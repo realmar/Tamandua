@@ -675,6 +675,11 @@ function register_event_handlers() {
 
     /* API */
     $('#search-button').click(on_search_button_click);
+    $(document).keypress(function (event) {
+       if(event.which == 13) {
+           on_search_button_click();
+       }
+    });
 
     /* Table */
     var jTable = $('#result-table');
