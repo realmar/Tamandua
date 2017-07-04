@@ -4,7 +4,7 @@ import copy
 from datetime import datetime
 from typing import List, Dict
 from functools import partial
-from pprint import pprint
+# from pprint import pprint
 
 import colorama
 
@@ -220,7 +220,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         else:
             scope = SearchScope.COMPLETE
 
-        pprint(mail)
+        # pprint(mail)
 
         self._repository.insert_or_update(mail, scope)
 
