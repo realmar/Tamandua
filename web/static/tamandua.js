@@ -13,6 +13,13 @@ var visibleColumns = [
     'recipient'
 ];
 
+var comparatorMap = {
+    '=': '=',
+    '!=': '!=',
+    '&gt;': '>',
+    '&lt;': '<'
+};
+
 /*
  * API Routes
  */
@@ -628,12 +635,6 @@ function on_search_button_click() {
         }
     };
 
-    var comparatorMap = {
-        '&gt;': '>',
-        '&lt;': '<',
-        '=': '='
-    };
-
     $.each(expressionLines, function () {
         var jq = this[0];
         var s = this[1];
@@ -658,11 +659,10 @@ function on_search_button_click() {
 }
 
 function on_comperator_button_click() {
-    cycle = [
-        '=',
-        '&lt;',
-        '&gt;'
-    ];
+    var cycle = [];
+    for(i in comparatorMap) {
+        cycle.push(i);
+    }
 
     var currCycle = $(this).html();
     var currCursor = 0;

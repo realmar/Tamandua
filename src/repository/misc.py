@@ -21,16 +21,15 @@ class Comparator():
     greater = '>'
     less = '<'
     equal = '='
+    not_equal = '!='
 
     def __init__(self, comperator: str):
-        if comperator == '<':
-            self.comparator = self.less
-        elif comperator == '>':
-            self.comparator = self.greater
-        elif comperator == '=':
-            self.comparator = self.equal
-        else:
-            raise StringIsNotAComperator()
+        for c in (self.equal, self.less, self.greater, self.not_equal):
+            if comperator == c:
+                self.comparator = c
+                return
+
+        raise StringIsNotAComperator()
 
 
 T = TypeVar('T')

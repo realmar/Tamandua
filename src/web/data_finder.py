@@ -184,7 +184,10 @@ class DataFinder():
         results_list = []
 
         for i in range(0, page_start + page_size):
-            currResult = next(results)
+            try:
+                currResult = next(results)
+            except StopIteration as e:
+                break
 
             if i <= page_start:
                 continue
