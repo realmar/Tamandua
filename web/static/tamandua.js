@@ -492,7 +492,8 @@ function update_tags() {
 
             var filters = $.tablesorter.getFilters(result_table, true);
             filters[allColumns.indexOf('tags') - 1] = query;
-            $.tablesorter.setFilters(result_table, filters, true);
+
+            result_table.trigger('search', [ filters ]);
         };
 
         for(i in tags) {
