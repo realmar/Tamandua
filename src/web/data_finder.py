@@ -1,12 +1,13 @@
 """Module used by the webapp: backend to search the data."""
 
+from typing import Dict
 from datetime import datetime
 from ast import literal_eval
 
 from .. import constants
 from .exceptions import ExpressionInvalid
 from ..repository.factory import RepositoryFactory
-from ..repository.misc import SearchScope, Comparator
+from ..repository.misc import SearchScope, Comparator, CountableIterator
 
 
 class DataFinder():
@@ -40,7 +41,7 @@ class DataFinder():
         self.availableFields = fields
 
 
-    def search(self, expression: dict) -> list:
+    def search(self, expression: dict, page_start: int, page_size: int) -> CountableIterator[Dict]:
         """Search for specific mails."""
 
         """
@@ -170,7 +171,7 @@ class DataFinder():
             queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)
 
         def do_search():
-            return list(self._repository.find(queryData, SearchScope.ALL))
+            return self._repository.find(queryData, SearchScope.ALL)
 
         results = do_search()
 
@@ -180,13 +181,19 @@ class DataFinder():
             queryData[constants.PHD_IMAP_TIME] = self._repository.make_datetime_comparison(start, end)
 
         results = do_search()
+        results_list = []
 
-        for r in results:
-            self._repository.remove_metadata(r)
+        for i in range(0, page_start + page_size):
+            currResult = next(results)
+
+            if i <= page_start:
+                continue
+
+            self._repository.remove_metadata(currResult)
 
             timeMap = {
-                constants.PHD_MXIN_TIME: r.get(constants.PHD_MXIN_TIME),
-                constants.PHD_IMAP_TIME: r.get(constants.PHD_IMAP_TIME)
+                constants.PHD_MXIN_TIME: currResult.get(constants.PHD_MXIN_TIME),
+                constants.PHD_IMAP_TIME: currResult.get(constants.PHD_IMAP_TIME)
             }
 
             for key, value in timeMap.items():
@@ -196,9 +203,11 @@ class DataFinder():
                         for v in value:
                             tmp.append(datetime.strftime(v, constants.TIME_FORMAT))
 
-                        r[key] = tmp
+                        currResult[key] = tmp
                     else:
-                        r[key] = datetime.strftime(value, constants.TIME_FORMAT)
+                        currResult[key] = datetime.strftime(value, constants.TIME_FORMAT)
 
-        return results
+            results_list.append(currResult)
+
+        return CountableIterator(iter(results_list), lambda x: len(results))
 

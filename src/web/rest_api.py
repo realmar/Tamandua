@@ -51,9 +51,9 @@ class Search(BaseResource):
         expression = request.get_json()
         page_start = page * size
 
-        results = self._dataFinder.search(expression)
+        results = self._dataFinder.search(expression, page_start, size)
 
         return {
             'total_rows': len(results),
-            'rows': results[page_start:page_start + size],
+            'rows': list(results),
         }

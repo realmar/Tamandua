@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Dict
 from datetime import datetime
 
-from .misc import SearchScope, Comparator
+from .misc import SearchScope, Comparator, CountableIterator
 
 
 class IRepository(metaclass=ABCMeta):
@@ -17,7 +17,7 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def find(self, query: dict, scope: SearchScope) -> List[Dict]:
+    def find(self, query: dict, scope: SearchScope) -> CountableIterator[Dict]:
         """
         R: Read
         """

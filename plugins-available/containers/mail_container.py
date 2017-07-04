@@ -295,17 +295,17 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 target = copy.deepcopy(frag)
             else:
                 try:
-                    target = do_query(SearchScope.INCOMPLETE)[0]
+                    target = next(do_query(SearchScope.INCOMPLETE))
                     self._repository.remove_metadata(target)
                     self.__preprocessing(target)
 
                     # remove this data as it may be complete afterwards
                     self._repository.delete(queryData, SearchScope.INCOMPLETE)
-                except IndexError as e:
+                except StopIteration as e:
                     res = do_query(SearchScope.COMPLETE)
                     if len(res) > 0:
 
-                        res = res[0]
+                        res = next(res)
 
                         for i in range(1, len(keyChain)):
                             try:
@@ -347,13 +347,13 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
 
                             def gather_existing_data(scope: SearchScope):
                                 try:
-                                    data = do_query(scope)[0]
+                                    data = next(do_query(scope))
                                     self._repository.remove_metadata(data)
                                     self.__preprocessing(data)
                                     self._merge_data(target, data)
 
                                     self._repository.delete(queryData, scope)
-                                except IndexError as e:
+                                except StopIteration as e:
                                     pass
 
                             gather_existing_data(SearchScope.INCOMPLETE)

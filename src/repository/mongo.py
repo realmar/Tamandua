@@ -1,6 +1,7 @@
 """Module which contains the repository implementation for mongodb."""
 
 
+import itertools
 from pymongo import MongoClient
 import pymongo.errors as pymongo_errors
 
@@ -9,7 +10,7 @@ from datetime import datetime
 
 from typing import List, Dict
 from .interfaces import IRepository
-from .misc import SearchScope, Comparator
+from .misc import SearchScope, Comparator, CountableIterator
 from .js import Loader
 from ..config import Config
 
@@ -68,15 +69,31 @@ class MongoRepository(IRepository):
         elif scope == SearchScope.ALL:
             class CollectionAggregate():
                 @staticmethod
-                def find(query: dict) -> list:
-                    res = list(
-                        self._collection_complete.find(query))
+                def find(query: dict) -> CountableIterator[Dict]:
+                    complete = self._collection_complete.find(query)
+                    incomplete = self._collection_incomplete.find(query)
 
-                    res.extend(
-                        list(
-                            self._collection_incomplete.find(query)))
+                    count = complete.count() + incomplete.count()
 
-                    return res
+                    # ultra dirty monkey patching ....
+                    # TODO: Do not use reflection to add a method ...
+                    # The goal of CollectionAggregate is to provide a
+                    # uniform way for accessing multiple collections
+                    # (same as single collection)
+                    # at the same time. Though this should be refactored
+                    # and implemented in a cleaner way
+
+                    c = CountableIterator(
+                        itertools.chain(
+                            complete,
+                            incomplete
+                        ),
+                        lambda x: count
+                    )
+
+                    setattr(c, 'count', lambda: count)
+
+                    return c
 
                 @staticmethod
                 def remove(query: dict) -> None:
@@ -87,15 +104,15 @@ class MongoRepository(IRepository):
         else:
             raise TargetCollectionNotFound()
 
-    def find(self, query: dict, scope: SearchScope) -> List[Dict]:
+    def find(self, query: dict, scope: SearchScope) -> CountableIterator[Dict]:
         """"""
         try:
             searchCollection = self.__resolveScope(scope)
         except TargetCollectionNotFound as e:
-            return []
+            return CountableIterator(iter([]), lambda x: 0)
 
         results = searchCollection.find(query)
-        return list(results)
+        return CountableIterator(results, lambda x: x.count())
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""
