@@ -542,7 +542,7 @@ function initialize_table(expression, columns) {
                     0: 'disable'
                 },
                 columnSelector_saveColumns: true,
-                columnSelector_layout : '<label><input type="checkbox">{name}</label>',
+                columnSelector_layout : '<label><input type="checkbox"><div class="inline">{name}</div></label>',
                 columnSelector_layoutCustomizer : null,
                 columnSelector_name  : 'data-selector-name',
                 columnSelector_mediaquery: false,
@@ -580,6 +580,18 @@ function initialize_table(expression, columns) {
             html: true,
             content: $('#popover-target')
         });
+
+    var elements = $("#columnSelector").find('label');
+
+    elements.detach().sort(
+        function(a, b) {
+            var astts = $(a).find('div').html();
+            var bstts = $(b).find('div').html();
+
+            return (astts > bstts) ? (astts > bstts) ? 1 : 0 : -1;
+        });
+
+    $("#columnSelector").append(elements);
 
     hide_child_rows();
     $(".columnSelectorWrapper").show();

@@ -49,7 +49,7 @@ https://mottie.github.io/tablesorter/docs/example-widget-column-selector.html
     min-width: 18em;
 }
 .columnSelector label:nth-child(1) {
-    border-bottom: #ddd solid 1px;
+    /* border-bottom: #ddd solid 1px; */
     margin-bottom: 5px;
 }
 .columnSelector input {
