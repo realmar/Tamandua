@@ -4,6 +4,7 @@ import copy
 from datetime import datetime
 from typing import List, Dict
 from functools import partial
+from pprint import pprint
 
 import colorama
 
@@ -15,6 +16,7 @@ from src import constants
 from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
 from src.repository.misc import SearchScope
+from src.plugins.bases.mail_edge_case_processor import MailEdgeCaseProcessorData
 
 
 class AlreadyInRepository(Exception):
@@ -30,6 +32,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 other fragments into one mail-object. Eg. such a fragment could be all
                 data of a mail from phd-mxin.
     """
+
 
     def __init__(self):
         self._map_qid_mxin = {}
@@ -188,18 +191,6 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             elif messageid is not None:
                 self._aggregate_fragment(messageid, self._map_msgid, d, logline)
 
-    def __merge_pickup(self, mail: dict, msgid: str) -> None:
-        """Merge pickup fragments with a mail-object."""
-        if msgid is None:
-            return
-
-        for qid, m in self._map_pickup.items():
-            for k, v in m.items():
-                if k == constants.MESSAGEID and msgid == v:
-                    self._merge_data(mail, m)
-                    del self._map_pickup[qid]
-                    return
-
     def __processing_porocessors(self, mail: dict, responsibility: str) -> ProcessorAction:
         if self._pluginManager is not None:
             chain = self._pluginManager.get_chain_with_responsibility(responsibility)
@@ -228,6 +219,8 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             scope = SearchScope.INCOMPLETE
         else:
             scope = SearchScope.COMPLETE
+
+        pprint(mail)
 
         self._repository.insert_or_update(mail, scope)
 
@@ -394,8 +387,21 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
 
             return target
 
-        def merge_pickup_wrapp(target: dict):
-            self.__merge_pickup(target, target.get(constants.MESSAGEID))
+        def process(target: dict):
+            # process all the edge cases
+            data = MailEdgeCaseProcessorData(
+                target,
+                self._map_qid_mxin,
+                self._map_qid_imap,
+                self._map_msgid,
+                self._map_pickup,
+                self._merge_data,
+                keyChain[0]
+            )
+
+            chain = self._pluginManager.get_chain_with_responsibility('mail-edge-cases')
+            chain.process(data)
+
             if self.__postprocessing(target) != ProcessorAction.DELETE:
                 self.__process_aggregated_mail(target)
 
@@ -414,12 +420,12 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             try:
                 if isinstance(frag, list):
                     for f in frag:
-                        merge_pickup_wrapp(agg_wrapp(f))
+                        process(agg_wrapp(f))
 
                 else:
                     # if the fragment is not a list, then it is
                     # a dict, so we can just aggregate it
-                    merge_pickup_wrapp(agg_wrapp(frag))
+                    process(agg_wrapp(frag))
             except AlreadyInRepository as e:
                 # if we already stored this fragment in the repo
                 # we will continue with the next

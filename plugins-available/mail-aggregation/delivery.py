@@ -17,7 +17,7 @@ class Delivery(SimplePlugin):
             re.compile(r''':\s(?P<''' + constants.HOSTNAME_QID + r'''>[^:]*):\s
                            to=<(?P<recipient>[^>]*)>,\s
                            (orig_to=<(?P<orig_recipient>[^>]*)>,\s)?
-                           relay=(?P<deliveryrelay>[^,]*).+?
+                           relay=(?P<''' + constants.DELIVERYRELAY + r'''>[^,]*).+?
                            status=(?P<deliverystatus>[^\s]*)\s\(
-                           (?P<deliverymessage>[^\)]*)''', re.X)
+                           (?P<''' + constants.DELIVERYMESSAGE + r'''>[^\)]*)''', re.X)
         ]

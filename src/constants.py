@@ -43,6 +43,11 @@ HOSTNAME_TIME_MAP = {
     PHD_IMAP: PHD_IMAP_TIME
 }
 
+# delivery
+
+DELIVERYRELAY = 'deliveryrelay'
+DELIVERYMESSAGE = 'deliverymessage'
+
 # Log
 
 LOGLINES = 'loglines'
