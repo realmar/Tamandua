@@ -5,6 +5,8 @@ var expressionLineTemplate = null;
 var expressionLines = [];
 var allColumns = [];
 
+var currentColorLength = 0;
+
 var datetimeFormat = 'YYYY/MM/DD HH:mm:ss';
 
 var visibleColumns = [
@@ -101,6 +103,22 @@ function remove_all_messages() {
     for(var t in uiresponses.types) {
         remove_messages_of_type(uiresponses.types[t]);
     }
+}
+
+/*
+ * Misc
+ */
+
+// Source: https://stackoverflow.com/questions/5137831/map-a-range-of-values-e-g-0-255-to-a-range-of-colours-e-g-rainbow-red-b
+
+function rainbow_colors(length)  {
+    var maxLength = 10;
+
+    var i = (length * 255 / maxLength);
+    var r = Math.round(Math.sin(0.024 * i + 0) * 127 + 230);
+    var g = Math.round(Math.sin(0.024 * i + 2) * 127 + 230);
+    var b = Math.round(Math.sin(0.024 * i + 4) * 127 + 230);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
 /*
@@ -315,11 +333,17 @@ function append_rows(expression, columns, callback) {
                         rowData = data['rows'][r][columns[i]];
 
                         if(rowData instanceof Array) {
-                            var replacement = '\n';
                             if(columns[i] === 'loglines') {
-                                replacement = '';
+                                rowData = rowData.join('');
+                            }else{
+                                var tmp = '';
+                                for(var i in rowData) {
+                                    tmp += '<div class="inline single-item">' + rowData[i] + '</div>';
+                                }
+                                rowData = tmp;
                             }
-                            rowData = rowData.join(replacement);
+                        }else{
+                            rowData = '<div class="inline single-item">' + rowData + '</div>';
                         }
                     }
 
@@ -327,7 +351,7 @@ function append_rows(expression, columns, callback) {
 
                     if(columns[i] === 'loglines') {
                         rowData = rowData.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                        rowData = '<pre><code>' + rowData + '</code></pre>';
+                        rowData = '<div class="loglines"><pre><code>' + rowData + '</code></pre></div>';
                     }
 
                     tmp =
@@ -368,6 +392,60 @@ function append_rows(expression, columns, callback) {
             }
 
             var rows_i = $(rows);
+
+            rows_i.on('click', '.single-item', function () {
+                var parent = $(this).parent();
+
+                if(parent.hasClass('tab-col-visible')) {
+                   var loglines = parent.find('.loglines').find('code');
+                }else if (parent.hasClass('tab-col-right')) {
+                   var loglines = parent.parent().parent().find('.loglines').find('code');
+                }else{
+                   return;
+                }
+
+
+                var searchValue = $(this).html();
+
+                if($(this).hasClass('hightlight_text')) {
+                    loglines.find('span').each(function () {
+                        if($(this).html() === searchValue) {
+                            $(this).replaceWith($(this).html());
+                        }
+                    });
+                    $(this).removeClass('hightlight_text');
+                    $(this).css({ 'background-color' : ''});
+                }else {
+                    var loglinesHTML = loglines.html();
+                    var regexp = new RegExp(searchValue, 'g');
+
+                    var indexes = [];
+
+                    while ((match = regexp.exec(loglinesHTML)) !== null) {
+                        indexes.push(match.index);
+                    }
+
+                    var newHTML = '';
+                    var lastPos = 0;
+                    var currentColor = rainbow_colors(currentColorLength);
+
+                    for (var i in indexes) {
+                        var ind = indexes[i];
+                        var piece = loglinesHTML.slice(lastPos, ind);
+
+                        newHTML += piece + '<span class="hightlight_text" style="background-color: ' + currentColor + ';">' + searchValue + '</span>';
+
+                        lastPos = ind + searchValue.length;
+                    }
+
+                    currentColorLength++;
+                    newHTML += loglinesHTML.slice(lastPos);
+
+                    $(this).addClass('hightlight_text');
+                    $(this).css({ 'background-color': currentColor });
+                    loglines.html(newHTML);
+                }
+            });
 
             rows_i.on('click', 'button.hide-show-empty-fields-button', function () {
                 var show_empty = $(this).data('shown') == 1;

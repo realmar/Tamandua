@@ -147,6 +147,17 @@ button.hide-show-empty-fields-button {
     right: 0px;
 }
 
+.hightlight_text {
+    border-radius: 2px 2px 2px 2px;
+    -moz-border-radius: 2px 2px 2px 2px;
+    -webkit-border-radius: 2px 2px 2px 2px;
+    border: 1px solid #263238;
+}
+
+.single-item {
+    margin-right: 0.2em;
+}
+
 /* tablesorter custom css */
 
 table.tablesorter tbody tr.normal-row td {
