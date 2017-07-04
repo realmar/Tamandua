@@ -336,11 +336,11 @@ function append_rows(expression, columns, callback) {
                             if(columns[i] === 'loglines') {
                                 rowData = rowData.join('');
                             }else{
-                                var tmp = '';
-                                for(var i in rowData) {
-                                    tmp += '<div class="inline single-item">' + rowData[i] + '</div>';
+                                var t = '';
+                                for(var j in rowData) {
+                                    t += '<div class="inline single-item">' + rowData[j] + '</div>';
                                 }
-                                rowData = tmp;
+                                rowData = t;
                             }
                         }else{
                             rowData = '<div class="inline single-item">' + rowData + '</div>';
