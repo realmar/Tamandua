@@ -181,9 +181,13 @@ class MongoRepository(IRepository):
         return self.__get_metadata_wrapp(self.__lastLogfileSizeName, 0)
 
 
-    def make_regexp(self, pattern: str) -> object:
+    def make_regexp(self, pattern: str, caseSensitive: True) -> object:
         """"""
-        return {'$regex': pattern}
+        query = {'$regex': pattern}
+        if not caseSensitive:
+            query['$options'] = '-i'
+
+        return query
 
     def make_comparison(self, key: str, value: object, comparator: Comparator) -> object:
         """"""

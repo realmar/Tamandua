@@ -130,7 +130,7 @@ class DataFinder():
 
                 if comparator.comparator == Comparator.equal:
                     if isinstance(value, str):
-                        tmp = self._repository.make_regexp(value)
+                        tmp = self._repository.make_regexp(value, caseSensitive=False)
                     else:
                         tmp = value
 

@@ -65,7 +65,7 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def make_regexp(self, pattern: str) -> object:
+    def make_regexp(self, pattern: str, caseSensitive: True) -> object:
         """"""
         pass
 
