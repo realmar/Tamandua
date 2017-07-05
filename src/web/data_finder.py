@@ -168,7 +168,7 @@ class DataFinder():
             except StopIteration as e:
                 break
 
-            if i <= page_start:
+            if i < page_start:
                 continue
 
             self._repository.remove_metadata(currResult)
