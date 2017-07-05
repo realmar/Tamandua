@@ -154,10 +154,6 @@ button.hide-show-empty-fields-button {
     border: 1px solid #263238;
 }
 
-.single-item {
-    margin-right: 0.2em;
-}
-
 /* tablesorter custom css */
 
 table.tablesorter tbody tr.normal-row td {

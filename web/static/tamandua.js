@@ -351,7 +351,7 @@ function append_rows(expression, columns, callback) {
                             }else{
                                 var t = '';
                                 for(var j in rowData) {
-                                    t += '<div class="inline single-item">' + rowData[j] + '</div>';
+                                    t += '<div class="inline single-item">' + rowData[j] + '</div><span class="margin-right-1">,</span>';
                                 }
                                 rowData = t;
                             }
