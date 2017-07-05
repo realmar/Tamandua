@@ -11,8 +11,8 @@ var datetimeFormat = 'YYYY/MM/DD HH:mm:ss';
 
 var visibleColumns = [
     'phdmxin_time',
-    'recipient',
-    'sender'
+    'sender',
+    'recipient'
 ];
 
 var comparatorMap = {
@@ -132,6 +132,20 @@ function get_color(pos) {
     )
         .luminance(0.6)
         .hex();
+}
+
+function sort_columns(columns) {
+    visibleColumns.reverse();
+
+    for (var vc in visibleColumns) {
+        var i = columns.indexOf(visibleColumns[vc]);
+        if (i > -1) {
+            columns.splice(i, 1);
+            columns.splice(0, 0, visibleColumns[vc])
+        }
+    }
+
+    visibleColumns.reverse();
 }
 
 /*
@@ -491,7 +505,7 @@ function append_rows(expression, columns, callback) {
 
             result_table_tbody.append(rows_i);
         }
-        callback();
+        callback(columns);
     })
     .fail(handle_ajax_error);
 }
@@ -516,15 +530,7 @@ function reset_table(expression, callback) {
         result_table_thead.append('<tr></tr>');
         var tr_head = result_table_thead.find('tr');
 
-        var vctmp = visibleColumns.reverse();
-
-        for(var vc in vctmp) {
-            var i = columns.indexOf(vctmp[vc]);
-            if(i > -1) {
-                columns.splice(i, 1);
-                columns.splice(0, 0, vctmp[vc])
-            }
-        }
+        sort_columns(columns);
 
         for(var i in columns) {
             // validate received data
@@ -616,7 +622,7 @@ function update_tags() {
     });
 }
 
-function initialize_table(expression, columns) {
+function initialize_table(columns) {
     var jTable = $('#result-table');
 
     jTable
@@ -682,17 +688,20 @@ function initialize_table(expression, columns) {
             content: $('#popover-target')
         });
 
-    var elements = $("#columnSelector").find('label');
+    var columnsSelector = $("#columnSelector");
+    var elements = columnsSelector.find('label').detach();
 
-    elements.detach().sort(
-        function(a, b) {
-            var astts = $(a).find('div').html();
-            var bstts = $(b).find('div').html();
+    var labelMap = {};
 
-            return (astts > bstts) ? (astts > bstts) ? 1 : 0 : -1;
-        });
+    elements.each(function () {
+        var d = $(this).find('div');
+        labelMap[d.html()] = $(this);
+    });
 
-    $("#columnSelector").append(elements);
+    sort_columns(columns);
+    for(var i in columns) {
+        columnsSelector.append(labelMap[columns[i]]);
+    }
 
     hide_child_rows();
     $(".columnSelectorWrapper").show();
@@ -811,29 +820,16 @@ function init_global_variables() {
 }
 
 function init_expression_template() {
-    var importantFields = [
-            'recipient',
-            'sender',
-            'spamscore',
-            'orig_recipient',
-            'rejectreason',
-            'size',
-            'uid',
-            'username',
-            'virusresult'
-        ];
-
     $.getJSON(api.columns, function (columns) {
 
-        for(var i in importantFields) {
-            $('.expression-select').append('<option value="' + importantFields[i] + '">'  + importantFields[i] +'</option>')
+        var removeFields = ['phdmxin_time', 'phdimap_time'];
+        for(var i in removeFields) {
+            columns.splice(columns.indexOf(removeFields[i]), 1);
         }
 
-        for(var i in columns) {
-            if(importantFields.indexOf(columns[i]) !== -1) {
-                continue;
-            }
+        sort_columns(columns);
 
+        for(var i in columns) {
             $('.expression-select').append('<option value="' + columns[i] + '">'  + columns[i] +'</option>')
         }
 
