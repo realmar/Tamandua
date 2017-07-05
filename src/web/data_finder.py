@@ -158,7 +158,8 @@ class DataFinder():
             del queryData[constants.PHD_MXIN_TIME]
             queryData[constants.PHD_IMAP_TIME] = self._repository.make_datetime_comparison(start, end)
 
-        results = do_search()
+            results = do_search()
+
         results_list = []
 
         for i in range(0, page_start + page_size):
