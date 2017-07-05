@@ -109,16 +109,29 @@ function remove_all_messages() {
  * Misc
  */
 
-// Source: https://stackoverflow.com/questions/5137831/map-a-range-of-values-e-g-0-255-to-a-range-of-colours-e-g-rainbow-red-b
+// generate colors
+var colors = chroma.scale(
+    [
+        'red',
+        'blue',
+        'yellow',
+        'green',
+        'magenta',
+        'navy',
+        'hotpink',
+        '#2A4858',
+        '#d3a96a',
+        '#800080',
+        '#63c56c'
+    ]
+).colors(15);
 
-function rainbow_colors(length)  {
-    var maxLength = 10;
-
-    var i = (length * 255 / maxLength);
-    var r = Math.round(Math.sin(0.024 * i + 0) * 127 + 230);
-    var g = Math.round(Math.sin(0.024 * i + 2) * 127 + 230);
-    var b = Math.round(Math.sin(0.024 * i + 4) * 127 + 230);
-    return 'rgb(' + r + ',' + g + ',' + b + ')';
+function get_color(pos) {
+    return chroma(
+        colors[pos % (colors.length - 1)]
+    )
+        .luminance(0.6)
+        .hex();
 }
 
 /*
@@ -430,7 +443,7 @@ function append_rows(expression, columns, callback) {
 
                     var newHTML = '';
                     var lastPos = 0;
-                    var currentColor = rainbow_colors(currentColorLength);
+                    var currentColor = get_color(currentColorLength);
 
                     for (var i in indexes) {
                         var ind = indexes[i];
