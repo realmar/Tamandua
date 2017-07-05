@@ -357,7 +357,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                                     pass
 
                             gather_existing_data(SearchScope.INCOMPLETE)
-                            gather_existing_data(SearchScope.COMPLETE)
+                            # gather_existing_data(SearchScope.COMPLETE)
 
                             self._merge_data(target, otherFrag)
                             # we can not delete the merged fragment now, as it would
