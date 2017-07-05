@@ -410,7 +410,13 @@ function append_rows(expression, columns, callback) {
                 var parent = $(this).parent();
 
                 if(parent.hasClass('tab-col-visible')) {
-                   var loglines = parent.parent().next().find('.loglines').find('code');
+                    var childRow = parent.parent().next();
+
+                    if(!childRow.find('td').first().is(":visible")) {
+                        return;
+                    }
+
+                   var loglines = childRow.find('.loglines').find('code');
                 }else if (parent.hasClass('tab-col-right')) {
                    var loglines = parent.parent().parent().find('.loglines').find('code');
                 }else{
