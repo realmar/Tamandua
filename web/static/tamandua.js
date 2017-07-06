@@ -92,16 +92,16 @@ DashboardView.get_overview = function () {
 
     var totalMailsQuery = $.extend({}, dt);
 
-    var totalVirusQuery = $.extend({}, dt);
-    totalVirusQuery['fields'] = [{
+    var totalSpamQuery = $.extend({}, dt);
+    totalSpamQuery['fields'] = [{
         'spamscore': {
-            'comparator': '>',
+            'comparator': '>=',
             'value': 5
         }
     }];
 
-    var totalSpamQuery = $.extend({}, dt);
-    totalSpamQuery['fields'] = [{
+    var totalVirusQuery = $.extend({}, dt);
+    totalVirusQuery['fields'] = [{
         'virusresult': {
             'comparator': '=',
             'value': 'INFECTED'
@@ -165,11 +165,24 @@ DashboardView.get_lists = function () {
     var sendersQuery = makelist('sender');
     var senderDomainsQuery = makelistdomain('sender');
 
-    // var greylistedQuery = makelist('');
-    // var greylistedDomainsQuery = makelistdomain('sender');
+    var greylistedQuery = makelist('sender');
+    var greylistedDomainsQuery = makelistdomain('sender');
+
+    greylistFields = {'fields': [{
+        'rejectreason': {
+            'comparator': '=',
+            'value': 'Recipient address rejected: Greylisted'
+        }
+    }]};
+
+    $.extend(greylistedQuery, greylistFields);
+    $.extend(greylistedDomainsQuery, greylistFields);
 
     get_data($('#list-top-senders'), sendersQuery);
     get_data($('#list-top-senders-domain'), senderDomainsQuery);
+
+    get_data($('#list-top-greylisted'), greylistedQuery);
+    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery);
 };
 
 DashboardView.prototype = {
@@ -180,8 +193,8 @@ DashboardView.prototype = {
         this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
         DashboardView.get_overview();
 
-        this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
-        DashboardView.get_lists();
+        // this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
+        // DashboardView.get_lists();
     },
 
     teardown: function () {
@@ -1025,6 +1038,7 @@ function on_overview_hours_focus_loss() {
     
     $("#overview-hours").val(overviewHours);
     DashboardView.get_overview();
+    DashboardView.get_lists();
 }
 
 //endregion
