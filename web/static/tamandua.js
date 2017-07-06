@@ -1,3 +1,5 @@
+//region Globals
+
 /*
  * Global Variables
  */
@@ -38,6 +40,10 @@ var methods = {
     post: 'POST',
     get: 'GET'
 };
+
+//endregion
+
+//region error messaging
 
 /*
  * Errors/Messaging
@@ -105,6 +111,10 @@ function remove_all_messages() {
     }
 }
 
+//endregion
+
+//region misc
+
 /*
  * Misc
  */
@@ -148,6 +158,10 @@ function sort_columns(columns) {
     visibleColumns.reverse();
 }
 
+//endregion
+
+//region ui loading spinners
+
 /*
  * UI Loading
  */
@@ -167,6 +181,10 @@ function hide_on_search() {
 function show_on_finished_search() {
     $('.hide-on-search').show();
 }
+
+//endregion
+
+//region setup functions
 
 /*
  * Setup Functions
@@ -190,6 +208,10 @@ function setup_datetimepicker(item) {
         format : 'DD/MM/YYYY HH:mm'
     });
 }
+
+//endregion
+
+//region creational destructional
 
 /*
  * Creational/Destructional Functions
@@ -225,48 +247,10 @@ function on_remove_expression_line_button_click(item) {
     item.remove();
 }
 
-/*
- * Event Handlers
- */
 
-/* expression builder */
+//endregion
 
-function has_empty_expression_fields() {
-    var hasEmptyFields = false;
-
-    $.each(expressionLines, function () {
-        var expInput = $(this[0]).find('.expression-input');
-        if(!expInput.val()) {
-            hasEmptyFields = true;
-        }
-    });
-
-    return hasEmptyFields;
-}
-
-function on_add_expression_line_button_click() {
-    // Check if an expression doesn't have any value
-    // if so, then we will not create a new expression line (return)
-
-    if(!has_empty_expression_fields()) {
-        add_expression_line();
-    }
-}
-
-/* datetime */
-
-function on_add_dt_button_click(item) {
-    var parent = $(this).parent().parent();
-    parent.find('.dt-add').hide();
-    parent.find('.dt-search-mask').show();
-
-}
-
-function on_remove_dt_button_click(item) {
-    var parent = $(this).parent().parent().parent();
-    parent.find('.dt-search-mask').hide();
-    parent.find('.dt-add').show();
-}
+//region ajax error handling
 
 /* API */
 
@@ -283,6 +267,10 @@ function handle_ajax_error(jqxhr, textStatus, error) {
         show_message(uiresponses.errors.searcherror, 'Failed to get data from server: ' + textStatus);
     }
 }
+
+//endregion
+
+//region table
 
 function empty_table() {
     show_loading_spinner();
@@ -710,6 +698,53 @@ function initialize_table(columns) {
     hide_loading_spinner();
 }
 
+//endregion
+
+//region event handlers
+
+/*
+ * Event Handlers
+ */
+
+/* expression builder */
+
+function has_empty_expression_fields() {
+    var hasEmptyFields = false;
+
+    $.each(expressionLines, function () {
+        var expInput = $(this[0]).find('.expression-input');
+        if(!expInput.val()) {
+            hasEmptyFields = true;
+        }
+    });
+
+    return hasEmptyFields;
+}
+
+function on_add_expression_line_button_click() {
+    // Check if an expression doesn't have any value
+    // if so, then we will not create a new expression line (return)
+
+    if(!has_empty_expression_fields()) {
+        add_expression_line();
+    }
+}
+
+/* datetime */
+
+function on_add_dt_button_click(item) {
+    var parent = $(this).parent().parent();
+    parent.find('.dt-add').hide();
+    parent.find('.dt-search-mask').show();
+
+}
+
+function on_remove_dt_button_click(item) {
+    var parent = $(this).parent().parent().parent();
+    parent.find('.dt-search-mask').hide();
+    parent.find('.dt-add').show();
+}
+
 function on_search_button_click() {
     /*
      * useful clojures for this function
@@ -811,6 +846,10 @@ function on_comperator_button_click() {
     $(this).html(cycle[currCursor]);
 }
 
+//endregion
+
+//region initialization
+
 /*
  * Init
  */
@@ -866,6 +905,8 @@ function register_event_handlers() {
         return false;
     });
 }
+
+//endregion
 
 function main() {
     init_global_variables();
