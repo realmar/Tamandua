@@ -231,7 +231,9 @@ class MongoRepository(IRepository):
             Comparator.equal: '$eq',
             Comparator.not_equal: '$ne',
             Comparator.greater: '$gt',
-            Comparator.less: '$lt'
+            Comparator.less: '$lt',
+            Comparator.greater_or_equal: '$gte',
+            Comparator.less_or_equal: '$lte'
         }
 
         return {
