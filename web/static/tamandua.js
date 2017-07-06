@@ -25,6 +25,20 @@ var comparatorMap = {
 };
 
 /*
+ *
+ */
+
+/*
+ * dashboard
+ */
+
+var overviewHoursDefault = 24;
+var lastOverviewHours = 0;
+var overviewHours = overviewHoursDefault;
+
+var overview_refresh_interval = null;
+
+/*
  * API Routes
  */
 
@@ -32,6 +46,7 @@ var maxPageSize = 200;
 
 var api = {
     columns: '/api/columns',
+    count: '/api/count',
     tags: '/api/tags',
     search: '/api/search/0/' + maxPageSize
 };
@@ -45,12 +60,89 @@ var methods = {
  * Views
  */
 
-var availableViews = {
-    'search': '#search-view',
-    'dashboard': '#dashboard-view'
+//endregion
+
+//region View Class
+
+function SearchView() { }
+
+SearchView.prototype = {
+    setup: function () {
+        $('#search-nav-link').addClass('navbar-item-active');
+        $('#search-view').show()
+    },
+
+    teardown: function () {
+        $('#search-view').hide()
+    }
 };
 
-var currentView = availableViews.dashboard;
+function DashboardView() {
+    this.overviewInterval = null;
+}
+
+DashboardView.get_overview = function () {
+    var dt = {
+        'datetime': {
+            'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
+        }
+    };
+
+    var totalMailsQuery = $.extend({}, dt);
+
+    var totalVirusQuery = $.extend({}, dt);
+    totalVirusQuery['fields'] = [{
+        'spamscore': {
+            'comparator': '>',
+            'value': 5
+        }
+    }];
+
+    var totalSpamQuery = $.extend({}, dt);
+    totalSpamQuery['fields'] = [{
+        'virusresult': {
+            'comparator': '=',
+            'value': 'INFECTED'
+        }
+    }];
+
+    function get_data(selector, expression) {
+        $.ajax({
+            url: api.count,
+            type: methods.post,
+            data: JSON.stringify(expression),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json'
+        }).done(function (result) {
+            selector.html(result)
+        });
+    }
+
+    get_data($('#overview-processed-mails'), totalMailsQuery);
+    get_data($('#overview-virus'), totalVirusQuery);
+    get_data($('#overview-spam'), totalSpamQuery);
+
+};
+
+DashboardView.prototype = {
+    setup: function () {
+        $('#dashboard-nav-link').addClass('navbar-item-active');
+        $('#dashboard-view').show();
+
+        this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
+        DashboardView.get_overview();
+    },
+
+    teardown: function () {
+        if(this.overviewInterval !== null) {
+            clearInterval(this.overviewInterval);
+        }
+
+        $('#dashboard-view').hide()
+    }
+};
+
+var currentView = null;
 
 //endregion
 
@@ -857,6 +949,33 @@ function on_comperator_button_click() {
     $(this).html(cycle[currCursor]);
 }
 
+/*
+ * dashboard overview
+ */
+
+function get_overview_hours() {
+    var val = parseInt($("#overview-hours").val());
+    if(isNaN(val)) {
+        return overviewHoursDefault;
+    }else{
+        return val;
+    }
+}
+
+function on_overview_hours_focus() {
+    lastOverviewHours = get_overview_hours();
+}
+
+function on_overview_hours_focus_loss() {
+    overviewHours = parseInt($("#overview-hours").val());
+    if(isNaN(overviewHours)) {
+        overviewHours = lastOverviewHours;
+    }
+    
+    $("#overview-hours").val(overviewHours);
+    DashboardView.get_overview();
+}
+
 //endregion
 
 //region view
@@ -866,22 +985,11 @@ function on_comperator_button_click() {
  */
 
 function change_view(view) {
-    currentView = view;
-
-    switch (currentView) {
-        case availableViews.search:
-            break;
-
-        case availableViews.dashboard:
-            break;
-
-        default:
-            console.warn('Trying to change to view "' + currentView + '" which is not available')
-            return;
+    if(currentView !== null) {
+        currentView.teardown();
     }
-
-    $('#view-container').find('.view').hide();
-    $(currentView).show();
+    currentView = view;
+    currentView.setup();
 }
 
 //endregion
@@ -914,7 +1022,26 @@ function init_expression_template() {
     });
 }
 
+function init_overview_dashboard() {
+    $('#overview-hours').val('24');
+}
+
+function deactivate_all_nav_elements() {
+    $('.navbar-item').removeClass('navbar-item-active');
+}
+
 function register_event_handlers() {
+    /* nav */
+    $('#dashboard-nav-link').click(function () {
+        deactivate_all_nav_elements();
+        change_view(new DashboardView());
+    });
+
+    $('#search-nav-link').click(function () {
+        deactivate_all_nav_elements();
+        change_view(new SearchView());
+    });
+
     /* expression builder */
     $('#add-expression-line-button').click(on_add_expression_line_button_click);
 
@@ -942,6 +1069,11 @@ function register_event_handlers() {
         $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
         return false;
     });
+
+    /* dashboard */
+
+    $("#overview-hours").on('focusout', on_overview_hours_focus_loss);
+    $("#overview-hours").on('focusin', on_overview_hours_focus);
 }
 
 //endregion
@@ -950,10 +1082,11 @@ function main() {
     init_global_variables();
     register_event_handlers();
     init_expression_template();
+    init_overview_dashboard();
     setup_datetimepicker($('#dt-from-picker'));
     setup_datetimepicker($('#dt-to-picker'));
     setup_selectizer($(".pagesize"));
-    change_view(availableViews.search);
+    change_view(new DashboardView());
 }
 
 $(document).ready(main);

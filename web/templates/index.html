@@ -68,14 +68,26 @@
             <div class="navbar-header">
                 <a class="navbar-brand" href="#">Tamandua</a>
             </div>
-            <p class="navbar-text">Web Interface</p>
+
+
+
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a id="dashboard-nav-link" class="navbar-item">Dashboard</a></li>
+                    <li><a id="search-nav-link"  class="navbar-item">Search</a></li>
+                </ul>
+            </div>
+
+
+
+
         </div>
     </nav>
 </header>
 
 <main>
     <div id="view-container">
-        <div id="search-view" class="view">
+        <div style="display: none;" id="search-view" class="view">
             <div class="container">
 
         <div id="search" class="container-fluid panel panel-default">
@@ -237,8 +249,14 @@
         </div>
     </div>
         </div>
-        <div id="dashboard-view" class="view">
-
+        <div style="display: none;" id="dashboard-view" class="view">
+            <div class="container">
+                <div id="overview-stats">
+                    <p class="inline">In the last <input id="overview-hours" type="text" class="form-control" placeholder="n"> hours there were <span id="overview-processed-mails" class="label label-default">n</span> mails processed. <span id="overview-virus" class="label label-default">n</span> of those are virus mails and <span id="overview-spam" class="label label-default">n</span> are spam mails.</p>
+                </div>
+                <hr>
+                <h4>Lists</h4>
+            </div>
         </div>
     </div>
 </main>

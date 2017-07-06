@@ -98,6 +98,15 @@ hr {
     margin-bottom: 0.4em;
 }
 
+.navbar-item {
+    color: white !important;
+    cursor: pointer;
+}
+
+.navbar-item-active {
+    background-color: #B0BEC5;
+}
+
 .navbar-text {
     color: #B0BEC5 !important;
 }
@@ -152,6 +161,11 @@ button.hide-show-empty-fields-button {
     -moz-border-radius: 2px 2px 2px 2px;
     -webkit-border-radius: 2px 2px 2px 2px;
     border: 1px solid #263238;
+}
+
+#overview-hours {
+    width: 3em;
+    display: inline-block;
 }
 
 /* tablesorter custom css */
