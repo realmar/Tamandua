@@ -143,7 +143,7 @@ class MongoRepository(IRepository):
 
         try:
             results = self._collection_complete.map_reduce(
-                Code(mapf), Code(reducef), "count"
+                Code(mapf), Code(reducef), "count", query=query
             )
         except pymongo_errors.OperationFailure as e:
             return CountableIterator([], lambda x: 0)

@@ -80,4 +80,11 @@ class AdvancedCount(BaseResource):
         expression = request.get_json()
         results = self._dataFinder.mapreduce(expression)
 
-        return [next(results) for x in range(0, length)]
+        final = []
+        for i in range(0, length):
+            try:
+                final.append(next(results))
+            except StopIteration as e:
+                break
+
+        return final
