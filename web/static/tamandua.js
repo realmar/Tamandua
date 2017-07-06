@@ -226,8 +226,8 @@ DashboardView.prototype = {
         this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
         DashboardView.get_overview();
 
-        // this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
-        // DashboardView.get_lists();
+        this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
+        DashboardView.get_lists();
     },
 
     teardown: function () {
