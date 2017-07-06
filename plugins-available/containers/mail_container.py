@@ -45,6 +45,9 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         self._pluginManager = None
         self._repository = None
 
+        # metadata
+        self.__build_final_metadata = {}
+
     @property
     def subscribedFolder(self) -> str:
         """Return the folder name from which we want the plugin data."""
@@ -282,11 +285,18 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             This function is needed, as a fragment may be a list, see below.
             """
 
+
             # create aggregate target
             # all data is aggregated into this dict
             initialID = frag.get(keyChain[0])
             queryData = { keyChain[0]: str(initialID) }
             do_query = partial(self._repository.find, queryData)
+
+            # if we are currently merging the messageid map and we
+            # already have merged this messageid we will ignore it
+            if keyChain[0] == constants.MESSAGEID and \
+                            self.__build_final_metadata.get(initialID) is not None:
+                raise AlreadyInRepository()
 
             if initialID == constants.NOQUEUE:
                 if len(self._repository.find(frag, SearchScope.ALL)) > 0:
@@ -360,11 +370,18 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                             # gather_existing_data(SearchScope.COMPLETE)
 
                             self._merge_data(target, otherFrag)
-                            # we can not delete the merged fragment now, as it would
-                            # break the iteration, so we have to cache its indexes
-                            toDelete.append(
-                                (index, id)
-                            )
+
+                            if keyChain[index] == constants.MESSAGEID:
+                                # if the current id is the messageid
+                                # we will store it as we dont need to merge
+                                # it again later (last phase in build_final)
+                                self.__build_final_metadata[id] = True
+                            else:
+                                # we can not delete the merged fragment now, as it would
+                                # break the iteration, so we have to cache its indexes
+                                toDelete.append(
+                                    (index, id)
+                                )
 
                     if isinstance(nextid, list):
                         # if the extracted id is a list, then we will
@@ -437,6 +454,8 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
 
     def build_final(self) -> None:
         """Aggregate data to mail objects."""
+        self.__build_final_metadata = {}
+
         self.__aggregate_mails(
             [
                 self._map_qid_mxin,
