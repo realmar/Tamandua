@@ -114,6 +114,26 @@ class MongoRepository(IRepository):
         results = searchCollection.find(query)
         return CountableIterator(results, lambda x: x.count())
 
+    def count(self, query: dict, field: str, regex=None) -> list:
+        """"""
+        mapf = Loader.load_js('mongo_js.count.mapper')
+        reducef = Loader.load_js('mongo_js.count.reducer')
+
+        mapf = mapf.replace('<field>', field)
+        if regex is not None:
+            mapf = mapf.replace('<regex>', '.match(/' + regex + '/)[1]')
+        else:
+            mapf = mapf.replace('<regex>', '')
+
+        try:
+            results = self._collection_complete.map_reduce(
+                Code(mapf), Code(reducef), "count"
+            )
+        except pymongo_errors.OperationFailure as e:
+            return []
+
+        return [{'key': x['_id'], 'value': x['value']} for x in results.find({}).sort('value', -1)]
+
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""
         if scope == SearchScope.ALL:

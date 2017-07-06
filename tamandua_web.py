@@ -48,6 +48,7 @@ api.add_resource(rest_api.Columns, '/api/columns', resource_class_args=[dataFind
 api.add_resource(rest_api.Tags, '/api/tags', resource_class_args=[dataFinder])
 api.add_resource(rest_api.Search, '/api/search/<int:page>/<int:size>', resource_class_args=[dataFinder])
 api.add_resource(rest_api.Count, '/api/count', resource_class_args=[dataFinder])
+api.add_resource(rest_api.AdvancedCount, '/api/advcount', resource_class_args=[dataFinder])
 
 if __name__ == "__main__":
     app.run(host='localhost', port=8080, debug=True)

@@ -47,6 +47,7 @@ var maxPageSize = 200;
 var api = {
     columns: '/api/columns',
     count: '/api/count',
+    advcount: '/api/advcount',
     tags: '/api/tags',
     search: '/api/search/0/' + maxPageSize
 };
@@ -79,6 +80,7 @@ SearchView.prototype = {
 
 function DashboardView() {
     this.overviewInterval = null;
+    this.listInterval = null;
 }
 
 DashboardView.get_overview = function () {
@@ -124,6 +126,58 @@ DashboardView.get_overview = function () {
 
 };
 
+DashboardView.get_lists = function () {
+    var dt = {
+        'datetime': {
+            'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
+        }
+    };
+
+    function makelist(field) {
+        var query = $.extend({}, dt);
+        query['countfield'] = "sender";
+
+        return query;
+    }
+
+    function makelistdomain(field) {
+        var query = makelist(field);
+        query['regex'] = '@([^$]+)';
+
+        return query;
+    }
+
+    function get_data(selector, expression) {
+        $.ajax({
+            url: api.advcount,
+            type: methods.post,
+            data: JSON.stringify(expression),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json'
+        }).done(function (result) {
+            selector.empty();
+
+            var counter = 20;
+            for(var k in result) {
+                selector.append('<div><span class="label label-default">' + result[k]['value'] + '</span> ' + result[k]['key']);
+
+                if(--counter < 0){
+                    break;
+                }
+            }
+        });
+    }
+
+    var sendersQuery = makelist('sender');
+    var senderDomainsQuery = makelistdomain('sender');
+
+    // var greylistedQuery = makelist('');
+    // var greylistedDomainsQuery = makelistdomain('sender');
+
+    get_data($('#list-top-senders'), sendersQuery);
+    get_data($('#list-top-senders-domain'), senderDomainsQuery);
+};
+
 DashboardView.prototype = {
     setup: function () {
         $('#dashboard-nav-link').addClass('navbar-item-active');
@@ -131,6 +185,9 @@ DashboardView.prototype = {
 
         this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
         DashboardView.get_overview();
+
+        this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
+        DashboardView.get_lists();
     },
 
     teardown: function () {
