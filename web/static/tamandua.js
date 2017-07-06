@@ -36,8 +36,6 @@ var overviewHoursDefault = 24;
 var lastOverviewHours = 0;
 var overviewHours = overviewHoursDefault;
 
-var overview_refresh_interval = null;
-
 /*
  * API Routes
  */
@@ -82,6 +80,31 @@ function DashboardView() {
     this.overviewInterval = null;
     this.listInterval = null;
 }
+
+DashboardView.go_to_sender = function (sender) {
+    change_view(new SearchView());
+
+    for(var i in expressionLines) {
+        expressionLines[i][0].remove();
+    }
+
+    expressionLines = [];
+
+    add_expression_line();
+
+    expressionLines[0][0].find('.expression-input').val(sender);
+    expressionLines[0][1].setValue('sender');
+
+    $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
+
+    on_add_dt_button_click(
+        $('#dt-from-picker').parent().parent().parent().parent().find('.add-dt-button')
+    );
+
+    $('#dt-from-picker').data("DateTimePicker").date(moment().subtract(overviewHours, 'hours'))
+
+    on_search_button_click();
+};
 
 DashboardView.get_overview = function () {
     var dt = {
@@ -157,7 +180,12 @@ DashboardView.get_lists = function () {
         }).done(function (result) {
             selector.empty();
             for(var k in result) {
-                selector.append('<div><span class="label label-default">' + result[k]['value'] + '</span> ' + result[k]['key']);
+                var element = $('<div><span class="label label-default">' + result[k]['value'] + '</span> <span class="dashboard-list-data">' + result[k]['key'] + '</span>');
+                element.click(function () {
+                    DashboardView.go_to_sender($(this).find('.dashboard-list-data').html())
+
+                });
+                selector.append(element);
             }
         });
     }
@@ -900,14 +928,14 @@ function on_add_expression_line_button_click() {
 /* datetime */
 
 function on_add_dt_button_click(item) {
-    var parent = $(this).parent().parent();
+    var parent = item.parent().parent();
     parent.find('.dt-add').hide();
     parent.find('.dt-search-mask').show();
 
 }
 
 function on_remove_dt_button_click(item) {
-    var parent = $(this).parent().parent().parent();
+    var parent = item.parent().parent().parent();
     parent.find('.dt-search-mask').hide();
     parent.find('.dt-add').show();
 }

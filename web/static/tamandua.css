@@ -168,6 +168,10 @@ button.hide-show-empty-fields-button {
     display: inline-block;
 }
 
+.dashboard-list-data {
+    cursor: pointer;
+}
+
 /* grid */
 
 .list-grid {
