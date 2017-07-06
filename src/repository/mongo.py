@@ -19,6 +19,22 @@ class TargetCollectionNotFound(Exception):
     pass
 
 
+class MongoCountSpecificIterable(CountableIterator):
+    """"""
+
+    def __init__(self, cursor):
+        self.__cursor = cursor
+
+    def __next__(self):
+        x = next(self.__cursor)
+        while x['_id'] == '' or x['_id'] == None:
+            x = next(self.__cursor)
+
+        return {'key': x['_id'], 'value': x['value']}
+
+    def __len__(self):
+        return self.__cursor.count()
+
 class MongoRepository(IRepository):
     """"""
 
@@ -114,7 +130,7 @@ class MongoRepository(IRepository):
         results = searchCollection.find(query)
         return CountableIterator(results, lambda x: x.count())
 
-    def count(self, query: dict, field: str, regex=None) -> list:
+    def count_specific_fields(self, query: dict, field: str, regex=None) -> CountableIterator:
         """"""
         mapf = Loader.load_js('mongo_js.count.mapper')
         reducef = Loader.load_js('mongo_js.count.reducer')
@@ -130,9 +146,9 @@ class MongoRepository(IRepository):
                 Code(mapf), Code(reducef), "count"
             )
         except pymongo_errors.OperationFailure as e:
-            return []
+            return CountableIterator([], lambda x: 0)
 
-        return [{'key': x['_id'], 'value': x['value']} for x in results.find({}).sort('value', -1)]
+        return MongoCountSpecificIterable(results.find({}).sort('value', -1))
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""

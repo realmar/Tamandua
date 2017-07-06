@@ -76,7 +76,8 @@ class Count(BaseResource):
 class AdvancedCount(BaseResource):
     """"""
 
-    def post(self) -> dict:
+    def post(self, length: int) -> list:
         expression = request.get_json()
+        results = self._dataFinder.mapreduce(expression)
 
-        return self._dataFinder.mapreduce(expression)
+        return [next(results) for x in range(0, length)]

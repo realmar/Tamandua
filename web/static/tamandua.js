@@ -47,7 +47,7 @@ var maxPageSize = 200;
 var api = {
     columns: '/api/columns',
     count: '/api/count',
-    advcount: '/api/advcount',
+    advcount: '/api/advcount/',
     tags: '/api/tags',
     search: '/api/search/0/' + maxPageSize
 };
@@ -149,21 +149,15 @@ DashboardView.get_lists = function () {
 
     function get_data(selector, expression) {
         $.ajax({
-            url: api.advcount,
+            url: api.advcount + 10,
             type: methods.post,
             data: JSON.stringify(expression),
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
         }).done(function (result) {
             selector.empty();
-
-            var counter = 20;
             for(var k in result) {
                 selector.append('<div><span class="label label-default">' + result[k]['value'] + '</span> ' + result[k]['key']);
-
-                if(--counter < 0){
-                    break;
-                }
             }
         });
     }

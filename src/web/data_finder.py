@@ -208,7 +208,7 @@ class DataFinder():
         queryData = self.build_query(*allfields)
 
         def do_search():
-            return self._repository.count(queryData, countfield, regex)
+            return self._repository.count_specific_fields(queryData, countfield, regex)
 
         results = do_search()
 
