@@ -103,6 +103,11 @@ hr {
     cursor: pointer;
 }
 
+.navbar-item:hover {
+    background-color: #B0BEC5 !important;
+    cursor: pointer;
+}
+
 .navbar-item-active {
     background-color: #B0BEC5;
 }
