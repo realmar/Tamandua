@@ -41,6 +41,17 @@ var methods = {
     get: 'GET'
 };
 
+/*
+ * Views
+ */
+
+var availableViews = {
+    'search': '#search-view',
+    'dashboard': '#dashboard-view'
+};
+
+var currentView = availableViews.dashboard;
+
 //endregion
 
 //region error messaging
@@ -848,6 +859,33 @@ function on_comperator_button_click() {
 
 //endregion
 
+//region view
+
+/*
+ * View
+ */
+
+function change_view(view) {
+    currentView = view;
+
+    switch (currentView) {
+        case availableViews.search:
+            break;
+
+        case availableViews.dashboard:
+            break;
+
+        default:
+            console.warn('Trying to change to view "' + currentView + '" which is not available')
+            return;
+    }
+
+    $('#view-container').find('.view').hide();
+    $(currentView).show();
+}
+
+//endregion
+
 //region initialization
 
 /*
@@ -915,6 +953,7 @@ function main() {
     setup_datetimepicker($('#dt-from-picker'));
     setup_datetimepicker($('#dt-to-picker'));
     setup_selectizer($(".pagesize"));
+    change_view(availableViews.search);
 }
 
 $(document).ready(main);
