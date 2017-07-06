@@ -19,7 +19,7 @@ class DataFinder():
         self.availableFields = self._repository.get_all_keys()
         self.availableTags = self._repository.get_all_tags()
 
-    def search(self, expression: dict, page_start: int, page_size: int) -> CountableIterator[Dict]:
+    def search(self, expression: dict) -> CountableIterator[Dict]:
         """Search for specific mails."""
 
         """
@@ -160,6 +160,10 @@ class DataFinder():
 
             results = do_search()
 
+
+        return results
+
+    def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int):
         results_list = []
 
         for i in range(0, page_start + page_size):
