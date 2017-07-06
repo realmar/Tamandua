@@ -106,6 +106,11 @@ DashboardView.go_to_sender = function (sender) {
     on_search_button_click();
 };
 
+DashboardView.get_precentage = function (value) {
+    var total = parseInt($('#overview-processed-mails').html());
+    return ((value / total) * 100).toFixed(2)
+}
+
 DashboardView.get_overview = function () {
     var dt = {
         'datetime': {
@@ -139,7 +144,7 @@ DashboardView.get_overview = function () {
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
         }).done(function (result) {
-            selector.html(result)
+            selector.html(result + ' (' + DashboardView.get_precentage(result) + '%)')
         });
     }
 
@@ -180,7 +185,7 @@ DashboardView.get_lists = function () {
         }).done(function (result) {
             selector.empty();
             for(var k in result) {
-                var element = $('<div><span class="label label-default">' + result[k]['value'] + '</span> <span class="dashboard-list-data">' + result[k]['key'] + '</span>');
+                var element = $('<div><span class="label label-default">' + result[k]['value'] + ' (' + DashboardView.get_precentage(result[k]['value']) + '%)</span> <span class="dashboard-list-data">' + result[k]['key'] + '</span>');
                 element.click(function () {
                     DashboardView.go_to_sender($(this).find('.dashboard-list-data').html())
 
