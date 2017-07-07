@@ -146,7 +146,7 @@ class MongoRepository(IRepository):
                 Code(mapf), Code(reducef), "count", query=query
             )
         except pymongo_errors.OperationFailure as e:
-            return CountableIterator([], lambda x: 0)
+            return CountableIterator(iter([]), lambda x: 0)
 
         return MongoCountSpecificIterable(results.find({}).sort('value', -1))
 
