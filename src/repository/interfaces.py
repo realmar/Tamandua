@@ -5,7 +5,7 @@ from typing import List, Dict
 from datetime import datetime
 
 from .misc import SearchScope, CountableIterator
-from ..expression.builder import Comparator
+from ..expression.builder import Comparator, Expression
 
 
 class IRepository(metaclass=ABCMeta):
@@ -18,14 +18,14 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def find(self, query: dict, scope: SearchScope) -> CountableIterator[Dict]:
+    def find(self, query: Expression, scope: SearchScope) -> CountableIterator[Dict]:
         """
         R: Read
         """
         pass
 
     @abstractmethod
-    def count_specific_fields(self, query: dict, field: str, regex=None) -> CountableIterator:
+    def count_specific_fields(self, query: Expression, field: str, regex=None) -> CountableIterator:
         """"""
         pass
 
@@ -39,7 +39,7 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def delete(self, query: dict, scope: SearchScope) -> None:
+    def delete(self, query: Expression, scope: SearchScope) -> None:
         """
         D: Delete
         """
@@ -67,21 +67,6 @@ class IRepository(metaclass=ABCMeta):
 
     @abstractmethod
     def get_size_of_last_logfile(self) -> int:
-        """"""
-        pass
-
-    @abstractmethod
-    def make_regexp(self, pattern: str, caseSensitive: True) -> object:
-        """"""
-        pass
-
-    @abstractmethod
-    def make_comparison(self, key: str, value: object, comparator: Comparator) -> object:
-        """"""
-        pass
-
-    @abstractmethod
-    def make_datetime_comparison(self, start: datetime, end: datetime) -> object:
         """"""
         pass
 

@@ -36,6 +36,9 @@ UID = 'uid'
 PHD_MXIN_TIME = PHD_MXIN + '_time'
 PHD_IMAP_TIME = PHD_IMAP + '_time'
 
+def get_all_times():
+    return (PHD_MXIN_TIME, PHD_IMAP_TIME)
+
 TIME_FORMAT = '%Y/%m/%d %H:%M:%S'
 
 HOSTNAME_TIME_MAP = {

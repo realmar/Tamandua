@@ -8,12 +8,15 @@ import pymongo.errors as pymongo_errors
 from bson.code import Code
 from datetime import datetime
 
+from ast import literal_eval
+
 from typing import List, Dict
 from .interfaces import IRepository
 from .misc import SearchScope, CountableIterator
-from ..expression.builder import Comparator
+from ..expression.builder import Comparator, Expression
 from .js import Loader
 from ..config import Config
+from ..constants import get_all_times
 
 
 class TargetCollectionNotFound(Exception):
@@ -74,6 +77,90 @@ class MongoRepository(IRepository):
         self._collection_incomplete = self._database[Config().get('collection_incomplete')]
         self._collection_metadata = self._database[Config().get('collection_metadata')]
 
+    @classmethod
+    def _make_regexp(cls, pattern: str, caseSensitive: True) -> object:
+        """"""
+        query = {'$regex': pattern}
+        if not caseSensitive:
+            query['$options'] = '-i'
+
+        return query
+
+    @classmethod
+    def _make_comparison(cls, key: str, value: object, comparator: Comparator) -> object:
+        """"""
+        comparatorMap = {
+            Comparator.equal: '$eq',
+            Comparator.not_equal: '$ne',
+            Comparator.greater: '$gt',
+            Comparator.less: '$lt',
+            Comparator.greater_or_equal: '$gte',
+            Comparator.less_or_equal: '$lte'
+        }
+
+        return {
+            key: {
+                comparatorMap[comparator.comparator]: value
+            }
+        }
+
+    @classmethod
+    def _make_datetime_comparison(cls, start: datetime, end: datetime) -> object:
+        """"""
+        obj = {}
+
+        if start is not None:
+            tmp = cls._make_comparison('dt', start, Comparator(Comparator.greater))
+            obj.update(tmp['dt'])
+
+        if end is not None:
+            tmp = cls._make_comparison('dt', start, Comparator(Comparator.less))
+            obj.update(tmp['dt'])
+
+        return obj
+
+    @classmethod
+    def _parse_expression(cls, expression: Expression) -> dict:
+        target = {}
+        isDateTimeSearch = expression.datetime.start is not None or expression.datetime.end is not None
+
+        for f in expression.fields:
+            for k, v in f.items():
+                value = v['value']
+                comparator = Comparator(v['comparator'])
+
+                try:
+                    value = literal_eval(value)
+                except Exception as e:
+                    pass
+
+                if comparator.comparator == Comparator.equal:
+                    if isinstance(value, str):
+                        tmp = cls._make_regexp(value, caseSensitive=False)
+                    else:
+                        tmp = value
+
+                    if target.get(k) is not None:
+                        target[k].update(tmp)
+                    else:
+                        target[k] = tmp
+                else:
+                    tmp = cls._make_comparison(k, value, comparator)
+                    if target.get(k) is not None:
+                        target[k].update(tmp[k])
+                    else:
+                        target[k] = tmp[k]
+
+        if isDateTimeSearch:
+            target['$or'] = []
+
+            for t in get_all_times():
+                target['$or'].append({
+                    t: cls._make_datetime_comparison(expression.datetime.start, expression.datetime.end)
+                })
+
+        return target
+
     @staticmethod
     def get_config_fields() -> List[str]:
         return ['database_name', 'collection_complete', 'collection_incomplete', 'collection_metadata', 'dbserver', 'dbport']
@@ -121,17 +208,17 @@ class MongoRepository(IRepository):
         else:
             raise TargetCollectionNotFound()
 
-    def find(self, query: dict, scope: SearchScope) -> CountableIterator[Dict]:
+    def find(self, query: Expression, scope: SearchScope) -> CountableIterator[Dict]:
         """"""
         try:
             searchCollection = self.__resolveScope(scope)
         except TargetCollectionNotFound as e:
             return CountableIterator(iter([]), lambda x: 0)
 
-        results = searchCollection.find(query)
+        results = searchCollection.find(self._parse_expression(query))
         return CountableIterator(results, lambda x: x.count())
 
-    def count_specific_fields(self, query: dict, field: str, regex=None) -> CountableIterator:
+    def count_specific_fields(self, query: Expression, field: str, regex=None) -> CountableIterator:
         """"""
         mapf = Loader.load_js('mongo_js.count.mapper')
         reducef = Loader.load_js('mongo_js.count.reducer')
@@ -144,7 +231,7 @@ class MongoRepository(IRepository):
 
         try:
             results = self._collection_complete.map_reduce(
-                Code(mapf), Code(reducef), "count", query=query
+                Code(mapf), Code(reducef), "count", query=self._parse_expression(query)
             )
         except pymongo_errors.OperationFailure as e:
             return CountableIterator(iter([]), lambda x: 0)
@@ -167,10 +254,10 @@ class MongoRepository(IRepository):
         else:
             collection.insert_one(data)
 
-    def delete(self, query: dict, scope: SearchScope) -> None:
+    def delete(self, query: Expression, scope: SearchScope) -> None:
         """"""
         collection = self.__resolveScope(scope)
-        collection.remove(query)
+        collection.remove(self._parse_expression(query))
 
     def remove_metadata(self, data: dict) -> None:
         """"""
@@ -216,46 +303,6 @@ class MongoRepository(IRepository):
     def get_size_of_last_logfile(self) -> int:
         """"""
         return self.__get_metadata_wrapp(self.__lastLogfileSizeName, 0)
-
-
-    def make_regexp(self, pattern: str, caseSensitive: True) -> object:
-        """"""
-        query = {'$regex': pattern}
-        if not caseSensitive:
-            query['$options'] = '-i'
-
-        return query
-
-    def make_comparison(self, key: str, value: object, comparator: Comparator) -> object:
-        """"""
-        comparatorMap = {
-            Comparator.equal: '$eq',
-            Comparator.not_equal: '$ne',
-            Comparator.greater: '$gt',
-            Comparator.less: '$lt',
-            Comparator.greater_or_equal: '$gte',
-            Comparator.less_or_equal: '$lte'
-        }
-
-        return {
-            key: {
-                comparatorMap[comparator.comparator]: value
-            }
-        }
-
-    def make_datetime_comparison(self, start: datetime, end: datetime) -> object:
-        """"""
-        obj = {}
-
-        if start is not None:
-            tmp = self.make_comparison('dt', start, Comparator(Comparator.greater))
-            obj.update(tmp['dt'])
-
-        if end is not None:
-            tmp = self.make_comparison('dt', start, Comparator(Comparator.less))
-            obj.update(tmp['dt'])
-
-        return obj
 
     def get_all_keys(self) -> List[str]:
         """"""
