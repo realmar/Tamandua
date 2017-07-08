@@ -543,9 +543,17 @@ function append_rows(expression, columns, callback) {
 
                 for (var i in columns) {
                     var rowData = '';
+                    var extraClass = '';
 
                     if(data['rows'][r].hasOwnProperty(columns[i])) {
                         rowData = data['rows'][r][columns[i]];
+
+                        if(columns[i] === 'spamscore') {
+                            var spamscore = parseFloat(rowData);
+                            if(!isNaN(spamscore) && spamscore >= 5) {
+                                extraClass = 'redbackground';
+                            }
+                        }
 
                         if(rowData instanceof Array) {
                             if(columns[i] === 'loglines') {
@@ -572,8 +580,9 @@ function append_rows(expression, columns, callback) {
                     tmp =
                         '<div class="inline tab-row">' +
                             '<div class="inline tab-col-left">' + columns[i] + '</div>' +
-                            '<div class="inline tab-col-right">' + rowData + '</div>' +
+                            '<div class="inline tab-col-right ' + extraClass + '">' + rowData + '</div>' +
                         '</div>';
+
 
                     if(columns[i] === 'loglines') {
                         loglines =

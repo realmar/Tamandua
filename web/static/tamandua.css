@@ -177,6 +177,10 @@ button.hide-show-empty-fields-button {
     cursor: pointer;
 }
 
+.redbackground {
+    background-color: #F44336;
+}
+
 /* grid */
 
 .list-grid {
