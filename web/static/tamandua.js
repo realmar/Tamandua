@@ -553,6 +553,10 @@ function append_rows(expression, columns, callback) {
                             if(!isNaN(spamscore) && spamscore >= 5) {
                                 extraClass = 'redbackground';
                             }
+                        }else if(columns[i] === 'virusresult') {
+                            if(rowData.indexOf('INFECTED') !== -1) {
+                                extraClass = 'redbackground';
+                            }
                         }
 
                         if(rowData instanceof Array) {
