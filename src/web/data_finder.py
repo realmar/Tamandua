@@ -5,9 +5,10 @@ from datetime import datetime
 from ast import literal_eval
 
 from .. import constants
-from .exceptions import ExpressionInvalid
+from ..expression.exceptions import ExpressionInvalid
 from ..repository.factory import RepositoryFactory
-from ..repository.misc import SearchScope, Comparator, CountableIterator
+from ..repository.misc import SearchScope, CountableIterator
+from ..expression.builder import Comparator
 
 
 class DataFinder():

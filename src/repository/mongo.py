@@ -10,7 +10,8 @@ from datetime import datetime
 
 from typing import List, Dict
 from .interfaces import IRepository
-from .misc import SearchScope, Comparator, CountableIterator
+from .misc import SearchScope, CountableIterator
+from ..expression.builder import Comparator
 from .js import Loader
 from ..config import Config
 

@@ -4,7 +4,8 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Dict
 from datetime import datetime
 
-from .misc import SearchScope, Comparator, CountableIterator
+from .misc import SearchScope, CountableIterator
+from ..expression.builder import Comparator
 
 
 class IRepository(metaclass=ABCMeta):

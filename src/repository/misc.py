@@ -12,28 +12,6 @@ class SearchScope(Enum):
     ALL = 3
 
 
-class StringIsNotAComperator(Exception):
-    def __init__(self):
-        super().__init__("The given string is not a comparator")
-
-
-class Comparator():
-    greater = '>'
-    less = '<'
-    greater_or_equal = '>='
-    less_or_equal = '<='
-    equal = '='
-    not_equal = '!='
-
-    def __init__(self, comperator: str):
-        for c in (self.equal, self.less, self.greater, self.not_equal, self.greater_or_equal, self.less_or_equal):
-            if comperator == c:
-                self.comparator = c
-                return
-
-        raise StringIsNotAComperator()
-
-
 T = TypeVar('T')
 
 
