@@ -933,14 +933,28 @@ function on_add_expression_line_button_click() {
 /* datetime */
 
 function on_add_dt_button_click(item) {
-    var parent = item.parent().parent();
+    var parent = null;
+
+    try {
+        parent = item.parent().parent();
+    }catch(e) {
+        parent = $(this).parent().parent();
+    }
+
     parent.find('.dt-add').hide();
     parent.find('.dt-search-mask').show();
 
 }
 
 function on_remove_dt_button_click(item) {
-    var parent = item.parent().parent().parent();
+    var parent = null;
+
+    try {
+        parent = item.parent().parent().parent();
+    }catch(e) {
+        parent = $(this).parent().parent().parent();
+    }
+
     parent.find('.dt-search-mask').hide();
     parent.find('.dt-add').show();
 }
