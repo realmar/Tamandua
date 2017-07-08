@@ -17,6 +17,7 @@ from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
 from src.repository.misc import SearchScope
 from src.plugins.bases.mail_edge_case_processor import MailEdgeCaseProcessorData
+from src.expression.builder import ExpressionBuilder, ExpressionField, Expression, Comparator
 
 
 class AlreadyInRepository(Exception):
@@ -289,8 +290,11 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             # create aggregate target
             # all data is aggregated into this dict
             initialID = frag.get(keyChain[0])
-            queryData = { keyChain[0]: str(initialID) }
-            do_query = partial(self._repository.find, queryData)
+
+            builder = ExpressionBuilder()
+            builder.add_field(ExpressionField(keyChain[0], str(initialID), Comparator.equal))
+
+            do_query = partial(self._repository.find, builder.expression)
 
             # if we are currently merging the messageid map and we
             # already have merged this messageid we will ignore it
@@ -299,7 +303,12 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 raise AlreadyInRepository()
 
             if initialID == constants.NOQUEUE:
-                if len(self._repository.find(frag, SearchScope.ALL)) > 0:
+                builder2 = ExpressionBuilder()
+
+                for k, v in frag.items():
+                    builder2.add_field(ExpressionField(k, v, Comparator.equal))
+
+                if len(self._repository.find(builder2.expression, SearchScope.ALL)) > 0:
                     raise AlreadyInRepository()
 
                 target = copy.deepcopy(frag)
@@ -310,7 +319,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                     self.__preprocessing(target)
 
                     # remove this data as it may be complete afterwards
-                    self._repository.delete(queryData, SearchScope.INCOMPLETE)
+                    self._repository.delete(builder.expression, SearchScope.INCOMPLETE)
                 except StopIteration as e:
                     res = do_query(SearchScope.COMPLETE)
                     if len(res) > 0:
@@ -352,8 +361,10 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                             # if the fragment is not None (aka if it exists)
                             # we will merge it with the target
 
-                            queryData = {keyChain[index]: id}
-                            do_query = partial(self._repository.find, queryData)
+                            builder = ExpressionBuilder()
+                            builder.add_field(ExpressionField(keyChain[index], id, Comparator.equal))
+
+                            do_query = partial(self._repository.find, builder.expression)
 
                             def gather_existing_data(scope: SearchScope):
                                 try:
@@ -362,7 +373,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                                     self.__preprocessing(data)
                                     self._merge_data(target, data)
 
-                                    self._repository.delete(queryData, scope)
+                                    self._repository.delete(builder.expression, scope)
                                 except StopIteration as e:
                                     pass
 
@@ -490,7 +501,11 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         )
 
         for id, mail in self._map_pickup.items():
-            if len(self._repository.find({constants.PHD_IMAP_QID: id},SearchScope.ALL)) == 0:
+
+            builder = ExpressionBuilder()
+            builder.add_field(ExpressionField(constants.PHD_IMAP_QID, id, Comparator.equal))
+
+            if len(self._repository.find(builder.expression,SearchScope.ALL)) == 0:
                 if self.__postprocessing(mail) != ProcessorAction.DELETE:
                     self.__process_aggregated_mail(mail)
 
