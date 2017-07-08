@@ -24,6 +24,11 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def count_specific_fields(self, query: dict, field: str, regex=None) -> CountableIterator:
+        """"""
+        pass
+
+    @abstractmethod
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """
         C: Create

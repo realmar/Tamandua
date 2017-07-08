@@ -51,9 +51,40 @@ class Search(BaseResource):
         expression = request.get_json()
         page_start = page * size
 
-        results = self._dataFinder.search(expression, page_start, size)
+        results = self._dataFinder.filter_page_size(
+            self._dataFinder.search(expression),
+            page_start,
+            size
+        )
 
         return {
             'total_rows': len(results),
             'rows': list(results),
         }
+
+
+class Count(BaseResource):
+    """"""
+
+    def post(self) -> int:
+        expression = request.get_json()
+        results = self._dataFinder.search(expression)
+
+        return len(results)
+
+
+class AdvancedCount(BaseResource):
+    """"""
+
+    def post(self, length: int) -> list:
+        expression = request.get_json()
+        results = self._dataFinder.mapreduce(expression)
+
+        final = []
+        for i in range(0, length):
+            try:
+                final.append(next(results))
+            except StopIteration as e:
+                break
+
+        return final

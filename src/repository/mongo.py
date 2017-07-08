@@ -19,6 +19,22 @@ class TargetCollectionNotFound(Exception):
     pass
 
 
+class MongoCountSpecificIterable(CountableIterator):
+    """"""
+
+    def __init__(self, cursor):
+        self.__cursor = cursor
+
+    def __next__(self):
+        x = next(self.__cursor)
+        while x['_id'] == '' or x['_id'] == None:
+            x = next(self.__cursor)
+
+        return {'key': x['_id'], 'value': x['value']}
+
+    def __len__(self):
+        return self.__cursor.count()
+
 class MongoRepository(IRepository):
     """"""
 
@@ -114,6 +130,26 @@ class MongoRepository(IRepository):
         results = searchCollection.find(query)
         return CountableIterator(results, lambda x: x.count())
 
+    def count_specific_fields(self, query: dict, field: str, regex=None) -> CountableIterator:
+        """"""
+        mapf = Loader.load_js('mongo_js.count.mapper')
+        reducef = Loader.load_js('mongo_js.count.reducer')
+
+        mapf = mapf.replace('<field>', field)
+        if regex is not None:
+            mapf = mapf.replace('<regex>', '.match(/' + regex + '/)[1]')
+        else:
+            mapf = mapf.replace('<regex>', '')
+
+        try:
+            results = self._collection_complete.map_reduce(
+                Code(mapf), Code(reducef), "count", query=query
+            )
+        except pymongo_errors.OperationFailure as e:
+            return CountableIterator(iter([]), lambda x: 0)
+
+        return MongoCountSpecificIterable(results.find({}).sort('value', -1))
+
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""
         if scope == SearchScope.ALL:
@@ -195,7 +231,9 @@ class MongoRepository(IRepository):
             Comparator.equal: '$eq',
             Comparator.not_equal: '$ne',
             Comparator.greater: '$gt',
-            Comparator.less: '$lt'
+            Comparator.less: '$lt',
+            Comparator.greater_or_equal: '$gte',
+            Comparator.less_or_equal: '$lte'
         }
 
         return {

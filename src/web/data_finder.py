@@ -1,6 +1,6 @@
 """Module used by the webapp: backend to search the data."""
 
-from typing import Dict
+from typing import Dict, Tuple
 from datetime import datetime
 from ast import literal_eval
 
@@ -19,44 +19,7 @@ class DataFinder():
         self.availableFields = self._repository.get_all_keys()
         self.availableTags = self._repository.get_all_tags()
 
-    def search(self, expression: dict, page_start: int, page_size: int) -> CountableIterator[Dict]:
-        """Search for specific mails."""
-
-        """
-        Description of an expression:
-        
-        {
-            "fields": [
-                { "field1": {
-                        "comparator": "=|<|>",
-                        "value": "value1"
-                    }
-                },
-                { "field2": {
-                        "comparator": "=|<|>",
-                        "value": "value2"
-                    }
-                }
-                ...
-            ],
-            
-            "datetime": {
-                "start": "time-str",
-                "end": "time-str"
-            }
-        }
-        
-        The fields described in "fields" have to match to the fields of the mail
-        additionally should the mail be processed between datetime.start and datetime.end
-        (including datetime.end)
-        
-        This is not a generic solution, although still one that provides the user with great flexibility.
-        """
-
-        """
-        Validation of fields
-        """
-
+    def verify_expression(self, expression: dict) -> Tuple:
         if not isinstance(expression.get('fields'), list):
             fields = []
         else:
@@ -115,6 +78,9 @@ class DataFinder():
             except Exception as e:
                 raise ExpressionInvalid("To datetime format is invalid: " + str(endTimeRaw))
 
+        return fields, start, end
+
+    def build_query(self, fields: list, start, end) -> dict:
         queryData = {}
         isDateTimeSearch = start is not None or end is not None
 
@@ -148,18 +114,116 @@ class DataFinder():
         if isDateTimeSearch:
             queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)
 
+        return queryData
+
+    def make_alternative_time(self, fields: list, start, end, query: dict) -> None:
+        del query[constants.PHD_MXIN_TIME]
+        query[constants.PHD_IMAP_TIME] = self._repository.make_datetime_comparison(start, end)
+
+    def search(self, expression: dict) -> CountableIterator[Dict]:
+        """Search for specific mails."""
+
+        """
+        Description of an expression:
+        
+        {
+            "fields": [
+                { "field1": {
+                        "comparator": "=|<|>",
+                        "value": "value1"
+                    }
+                },
+                { "field2": {
+                        "comparator": "=|<|>",
+                        "value": "value2"
+                    }
+                }
+                ...
+            ],
+            
+            "datetime": {
+                "start": "time-str",
+                "end": "time-str"
+            }
+        }
+        
+        The fields described in "fields" have to match to the fields of the mail
+        additionally should the mail be processed between datetime.start and datetime.end
+        (including datetime.end)
+        
+        This is not a generic solution, although still one that provides the user with great flexibility.
+        """
+
+        """
+        Validation of fields
+        """
+
+        allfields = self.verify_expression(expression)
+        queryData = self.build_query(*allfields)
+
         def do_search():
             return self._repository.find(queryData, SearchScope.ALL)
 
         results = do_search()
 
         # if we didnt find any results we will search again using imap datetime
-        if len(results) == 0 and isDateTimeSearch:
-            del queryData[constants.PHD_MXIN_TIME]
-            queryData[constants.PHD_IMAP_TIME] = self._repository.make_datetime_comparison(start, end)
+        if len(results) == 0:
+            try:
+                self.make_alternative_time(*allfields, queryData)
+            except KeyError as e:
+                return results
 
             results = do_search()
 
+
+        return results
+
+    def mapreduce(self, expression: dict) -> list:
+        """"""
+
+        """
+        This specific expression has to have additional attributes:
+        
+        {
+            ...
+            
+            "countfield": "<field>",
+            "regex": "<regex>"
+            
+            ...
+        }
+        
+        """
+
+        allfields = self.verify_expression(expression)
+        countfield = expression.get('countfield')
+        regex = expression.get('regex')
+
+        if not isinstance(countfield, str):
+            raise ExpressionInvalid('countfield has to be a string')
+
+        if not isinstance(regex, str):
+            regex = None
+
+        queryData = self.build_query(*allfields)
+
+        def do_search():
+            return self._repository.count_specific_fields(queryData, countfield, regex)
+
+        results = do_search()
+
+        if len(results) == 0:
+            try:
+                self.make_alternative_time(*allfields, queryData)
+            except KeyError as e:
+                return results
+
+            results = do_search()
+
+        return results
+
+
+    def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int):
         results_list = []
 
         for i in range(0, page_start + page_size):

@@ -1,3 +1,5 @@
+//region Globals
+
 /*
  * Global Variables
  */
@@ -23,6 +25,18 @@ var comparatorMap = {
 };
 
 /*
+ *
+ */
+
+/*
+ * dashboard
+ */
+
+var overviewHoursDefault = 24;
+var lastOverviewHours = 0;
+var overviewHours = overviewHoursDefault;
+
+/*
  * API Routes
  */
 
@@ -30,6 +44,8 @@ var maxPageSize = 200;
 
 var api = {
     columns: '/api/columns',
+    count: '/api/count',
+    advcount: '/api/advcount/',
     tags: '/api/tags',
     search: '/api/search/0/' + maxPageSize
 };
@@ -38,6 +54,196 @@ var methods = {
     post: 'POST',
     get: 'GET'
 };
+
+/*
+ * Views
+ */
+
+//endregion
+
+//region View Class
+
+function SearchView() { }
+
+SearchView.prototype = {
+    setup: function () {
+        $('#search-nav-link').addClass('navbar-item-active');
+        $('#search-view').show()
+    },
+
+    teardown: function () {
+        $('#search-view').hide()
+    }
+};
+
+function DashboardView() {
+    this.overviewInterval = null;
+    this.listInterval = null;
+}
+
+DashboardView.go_to_sender = function (sender) {
+    change_view(new SearchView());
+
+    for(var i in expressionLines) {
+        expressionLines[i][0].remove();
+    }
+
+    expressionLines = [];
+
+    add_expression_line();
+
+    expressionLines[0][0].find('.expression-input').val(sender);
+    expressionLines[0][1].setValue('sender');
+
+    $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
+
+    on_add_dt_button_click(
+        $('#dt-from-picker').parent().parent().parent().parent().find('.add-dt-button')
+    );
+
+    $('#dt-from-picker').data("DateTimePicker").date(moment().subtract(overviewHours, 'hours'))
+
+    on_search_button_click();
+};
+
+DashboardView.get_precentage = function (value) {
+    var total = parseInt($('#overview-processed-mails').html());
+    return ((value / total) * 100).toFixed(2)
+}
+
+DashboardView.get_overview = function () {
+    var dt = {
+        'datetime': {
+            'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
+        }
+    };
+
+    var totalMailsQuery = $.extend({}, dt);
+
+    var totalSpamQuery = $.extend({}, dt);
+    totalSpamQuery['fields'] = [{
+        'spamscore': {
+            'comparator': '>=',
+            'value': 5
+        }
+    }];
+
+    var totalVirusQuery = $.extend({}, dt);
+    totalVirusQuery['fields'] = [{
+        'virusresult': {
+            'comparator': '=',
+            'value': 'INFECTED'
+        }
+    }];
+
+    function get_data(selector, expression) {
+        $.ajax({
+            url: api.count,
+            type: methods.post,
+            data: JSON.stringify(expression),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json'
+        }).done(function (result) {
+            selector.html(result + ' (' + DashboardView.get_precentage(result) + '%)')
+        });
+    }
+
+    get_data($('#overview-processed-mails'), totalMailsQuery);
+    get_data($('#overview-virus'), totalVirusQuery);
+    get_data($('#overview-spam'), totalSpamQuery);
+
+};
+
+DashboardView.get_lists = function () {
+    var dt = {
+        'datetime': {
+            'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
+        }
+    };
+
+    function makelist(field) {
+        var query = $.extend({}, dt);
+        query['countfield'] = "sender";
+
+        return query;
+    }
+
+    function makelistdomain(field) {
+        var query = makelist(field);
+        query['regex'] = '@([^$]+)';
+
+        return query;
+    }
+
+    function get_data(selector, expression) {
+        $.ajax({
+            url: api.advcount + 10,
+            type: methods.post,
+            data: JSON.stringify(expression),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json'
+        }).done(function (result) {
+            selector.empty();
+            for(var k in result) {
+                var element = $('<div><span class="label label-default">' + result[k]['value'] + ' (' + DashboardView.get_precentage(result[k]['value']) + '%)</span> <span class="dashboard-list-data">' + result[k]['key'] + '</span>');
+                element.click(function () {
+                    DashboardView.go_to_sender($(this).find('.dashboard-list-data').html())
+
+                });
+                selector.append(element);
+            }
+        });
+    }
+
+    var sendersQuery = makelist('sender');
+    var senderDomainsQuery = makelistdomain('sender');
+
+    var greylistedQuery = makelist('sender');
+    var greylistedDomainsQuery = makelistdomain('sender');
+
+    greylistFields = {'fields': [{
+        'rejectreason': {
+            'comparator': '=',
+            'value': 'Recipient address rejected: Greylisted'
+        }
+    }]};
+
+    $.extend(greylistedQuery, greylistFields);
+    $.extend(greylistedDomainsQuery, greylistFields);
+
+    get_data($('#list-top-senders'), sendersQuery);
+    get_data($('#list-top-senders-domain'), senderDomainsQuery);
+
+    get_data($('#list-top-greylisted'), greylistedQuery);
+    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery);
+};
+
+DashboardView.prototype = {
+    setup: function () {
+        $('#dashboard-nav-link').addClass('navbar-item-active');
+        $('#dashboard-view').show();
+
+        this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
+        DashboardView.get_overview();
+
+        this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
+        DashboardView.get_lists();
+    },
+
+    teardown: function () {
+        if(this.overviewInterval !== null) {
+            clearInterval(this.overviewInterval);
+        }
+
+        $('#dashboard-view').hide()
+    }
+};
+
+var currentView = null;
+
+//endregion
+
+//region error messaging
 
 /*
  * Errors/Messaging
@@ -105,6 +311,10 @@ function remove_all_messages() {
     }
 }
 
+//endregion
+
+//region misc
+
 /*
  * Misc
  */
@@ -148,6 +358,10 @@ function sort_columns(columns) {
     visibleColumns.reverse();
 }
 
+//endregion
+
+//region ui loading spinners
+
 /*
  * UI Loading
  */
@@ -167,6 +381,10 @@ function hide_on_search() {
 function show_on_finished_search() {
     $('.hide-on-search').show();
 }
+
+//endregion
+
+//region setup functions
 
 /*
  * Setup Functions
@@ -190,6 +408,10 @@ function setup_datetimepicker(item) {
         format : 'DD/MM/YYYY HH:mm'
     });
 }
+
+//endregion
+
+//region creational destructional
 
 /*
  * Creational/Destructional Functions
@@ -225,48 +447,10 @@ function on_remove_expression_line_button_click(item) {
     item.remove();
 }
 
-/*
- * Event Handlers
- */
 
-/* expression builder */
+//endregion
 
-function has_empty_expression_fields() {
-    var hasEmptyFields = false;
-
-    $.each(expressionLines, function () {
-        var expInput = $(this[0]).find('.expression-input');
-        if(!expInput.val()) {
-            hasEmptyFields = true;
-        }
-    });
-
-    return hasEmptyFields;
-}
-
-function on_add_expression_line_button_click() {
-    // Check if an expression doesn't have any value
-    // if so, then we will not create a new expression line (return)
-
-    if(!has_empty_expression_fields()) {
-        add_expression_line();
-    }
-}
-
-/* datetime */
-
-function on_add_dt_button_click(item) {
-    var parent = $(this).parent().parent();
-    parent.find('.dt-add').hide();
-    parent.find('.dt-search-mask').show();
-
-}
-
-function on_remove_dt_button_click(item) {
-    var parent = $(this).parent().parent().parent();
-    parent.find('.dt-search-mask').hide();
-    parent.find('.dt-add').show();
-}
+//region ajax error handling
 
 /* API */
 
@@ -283,6 +467,10 @@ function handle_ajax_error(jqxhr, textStatus, error) {
         show_message(uiresponses.errors.searcherror, 'Failed to get data from server: ' + textStatus);
     }
 }
+
+//endregion
+
+//region table
 
 function empty_table() {
     show_loading_spinner();
@@ -710,6 +898,53 @@ function initialize_table(columns) {
     hide_loading_spinner();
 }
 
+//endregion
+
+//region event handlers
+
+/*
+ * Event Handlers
+ */
+
+/* expression builder */
+
+function has_empty_expression_fields() {
+    var hasEmptyFields = false;
+
+    $.each(expressionLines, function () {
+        var expInput = $(this[0]).find('.expression-input');
+        if(!expInput.val()) {
+            hasEmptyFields = true;
+        }
+    });
+
+    return hasEmptyFields;
+}
+
+function on_add_expression_line_button_click() {
+    // Check if an expression doesn't have any value
+    // if so, then we will not create a new expression line (return)
+
+    if(!has_empty_expression_fields()) {
+        add_expression_line();
+    }
+}
+
+/* datetime */
+
+function on_add_dt_button_click(item) {
+    var parent = item.parent().parent();
+    parent.find('.dt-add').hide();
+    parent.find('.dt-search-mask').show();
+
+}
+
+function on_remove_dt_button_click(item) {
+    var parent = item.parent().parent().parent();
+    parent.find('.dt-search-mask').hide();
+    parent.find('.dt-add').show();
+}
+
 function on_search_button_click() {
     /*
      * useful clojures for this function
@@ -812,6 +1047,54 @@ function on_comperator_button_click() {
 }
 
 /*
+ * dashboard overview
+ */
+
+function get_overview_hours() {
+    var val = parseInt($("#overview-hours").val());
+    if(isNaN(val)) {
+        return overviewHoursDefault;
+    }else{
+        return val;
+    }
+}
+
+function on_overview_hours_focus() {
+    lastOverviewHours = get_overview_hours();
+}
+
+function on_overview_hours_focus_loss() {
+    overviewHours = parseInt($("#overview-hours").val());
+    if(isNaN(overviewHours)) {
+        overviewHours = lastOverviewHours;
+    }
+    
+    $("#overview-hours").val(overviewHours);
+    DashboardView.get_overview();
+    DashboardView.get_lists();
+}
+
+//endregion
+
+//region view
+
+/*
+ * View
+ */
+
+function change_view(view) {
+    if(currentView !== null) {
+        currentView.teardown();
+    }
+    currentView = view;
+    currentView.setup();
+}
+
+//endregion
+
+//region initialization
+
+/*
  * Init
  */
 
@@ -837,7 +1120,26 @@ function init_expression_template() {
     });
 }
 
+function init_overview_dashboard() {
+    $('#overview-hours').val('24');
+}
+
+function deactivate_all_nav_elements() {
+    $('.navbar-item').removeClass('navbar-item-active');
+}
+
 function register_event_handlers() {
+    /* nav */
+    $('#dashboard-nav-link').click(function () {
+        deactivate_all_nav_elements();
+        change_view(new DashboardView());
+    });
+
+    $('#search-nav-link').click(function () {
+        deactivate_all_nav_elements();
+        change_view(new SearchView());
+    });
+
     /* expression builder */
     $('#add-expression-line-button').click(on_add_expression_line_button_click);
 
@@ -865,15 +1167,24 @@ function register_event_handlers() {
         $(this).closest('tr').nextUntil('tr:not(.tablesorter-childRow)').find('td').toggle();
         return false;
     });
+
+    /* dashboard */
+
+    $("#overview-hours").on('focusout', on_overview_hours_focus_loss);
+    $("#overview-hours").on('focusin', on_overview_hours_focus);
 }
+
+//endregion
 
 function main() {
     init_global_variables();
     register_event_handlers();
     init_expression_template();
+    init_overview_dashboard();
     setup_datetimepicker($('#dt-from-picker'));
     setup_datetimepicker($('#dt-to-picker'));
     setup_selectizer($(".pagesize"));
+    change_view(new DashboardView());
 }
 
 $(document).ready(main);
