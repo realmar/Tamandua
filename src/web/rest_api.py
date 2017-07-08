@@ -3,6 +3,7 @@
 from flask import request
 from flask_restful import Resource
 from .data_finder import DataFinder
+from ..expression.builder import Expression
 
 
 class BaseResource(Resource):
@@ -48,7 +49,7 @@ class Search(BaseResource):
     """
 
     def post(self, page: int, size: int) -> dict:
-        expression = request.get_json()
+        expression = Expression(request.get_json())
         page_start = page * size
 
         results = self._dataFinder.filter_page_size(
@@ -67,7 +68,7 @@ class Count(BaseResource):
     """"""
 
     def post(self) -> int:
-        expression = request.get_json()
+        expression = Expression(request.get_json())
         results = self._dataFinder.search(expression)
 
         return len(results)
@@ -77,7 +78,7 @@ class AdvancedCount(BaseResource):
     """"""
 
     def post(self, length: int) -> list:
-        expression = request.get_json()
+        expression = Expression(request.get_json())
         results = self._dataFinder.mapreduce(expression)
 
         final = []

@@ -163,14 +163,14 @@ DashboardView.get_lists = function () {
 
     function makelist(field) {
         var query = $.extend({}, dt);
-        query['countfield'] = "sender";
+        query['advcount'] = {'field': 'sender'};
 
         return query;
     }
 
     function makelistdomain(field) {
         var query = makelist(field);
-        query['regex'] = '@([^$]+)';
+        query['advcount']['regex'] = '@([^$]+)';
 
         return query;
     }

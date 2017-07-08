@@ -1,14 +1,13 @@
 """Module used by the webapp: backend to search the data."""
 
-from typing import Dict, Tuple
+from typing import Dict
 from datetime import datetime
-from ast import literal_eval
 
 from .. import constants
 from ..expression.exceptions import ExpressionInvalid
 from ..repository.factory import RepositoryFactory
 from ..repository.misc import SearchScope, CountableIterator
-from ..expression.builder import Comparator
+from ..expression.builder import Expression
 
 
 class DataFinder():
@@ -20,108 +19,7 @@ class DataFinder():
         self.availableFields = self._repository.get_all_keys()
         self.availableTags = self._repository.get_all_tags()
 
-    def verify_expression(self, expression: dict) -> Tuple:
-        if not isinstance(expression.get('fields'), list):
-            fields = []
-        else:
-            fields = expression['fields']
-
-            counter = 0
-            for f in fields:
-                currField = 'fields.' + str(counter) + ' '
-
-                if not isinstance(f, dict):
-                    raise ExpressionInvalid(currField + 'is not a dict')
-                else:
-                    if len(f) > 1:
-                        raise ExpressionInvalid(currField + 'has more than 1 key value pair')
-
-                v = next(iter(f.values()))
-
-                if v.get('value') is None:
-                    raise ExpressionInvalid(currField +  'has no value key')
-
-                if v.get('comparator') is None:
-                    raise ExpressionInvalid(currField +  'has no comparator key')
-
-                counter += 1
-
-        """
-        Validation of datetime strings
-        """
-
-        datetimeRaw = expression.get('datetime')
-        startTimeRaw = None
-        endTimeRaw = None
-
-        start = None
-        end = None
-
-        if datetimeRaw is not None:
-            startTimeRaw = datetimeRaw.get('start')
-            endTimeRaw = datetimeRaw.get('end')
-
-            if not isinstance(startTimeRaw, str) or startTimeRaw.strip() == "":
-                startTimeRaw = None
-
-            if not isinstance(endTimeRaw, str) or endTimeRaw.strip() == "":
-                endTimeRaw = None
-
-        if startTimeRaw is not None:
-            try:
-                start = datetime.strptime(startTimeRaw, constants.TIME_FORMAT)
-            except Exception as e:
-                raise ExpressionInvalid("From datetime format is invalid: " + str(startTimeRaw))
-
-        if endTimeRaw is not None:
-            try:
-                end = datetime.strptime(endTimeRaw, constants.TIME_FORMAT)
-            except Exception as e:
-                raise ExpressionInvalid("To datetime format is invalid: " + str(endTimeRaw))
-
-        return fields, start, end
-
-    def build_query(self, fields: list, start, end) -> dict:
-        queryData = {}
-        isDateTimeSearch = start is not None or end is not None
-
-        for f in fields:
-            for k, v in f.items():
-                value = v['value']
-                comparator = Comparator(v['comparator'])
-
-                try:
-                    value = literal_eval(value)
-                except Exception as e:
-                    pass
-
-                if comparator.comparator == Comparator.equal:
-                    if isinstance(value, str):
-                        tmp = self._repository.make_regexp(value, caseSensitive=False)
-                    else:
-                        tmp = value
-
-                    if queryData.get(k) is not None:
-                        queryData[k].update(tmp)
-                    else:
-                        queryData[k] = tmp
-                else:
-                    tmp = self._repository.make_comparison(k, value, comparator)
-                    if queryData.get(k) is not None:
-                        queryData[k].update(tmp[k])
-                    else:
-                        queryData[k] = tmp[k]
-
-        if isDateTimeSearch:
-            queryData[constants.PHD_MXIN_TIME] = self._repository.make_datetime_comparison(start, end)
-
-        return queryData
-
-    def make_alternative_time(self, fields: list, start, end, query: dict) -> None:
-        del query[constants.PHD_MXIN_TIME]
-        query[constants.PHD_IMAP_TIME] = self._repository.make_datetime_comparison(start, end)
-
-    def search(self, expression: dict) -> CountableIterator[Dict]:
+    def search(self, expression: Expression) -> CountableIterator[Dict]:
         """Search for specific mails."""
 
         """
@@ -159,27 +57,9 @@ class DataFinder():
         Validation of fields
         """
 
-        allfields = self.verify_expression(expression)
-        queryData = self.build_query(*allfields)
+        return self._repository.find(expression, SearchScope.ALL)
 
-        def do_search():
-            return self._repository.find(queryData, SearchScope.ALL)
-
-        results = do_search()
-
-        # if we didnt find any results we will search again using imap datetime
-        if len(results) == 0:
-            try:
-                self.make_alternative_time(*allfields, queryData)
-            except KeyError as e:
-                return results
-
-            results = do_search()
-
-
-        return results
-
-    def mapreduce(self, expression: dict) -> list:
+    def mapreduce(self, expression: Expression) -> CountableIterator:
         """"""
 
         """
@@ -196,33 +76,10 @@ class DataFinder():
         
         """
 
-        allfields = self.verify_expression(expression)
-        countfield = expression.get('countfield')
-        regex = expression.get('regex')
+        if expression.advcount.field is None:
+            raise ExpressionInvalid('advcount.field is required. Provide it in your expression.')
 
-        if not isinstance(countfield, str):
-            raise ExpressionInvalid('countfield has to be a string')
-
-        if not isinstance(regex, str):
-            regex = None
-
-        queryData = self.build_query(*allfields)
-
-        def do_search():
-            return self._repository.count_specific_fields(queryData, countfield, regex)
-
-        results = do_search()
-
-        if len(results) == 0:
-            try:
-                self.make_alternative_time(*allfields, queryData)
-            except KeyError as e:
-                return results
-
-            results = do_search()
-
-        return results
-
+        return self._repository.count_specific_fields(expression)
 
     def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int):
         results_list = []

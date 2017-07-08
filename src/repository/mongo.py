@@ -125,31 +125,31 @@ class MongoRepository(IRepository):
         isDateTimeSearch = expression.datetime.start is not None or expression.datetime.end is not None
 
         for f in expression.fields:
-            for k, v in f.items():
-                value = v['value']
-                comparator = Comparator(v['comparator'])
+            key = f.key
+            value = f.value
+            comparator = Comparator(f.comparator)
 
-                try:
-                    value = literal_eval(value)
-                except Exception as e:
-                    pass
+            try:
+                value = literal_eval(value)
+            except Exception as e:
+                pass
 
-                if comparator.comparator == Comparator.equal:
-                    if isinstance(value, str):
-                        tmp = cls._make_regexp(value, caseSensitive=False)
-                    else:
-                        tmp = value
-
-                    if target.get(k) is not None:
-                        target[k].update(tmp)
-                    else:
-                        target[k] = tmp
+            if comparator.comparator == Comparator.equal:
+                if isinstance(value, str):
+                    tmp = cls._make_regexp(value, caseSensitive=False)
                 else:
-                    tmp = cls._make_comparison(k, value, comparator)
-                    if target.get(k) is not None:
-                        target[k].update(tmp[k])
-                    else:
-                        target[k] = tmp[k]
+                    tmp = value
+
+                if target.get(key) is not None:
+                    target[key].update(tmp)
+                else:
+                    target[key] = tmp
+            else:
+                tmp = cls._make_comparison(key, value, comparator)
+                if target.get(key) is not None:
+                    target[key].update(tmp[key])
+                else:
+                    target[key] = tmp[key]
 
         if isDateTimeSearch:
             target['$or'] = []
@@ -218,14 +218,14 @@ class MongoRepository(IRepository):
         results = searchCollection.find(self._parse_expression(query))
         return CountableIterator(results, lambda x: x.count())
 
-    def count_specific_fields(self, query: Expression, field: str, regex=None) -> CountableIterator:
+    def count_specific_fields(self, query: Expression) -> CountableIterator:
         """"""
         mapf = Loader.load_js('mongo_js.count.mapper')
         reducef = Loader.load_js('mongo_js.count.reducer')
 
-        mapf = mapf.replace('<field>', field)
-        if regex is not None:
-            mapf = mapf.replace('<regex>', '.match(/' + regex + '/)[1]')
+        mapf = mapf.replace('<field>', query.advcount.field)
+        if query.advcount.regex is not None:
+            mapf = mapf.replace('<regex>', '.match(/' + query.advcount.regex + '/)[1]')
         else:
             mapf = mapf.replace('<regex>', '')
 

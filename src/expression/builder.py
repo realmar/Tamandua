@@ -43,16 +43,16 @@ class Expression():
 
     def __parse(self, expression: dict) -> None:
         try:
-            self.fields = expression['fields']
+            fields = expression['fields']
         except KeyError as e:
-            pass
+            fields = []
 
         """
         Validation of fields
         """
 
         counter = 0
-        for f in self.fields:
+        for f in fields:
             currField = 'fields.' + str(counter) + ' '
 
             if not isinstance(f, dict):
@@ -63,10 +63,7 @@ class Expression():
 
             k, v = next(iter(f.items()))
 
-            try:
-                if not isinstance(v['value'], str):
-                    raise ExpressionInvalid(currField + 'value key is not a string')
-            except KeyError as e:
+            if v.get('value') is None:
                 raise ExpressionInvalid(currField + 'has no value key')
 
             try:

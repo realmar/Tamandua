@@ -25,7 +25,7 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def count_specific_fields(self, query: Expression, field: str, regex=None) -> CountableIterator:
+    def count_specific_fields(self, query: Expression) -> CountableIterator:
         """"""
         pass
 
