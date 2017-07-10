@@ -1,6 +1,5 @@
 """"""
 
-
 from argparse import Namespace
 from datetime import datetime
 
@@ -20,14 +19,29 @@ class Comparator():
     less_or_equal = '<='
     equal = '='
     not_equal = '!='
+    regex = 're'            # case sensitive
+    regex_i = 're_i'        # case insensitive
 
     def __init__(self, comperator: str):
-        for c in (self.equal, self.less, self.greater, self.not_equal, self.greater_or_equal, self.less_or_equal):
+        for c in [y for x, y in vars(Comparator).items() if x[:2] != '__']:
             if comperator == c:
                 self.comparator = c
                 return
 
         raise StringIsNotAComperator()
+
+    def is_regex(self) -> bool:
+        if self.comparator == self.regex or \
+            self.comparator == self.regex_i:
+            return True
+        else:
+            return False
+
+    def is_regex_case_insensitive(self) -> bool:
+        if self.comparator == self.regex_i:
+            return True
+        else:
+            return False
 
 
 class Expression():
@@ -169,22 +183,22 @@ class ExpressionBuilder():
     def __init__(self):
         self.expression = Expression()
 
-    def add_field(self, field: ExpressionField) -> None:
+    def add_field(self, field: ExpressionField) -> 'ExpressionBuilder':
         self.expression.fields.append(field)
         return self
 
-    def set_count_field(self, field: str) -> None:
+    def set_count_field(self, field: str) -> 'ExpressionBuilder':
         self.expression.advcount.field = field
         return self
 
-    def set_count_regex(self, regex: str) -> None:
+    def set_count_regex(self, regex: str) -> 'ExpressionBuilder':
         self.expression.advcount.regex = regex
         return self
 
-    def set_start_datetime(self, dt: datetime) -> None:
+    def set_start_datetime(self, dt: datetime) -> 'ExpressionBuilder':
         self.expression.datetime.start = dt
         return self
 
-    def set_end_datetime(self, dt: datetime) -> None:
+    def set_end_datetime(self, dt: datetime) -> 'ExpressionBuilder':
         self.expression.datetime.end = dt
         return self

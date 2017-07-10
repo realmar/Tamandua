@@ -306,7 +306,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 builder2 = ExpressionBuilder()
 
                 for k, v in frag.items():
-                    builder2.add_field(ExpressionField(k, v, Comparator.equal))
+                    builder2.add_field(ExpressionField(k, v, Comparator.regex_i))
 
                 if len(self._repository.find(builder2.expression, SearchScope.ALL)) > 0:
                     raise AlreadyInRepository()

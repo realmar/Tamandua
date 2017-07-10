@@ -4,6 +4,7 @@
 import itertools
 from pymongo import MongoClient
 import pymongo.errors as pymongo_errors
+import re
 
 from bson.code import Code
 from datetime import datetime
@@ -46,6 +47,15 @@ class MongoRepository(IRepository):
     __lastLogfileSizeName = 'lastlogfilesize'
     __lastRunDateTimeName = 'lastrundatetime'
 
+    __comparatorMap = {
+        Comparator.equal: '$eq',
+        Comparator.not_equal: '$not',
+        Comparator.greater: '$gt',
+        Comparator.less: '$lt',
+        Comparator.greater_or_equal: '$gte',
+        Comparator.less_or_equal: '$lte',
+        Comparator.regex: '$regex'
+    }
 
     def __init__(self):
         """"""
@@ -81,7 +91,7 @@ class MongoRepository(IRepository):
     def _make_regexp(cls, pattern: str, caseSensitive: True) -> object:
         """"""
         query = {'$regex': pattern}
-        if not caseSensitive:
+        if caseSensitive:
             query['$options'] = '-i'
 
         return query
@@ -89,18 +99,19 @@ class MongoRepository(IRepository):
     @classmethod
     def _make_comparison(cls, key: str, value: object, comparator: Comparator) -> object:
         """"""
-        comparatorMap = {
-            Comparator.equal: '$eq',
-            Comparator.not_equal: '$ne',
-            Comparator.greater: '$gt',
-            Comparator.less: '$lt',
-            Comparator.greater_or_equal: '$gte',
-            Comparator.less_or_equal: '$lte'
-        }
+
+        if comparator.is_regex():
+            return {
+                key: cls._make_regexp(value, comparator.is_regex_case_insensitive())
+            }
+
+        if comparator.comparator == Comparator.not_equal and isinstance(value, str):                        tmp = re.compile(value, re.I)
+        else:
+            tmp = value
 
         return {
             key: {
-                comparatorMap[comparator.comparator]: value
+                cls.__comparatorMap[comparator.comparator]: tmp
             }
         }
 
@@ -114,7 +125,7 @@ class MongoRepository(IRepository):
             obj.update(tmp['dt'])
 
         if end is not None:
-            tmp = cls._make_comparison('dt', start, Comparator(Comparator.less))
+            tmp = cls._make_comparison('dt', end, Comparator(Comparator.less))
             obj.update(tmp['dt'])
 
         return obj
@@ -125,6 +136,9 @@ class MongoRepository(IRepository):
         isDateTimeSearch = expression.datetime.start is not None or expression.datetime.end is not None
 
         for f in expression.fields:
+            if target.get('$and') is None:
+                target['$and'] = []
+
             key = f.key
             value = f.value
             comparator = Comparator(f.comparator)
@@ -132,24 +146,11 @@ class MongoRepository(IRepository):
             try:
                 value = literal_eval(value)
             except Exception as e:
+                # It is probably a string or another non primitive type
                 pass
 
-            if comparator.comparator == Comparator.equal:
-                if isinstance(value, str):
-                    tmp = cls._make_regexp(value, caseSensitive=False)
-                else:
-                    tmp = value
-
-                if target.get(key) is not None:
-                    target[key].update(tmp)
-                else:
-                    target[key] = tmp
-            else:
-                tmp = cls._make_comparison(key, value, comparator)
-                if target.get(key) is not None:
-                    target[key].update(tmp[key])
-                else:
-                    target[key] = tmp[key]
+            tmp = cls._make_comparison(key, value, comparator)
+            target['$and'].append({key: tmp[key]})
 
         if isDateTimeSearch:
             target['$or'] = []
@@ -215,7 +216,8 @@ class MongoRepository(IRepository):
         except TargetCollectionNotFound as e:
             return CountableIterator(iter([]), lambda x: 0)
 
-        results = searchCollection.find(self._parse_expression(query))
+        q = self._parse_expression(query)
+        results = searchCollection.find(q)
         return CountableIterator(results, lambda x: x.count())
 
     def count_specific_fields(self, query: Expression) -> CountableIterator:

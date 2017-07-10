@@ -21,6 +21,7 @@ from src.repository.factory import RepositoryFactory
 from src.repository.misc import SearchScope
 from src.config import Config
 from src.constants import CONFIGFILE, PHD_MXIN_TIME, PHD_IMAP_TIME
+from src.expression.builder import ExpressionBuilder, Comparator
 
 
 Config().setup(
@@ -109,10 +110,10 @@ def cleanup(days=30):
     """Deletes entries which are older than n days."""
     repository = RepositoryFactory.create_repository()
     keepDate = datetime.today() - timedelta(days=days)
-    date = repository.make_datetime_comparison(start=None, end=keepDate)
 
-    repository.delete({PHD_MXIN_TIME: date}, SearchScope.ALL)
-    repository.delete({PHD_IMAP_TIME: date}, SearchScope.ALL)
+    builder = ExpressionBuilder().set_end_datetime(keepDate)
+
+    repository.delete(builder.expression, SearchScope.ALL)
 
     print('Deleted all data older than ' + str(days) + ' days successful.')
 
