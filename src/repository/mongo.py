@@ -101,9 +101,12 @@ class MongoRepository(IRepository):
         """"""
 
         if comparator.is_regex():
-            return {
-                key: cls._make_regexp(value, comparator.is_regex_case_insensitive())
-            }
+            if not isinstance(value, str):
+                comparator.comparator = Comparator.equal
+            else:
+                return {
+                    key: cls._make_regexp(value, comparator.is_regex_case_insensitive())
+                }
 
         if comparator.comparator == Comparator.not_equal and isinstance(value, str):                        tmp = re.compile(value, re.I)
         else:
