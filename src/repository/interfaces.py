@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Dict
 from datetime import datetime
 
-from .misc import SearchScope, CountableIterator, CountSpecificResult
+from .misc import SearchScope, CountableIterator
 from ..expression.builder import Expression
 
 
@@ -25,7 +25,7 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def count_specific_fields(self, query: Expression) -> CountSpecificResult:
+    def count_specific_fields(self, query: Expression) -> CountableIterator:
         """"""
         pass
 

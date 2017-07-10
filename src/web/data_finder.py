@@ -59,7 +59,7 @@ class DataFinder():
 
         return self._repository.find(expression, SearchScope.ALL)
 
-    def mapreduce(self, expression: Expression) -> Tuple[CountableIterator, int]:
+    def mapreduce(self, expression: Expression) -> CountableIterator:
         """"""
 
         """
@@ -69,7 +69,7 @@ class DataFinder():
             ...
             
             "countfield": "<field>",
-            "regex": "<regex>"
+            "sep": "<separator>"
             
             ...
         }
@@ -79,9 +79,7 @@ class DataFinder():
         if expression.advcount.field is None:
             raise ExpressionInvalid('advcount.field is required. Provide it in your expression.')
 
-        result = self._repository.count_specific_fields(expression)
-
-        return result.iterable, result.total
+        return self._repository.count_specific_fields(expression)
 
     def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int):
         results_list = []

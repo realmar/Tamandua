@@ -50,7 +50,7 @@ class Expression():
     def __init__(self, expression: dict=None):
         self.fields = []
         self.datetime = Namespace(start=None, end=None)
-        self.advcount = Namespace(field=None, regex=None)
+        self.advcount = Namespace(field=None, sep=None)
 
         if isinstance(expression, dict):
             self.__parse(expression)
@@ -130,7 +130,7 @@ class Expression():
             pass
         else:
             try:
-                self.advcount.regex = expression['advcount']['regex']
+                self.advcount.sep = expression['advcount']['sep']
             except KeyError as e:
                 pass
 
@@ -154,8 +154,8 @@ class Expression():
         if self.advcount.field is not None:
             exp['advcount'] = {'field': self.advcount.field}
 
-            if self.advcount.regex is not None:
-                exp['advcount']['regex'] = self.advcount.regex
+            if self.advcount.sep is not None:
+                exp['advcount']['sep'] = self.advcount.sep
 
         return exp
 
@@ -191,8 +191,8 @@ class ExpressionBuilder():
         self.expression.advcount.field = field
         return self
 
-    def set_count_regex(self, regex: str) -> 'ExpressionBuilder':
-        self.expression.advcount.regex = regex
+    def set_count_sep(self, sep: str) -> 'ExpressionBuilder':
+        self.expression.advcount.sep = sep
         return self
 
     def set_start_datetime(self, dt: datetime) -> 'ExpressionBuilder':
