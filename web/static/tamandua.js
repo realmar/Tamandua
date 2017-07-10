@@ -99,8 +99,13 @@ DashboardView.go_to_sender = function (sender, additionalFields) {
         for(var i in additionalFields[j]) {
             add_expression_line();
 
+            var c = additionalFields[j][i]['comparator'];
+            if(c === 're_i' || c ==='re') {
+                c = '='
+            }
+
             expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[j][i]['value']);
-            expressionLines[counter + 1][0].find('.expression-comparator-button').html(additionalFields[j][i]['comparator']);
+            expressionLines[counter + 1][0].find('.expression-comparator-button').html(c);
             expressionLines[counter + 1][1].setValue(i);
 
             counter++;
@@ -148,7 +153,9 @@ DashboardView.get_overview = function (callback) {
         }
     }];
 
-    function get_data(selector, expression, addPrecentages, callback) {
+    function get_data(selector_arg, expression, addPrecentages, callback) {
+        var selector = selector_arg;
+
         $.ajax({
             url: api.count,
             type: methods.post,
@@ -188,13 +195,14 @@ DashboardView.get_lists = function () {
 
     function makelistdomain(field) {
         var query = makelist(field);
-        query['advcount']['regex'] = '@([^$]+)';
+        query['advcount']['sep'] = '@';
 
         return query;
     }
 
-    function get_data(selector_arg, expression, additionalSearchFields) {
+    function get_data(selector_arg, expression, additionalSearchFields_arg) {
         var selector = selector_arg;
+        var additionalSearchFields = additionalSearchFields_arg;
 
         $.ajax({
             url: api.advcount + 10,
@@ -230,7 +238,7 @@ DashboardView.get_lists = function () {
                 });
                 selector.append(element);
             }
-        });
+        }.bind(this));
     }
 
     var sendersQuery = makelist('sender');
@@ -295,7 +303,7 @@ DashboardView.prototype = {
 
     teardown: function () {
         if(this.interval !== null) {
-            clearInterval(this.interval);
+            window.clearInterval(this.interval);
         }
 
         $('#dashboard-view').hide()

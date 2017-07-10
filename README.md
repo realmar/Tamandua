@@ -5,7 +5,9 @@ Tamandua is a framework for logfile analysis and aggregation.
 
 Setup
 -----
-Tamandua requires python **>= 3.5**.
+Tamandua requires:
+ - python **>= 3.5**
+ - MongoDB **>= 3.4** (Because: [$split](https://docs.mongodb.com/manual/reference/operator/aggregation/split/))
 
 First you need to install the dependencies. Either you do this via a linux package manager (eg. `apt`) or you use a virtual environment. (Or install the deps globally) If you want to use a linux packages, please refer to `deployment/roles/tamandua/tasks/main.yml`.
 

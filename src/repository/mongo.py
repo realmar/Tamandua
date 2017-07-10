@@ -13,7 +13,7 @@ from ast import literal_eval
 
 from typing import List, Dict
 from .interfaces import IRepository
-from .misc import SearchScope, CountableIterator, CountSpecificResult
+from .misc import SearchScope, CountableIterator
 from ..expression.builder import Comparator, Expression
 from .js import Loader
 from ..config import Config
@@ -29,16 +29,25 @@ class MongoCountSpecificIterable(CountableIterator):
 
     def __init__(self, cursor):
         self.__cursor = cursor
+        self.__sum = -1
 
     def __next__(self):
         x = next(self.__cursor)
-        while x['_id'] == '' or x['_id'] == None or x['_id'] == 'sum':
+        while x['details']['field'] == '' or x['details']['field'] == 'null':
             x = next(self.__cursor)
 
-        return {'key': x['_id'], 'value': x['value']}
+        if self.__sum == -1:
+            self.__sum = x['sum']
+
+        return {'key': x['details']['field'], 'value': x['details']['value']}
 
     def __len__(self):
-        return self.__cursor.count()
+        if self.__sum == -1:
+            raise KeyError()
+
+        return self.__sum
+
+
 
 
 class MongoRepository(IRepository):
@@ -224,31 +233,50 @@ class MongoRepository(IRepository):
         results = searchCollection.find(q)
         return CountableIterator(results, lambda x: x.count())
 
-    def count_specific_fields(self, query: Expression) -> CountSpecificResult:
+    def count_specific_fields(self, query: Expression) -> CountableIterator:
         """"""
-        mapf = Loader.load_js('mongo_js.count.mapper')
-        reducef = Loader.load_js('mongo_js.count.reducer')
+        fieldExp = '$' + query.advcount.field
 
-        mapf = mapf.replace('<field>', query.advcount.field)
-        if query.advcount.regex is not None:
-            mapf = mapf.replace('<regex>', '.match(/' + query.advcount.regex + '/)[1]')
+        if query.advcount.sep is not None:
+            groupExp = {'$arrayElemAt':
+                             [
+                                 {'$split':
+                                      [fieldExp, '@']
+                                 }, 1
+                             ]
+                        }
         else:
-            mapf = mapf.replace('<regex>', '')
+            groupExp = fieldExp
+
+        pipline = [
+            {'$match': self._parse_expression(query)},
+            {'$project':
+                 {query.advcount.field: fieldExp}
+             },
+            {'$unwind': fieldExp},
+            {'$group':
+                 {'_id': groupExp,
+                  'value': {'$sum': 1}}
+                 },
+            {'$group':
+                 {'_id': None,
+                  'sum': {'$sum': '$value'},
+                  'details': {
+                      '$push': {'field': '$_id',
+                                'value': '$value'}
+                                }
+                  }
+             },
+            {'$unwind': '$details'},
+            {'$sort': {'details.value': -1}}
+        ]
 
         try:
-            results = self._collection_complete.map_reduce(
-                Code(mapf), Code(reducef), "count", query=self._parse_expression(query)
-            )
+            return MongoCountSpecificIterable(
+                    self._collection_complete.aggregate(pipline)
+                )
         except pymongo_errors.OperationFailure as e:
-            return CountSpecificResult(CountableIterator(iter([]), lambda x: 0), 0)
-
-        try:
-            sum = next(results.find({'_id': 'sum'}))['value']
-        except (StopIteration, KeyError) as e:
-            sum = 0
-
-        return CountSpecificResult(MongoCountSpecificIterable(results.find({}).sort('value', DESCENDING)),
-                                   sum)
+            return CountableIterator(iter([]), lambda x: 0)
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""
