@@ -18,6 +18,8 @@ var visibleColumns = [
 ];
 
 var comparatorMap = {
+    're_i': 're_i',
+    're': 're',
     '=': '=',
     '!=': '!=',
     '&gt;': '>',
@@ -109,7 +111,7 @@ DashboardView.go_to_sender = function (sender) {
 DashboardView.get_precentage = function (value) {
     var total = parseInt($('#overview-processed-mails').html());
     return ((value / total) * 100).toFixed(2)
-}
+};
 
 DashboardView.get_overview = function () {
     var dt = {
@@ -201,15 +203,23 @@ DashboardView.get_lists = function () {
     var greylistedQuery = makelist('sender');
     var greylistedDomainsQuery = makelistdomain('sender');
 
-    greylistFields = {'fields': [{
+    var greylistFields = {'fields': [{
         'rejectreason': {
-            'comparator': '=',
+            'comparator': 're_i',
             'value': 'Recipient address rejected: Greylisted'
         }
     }]};
 
-    $.extend(greylistedQuery, greylistFields);
-    $.extend(greylistedDomainsQuery, greylistFields);
+    var excludeGreylistingQuery = {};
+
+    $.extend(true, excludeGreylistingQuery, greylistFields);
+    excludeGreylistingQuery['fields'][0]['rejectreason']['comparator'] = '!=';
+
+    $.extend(true, greylistedQuery, greylistFields);
+    $.extend(true, greylistedDomainsQuery, greylistFields);
+
+    $.extend(true, sendersQuery, excludeGreylistingQuery);
+    $.extend(true, senderDomainsQuery, excludeGreylistingQuery);
 
     get_data($('#list-top-senders'), sendersQuery);
     get_data($('#list-top-senders-domain'), senderDomainsQuery);
@@ -223,16 +233,20 @@ DashboardView.prototype = {
         $('#dashboard-nav-link').addClass('navbar-item-active');
         $('#dashboard-view').show();
 
-        this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
-        DashboardView.get_overview();
+        // this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
+        // DashboardView.get_overview();
 
-        this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
-        DashboardView.get_lists();
+        // this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
+        // DashboardView.get_lists();
     },
 
     teardown: function () {
         if(this.overviewInterval !== null) {
             clearInterval(this.overviewInterval);
+        }
+
+        if(this.listInterval !== null) {
+            clearInterval(this.listInterval);
         }
 
         $('#dashboard-view').hide()
