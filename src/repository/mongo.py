@@ -2,7 +2,7 @@
 
 
 import itertools
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING, DESCENDING
 import pymongo.errors as pymongo_errors
 import re
 
@@ -247,7 +247,7 @@ class MongoRepository(IRepository):
         except (StopIteration, KeyError) as e:
             sum = 0
 
-        return CountSpecificResult(MongoCountSpecificIterable(results.find({}).sort('value', -1)),
+        return CountSpecificResult(MongoCountSpecificIterable(results.find({}).sort('value', DESCENDING)),
                                    sum)
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
