@@ -16,6 +16,7 @@ see also: requirements_manager.txt
 """
 from manager import Manager
 from datetime import datetime, timedelta
+import subprocess
 
 from src.repository.factory import RepositoryFactory
 from src.repository.misc import SearchScope
@@ -118,6 +119,23 @@ def cleanup(days=30):
     print('Deleted all data older than ' + str(days) + ' days successful.')
 
 
+def run_remotesshwrapper_command(command: str, args: list=[], stdout: object=subprocess.PIPE) -> subprocess.Popen:
+    return subprocess.Popen(
+        [
+            'ssh',
+            '-o',
+            'IdentitiesOnly=yes',
+            '-i',
+            '~/.ssh/remotesshwrapper',
+            'root@phd-systemxen',
+            '/usr/local/bin/remotesshwrapper',
+            command,
+            ' '.join(args)
+        ],
+        stdout=stdout
+    )
+
+
 @manager.command
 def run():
     """Get logfile and run the parser. This can be used within cronjobs."""
@@ -126,29 +144,19 @@ def run():
     logfilename = os.path.join(BASEDIR, 'logfile')
     lastlogfilesize = repository.get_size_of_last_logfile()
 
-    import subprocess
-    with open(logfilename, 'wb') as f:
-        process = subprocess.Popen(
-            [
-                'ssh',
-                '-o',
-                'IdentitiesOnly=yes',
-                '-i',
-                '~/.ssh/remotesshwrapper',
-                'root@phd-systemxen',
-                '/usr/local/bin/remotesshwrapper',
-                'tamandua'
-            ],
-            stdout=f
-        )
-        process.wait()
+    process = run_remotesshwrapper_command('getmaillogsize')
+    currlogfilesize = int(process.communicate()[0].decode('utf-8'))
 
-    currlogfilesize = os.path.getsize(logfilename)
     if currlogfilesize < lastlogfilesize:
         print('New logfile detected, reading from beginning.')
         logfile_pos()
 
     repository.save_size_of_last_logfile(currlogfilesize)
+    currByte = repository.get_position_of_last_read_byte()
+
+    with open(logfilename, 'wb') as f:
+        process = run_remotesshwrapper_command('tamandua', args=[str(max(0, currByte - 1000))], stdout=f)
+        process.wait()
 
     from tamandua_parser import main as tamandua_main
     from tamandua_parser import DefaultArgs

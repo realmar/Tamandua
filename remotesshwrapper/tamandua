@@ -1,1 +1,1 @@
-/bin/cat /var/log/mail.log
+/bin/dd skip=$1 bs=1 if=/var/log/mail.log

@@ -76,7 +76,6 @@ def main(args: DefaultArgs):
     currByte = repository.get_position_of_last_read_byte()
 
     logfilehandle = open(args.logfile, 'r')
-    logfilehandle.seek(max(0, currByte - 1000))      # clamp byte: 0 - infinity
 
     try:
         for line in logfilehandle:
@@ -96,7 +95,7 @@ def main(args: DefaultArgs):
 
     # save the current byte position
 
-    repository.save_position_of_last_read_byte(logfilehandle.tell())
+    repository.save_position_of_last_read_byte(currByte + logfilehandle.tell())
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
