@@ -70,6 +70,7 @@ SearchView.prototype = {
     },
 
     teardown: function () {
+        $('#search-nav-link').removeClass('navbar-item-active');
         $('#search-view').hide()
     }
 };
@@ -306,6 +307,7 @@ DashboardView.prototype = {
             window.clearInterval(this.interval);
         }
 
+        $('#dashboard-nav-link').removeClass('navbar-item-active');
         $('#dashboard-view').hide()
     }
 };
