@@ -23,7 +23,9 @@ var comparatorMap = {
     '=': '=',
     '!=': '!=',
     '&gt;': '>',
-    '&lt;': '<'
+    '&lt;': '<',
+    '&gt;=': '>=',
+    '&lt;=': '<='
 };
 
 /*
@@ -96,15 +98,19 @@ DashboardView.go_to_sender = function (sender, additionalFields) {
     expressionLines[0][0].find('.expression-input').val(sender);
     expressionLines[0][1].setValue('sender');
 
+    additionalFields = additionalFields['fields'];
+
     var counter = 0;
-    for(var i in additionalFields) {
-        add_expression_line();
+    for(var j in additionalFields) {
+        for(var i in additionalFields[j]) {
+            add_expression_line();
 
-        expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[i]['value']);
-        expressionLines[counter + 1][0].find('.expression-comparator-button').html(comparatorMap[additionalFields[i]['comparator']]);
-        expressionLines[counter + 1][1].setValue(i);
+            expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[j][i]['value']);
+            expressionLines[counter + 1][0].find('.expression-comparator-button').html(additionalFields[j][i]['comparator']);
+            expressionLines[counter + 1][1].setValue(i);
 
-        counter++;
+            counter++;
+        }
     }
 
     $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
@@ -237,10 +243,20 @@ DashboardView.get_lists = function () {
     var greylistedQuery = makelist('sender');
     var greylistedDomainsQuery = makelistdomain('sender');
 
+    var spamSendersQuery = makelist('sender');
+    var spamSendersDomainsQuery = makelistdomain('sender');
+
     var greylistFields = {'fields': [{
         'rejectreason': {
             'comparator': 're_i',
             'value': 'Recipient address rejected: Greylisted'
+        }
+    }]};
+
+    var spamSendersFields = {'fields': [{
+        'spamscore': {
+            'comparator': '>=',
+            'value': 5
         }
     }]};
 
@@ -255,25 +271,17 @@ DashboardView.get_lists = function () {
     $.extend(true, sendersQuery, excludeGreylistingQuery);
     $.extend(true, senderDomainsQuery, excludeGreylistingQuery);
 
-    var greylistAdditionalSearchFields = {
-        'rejectreason': {
-            'comparator': 're_i',
-            'value': 'Greylisted'
-        }
-    };
+    $.extend(true, spamSendersQuery, spamSendersFields);
+    $.extend(true, spamSendersDomainsQuery, spamSendersFields);
 
-    var senderAdditionalSearchFields = {
-        'rejectreason': {
-            'comparator': '!=',
-            'value': 'Greylisted'
-        }
-    };
+    get_data($('#list-top-senders'), sendersQuery, excludeGreylistingQuery);
+    get_data($('#list-top-senders-domain'), senderDomainsQuery, excludeGreylistingQuery);
 
-    get_data($('#list-top-senders'), sendersQuery, senderAdditionalSearchFields);
-    get_data($('#list-top-senders-domain'), senderDomainsQuery, senderAdditionalSearchFields);
+    get_data($('#list-top-greylisted'), greylistedQuery, greylistFields);
+    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery, greylistFields);
 
-    get_data($('#list-top-greylisted'), greylistedQuery, greylistAdditionalSearchFields);
-    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery, greylistAdditionalSearchFields);
+    get_data($('#list-top-senders-spam'), spamSendersQuery, spamSendersFields);
+    get_data($('#list-top-senders-spam-domain'), spamSendersDomainsQuery, spamSendersFields);
 };
 
 DashboardView.get_stats = function () {

@@ -191,7 +191,7 @@ button.hide-show-empty-fields-button {
     display: grid;
     grid-gap: 10px;
     grid-auto-rows: minmax(20em, auto);
-    margin-bottom: 4em;
+    margin-bottom: 1em;
 }
 
 .grid-item {
@@ -206,6 +206,7 @@ button.hide-show-empty-fields-button {
 
     .grid-2 {
         grid-column: 2;
+        border-right: 1px solid #eee;
     }
 
     .grid-3 {
@@ -247,7 +248,6 @@ button.hide-show-empty-fields-button {
     .grid-1 {
         grid-column: 1;
         grid-row: 1;
-        border-right: 1px solid #eee;
     }
 
     .grid-2 {
@@ -258,7 +258,6 @@ button.hide-show-empty-fields-button {
     .grid-3 {
         grid-column: 1;
         grid-row: 3;
-        border-right: 1px solid #eee;
     }
 
     .grid-4 {
