@@ -363,26 +363,26 @@ class MongoRepository(IRepository):
 
         return res
 
+
     def get_all_tags(self) -> List[str]:
         """"""
-        targetCollections = [
-            self._collection_complete,
-            self._collection_incomplete
+        pipeline = [
+            {'$project':
+                 {'tags': '$tags'}
+             },
+            {'$unwind': '$tags'},
+            {'$group':
+                 {'_id': '$tags'}
+             }
         ]
 
-        result = set()
+        def do_query(collection):
+            return [x['_id'] for x in collection.aggregate(pipeline)]
 
-        for tc in targetCollections:
-            try:
-                result.update(list(tc.map_reduce(
-                    Code(Loader.load_js('mongo_js.tags_mapper')),
-                    Code(Loader.load_js('mongo_js.reducer')),
-                    "results"
-                ).distinct('_id')))
-            except pymongo_errors.OperationFailure as e:
-                return []
+        tagsComplete = do_query(self._collection_complete)
+        tagsincomplete = do_query(self._collection_incomplete)
 
-        return list(result)
+        return list(set().union(tagsComplete, tagsincomplete))
 
     def save_time_of_last_run(self, dt: datetime):
         """"""
