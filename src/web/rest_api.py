@@ -79,7 +79,7 @@ class AdvancedCount(BaseResource):
 
     def post(self, length: int) -> dict:
         expression = Expression(request.get_json())
-        results = self._dataFinder.mapreduce(expression)
+        results, total = self._dataFinder.mapreduce(expression)
 
         final = []
         for i in range(0, length):
@@ -90,5 +90,5 @@ class AdvancedCount(BaseResource):
 
         return {
             'items': final,
-            'total': len(results)
+            'total': total
         }

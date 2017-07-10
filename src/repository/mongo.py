@@ -13,7 +13,7 @@ from ast import literal_eval
 
 from typing import List, Dict
 from .interfaces import IRepository
-from .misc import SearchScope, CountableIterator
+from .misc import SearchScope, CountableIterator, CountSpecificResult
 from ..expression.builder import Comparator, Expression
 from .js import Loader
 from ..config import Config
@@ -32,13 +32,14 @@ class MongoCountSpecificIterable(CountableIterator):
 
     def __next__(self):
         x = next(self.__cursor)
-        while x['_id'] == '' or x['_id'] == None:
+        while x['_id'] == '' or x['_id'] == None or x['_id'] == 'sum':
             x = next(self.__cursor)
 
         return {'key': x['_id'], 'value': x['value']}
 
     def __len__(self):
         return self.__cursor.count()
+
 
 class MongoRepository(IRepository):
     """"""
@@ -223,7 +224,7 @@ class MongoRepository(IRepository):
         results = searchCollection.find(q)
         return CountableIterator(results, lambda x: x.count())
 
-    def count_specific_fields(self, query: Expression) -> CountableIterator:
+    def count_specific_fields(self, query: Expression) -> CountSpecificResult:
         """"""
         mapf = Loader.load_js('mongo_js.count.mapper')
         reducef = Loader.load_js('mongo_js.count.reducer')
@@ -239,9 +240,15 @@ class MongoRepository(IRepository):
                 Code(mapf), Code(reducef), "count", query=self._parse_expression(query)
             )
         except pymongo_errors.OperationFailure as e:
-            return CountableIterator(iter([]), lambda x: 0)
+            return CountSpecificResult(CountableIterator(iter([]), lambda x: 0), 0)
 
-        return MongoCountSpecificIterable(results.find({}).sort('value', -1))
+        try:
+            sum = next(results.find({'_id': 'sum'}))['value']
+        except (StopIteration, KeyError) as e:
+            sum = 0
+
+        return CountSpecificResult(MongoCountSpecificIterable(results.find({}).sort('value', -1)),
+                                   sum)
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
         """"""

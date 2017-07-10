@@ -30,3 +30,11 @@ class CountableIterator(Generic[T]):
 
     def __len__(self):
         return self.__len_counter(self.__data)
+
+
+class CountSpecificResult():
+    """"""
+
+    def __init__(self, iterable: CountableIterator, total: int):
+        self.iterable = iterable
+        self.total = total

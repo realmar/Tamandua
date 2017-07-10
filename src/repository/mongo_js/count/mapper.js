@@ -5,6 +5,8 @@ function map() {
         }catch(e) {
             emit('', 1);
         }
+
+        emit('sum', 1);
     }
 
     if(this.<field> instanceof Array) {
