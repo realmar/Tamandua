@@ -79,8 +79,7 @@ SearchView.prototype = {
 };
 
 function DashboardView() {
-    this.overviewInterval = null;
-    this.listInterval = null;
+    this.interval = null;
 }
 
 DashboardView.go_to_sender = function (sender) {
@@ -113,7 +112,7 @@ DashboardView.get_precentage = function (value) {
     return ((value / total) * 100).toFixed(2)
 };
 
-DashboardView.get_overview = function () {
+DashboardView.get_overview = function (callback) {
     var dt = {
         'datetime': {
             'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
@@ -133,12 +132,12 @@ DashboardView.get_overview = function () {
     var totalVirusQuery = $.extend({}, dt);
     totalVirusQuery['fields'] = [{
         'virusresult': {
-            'comparator': '=',
+            'comparator': 're_i',
             'value': 'INFECTED'
         }
     }];
 
-    function get_data(selector, expression) {
+    function get_data(selector, expression, addPrecentages, callback) {
         $.ajax({
             url: api.count,
             type: methods.post,
@@ -146,14 +145,20 @@ DashboardView.get_overview = function () {
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
         }).done(function (result) {
-            selector.html(result + ' (' + DashboardView.get_precentage(result) + '%)')
+            if(addPrecentages) {
+                selector.html(result + ' (' + DashboardView.get_precentage(result) + '%)');
+            }else{
+                selector.html(result);
+            }
+            callback()
         });
     }
 
-    get_data($('#overview-processed-mails'), totalMailsQuery);
-    get_data($('#overview-virus'), totalVirusQuery);
-    get_data($('#overview-spam'), totalSpamQuery);
-
+    get_data($('#overview-processed-mails'), totalMailsQuery, false, function () {
+        get_data($('#overview-virus'), totalVirusQuery, true, function () {});
+        get_data($('#overview-spam'), totalSpamQuery, true, function () {});
+        callback();
+    });
 };
 
 DashboardView.get_lists = function () {
@@ -228,25 +233,22 @@ DashboardView.get_lists = function () {
     get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery);
 };
 
+DashboardView.get_stats = function () {
+    DashboardView.get_overview(DashboardView.get_lists);
+};
+
 DashboardView.prototype = {
     setup: function () {
         $('#dashboard-nav-link').addClass('navbar-item-active');
         $('#dashboard-view').show();
 
-        // this.overviewInterval = setInterval(DashboardView.get_overview, 10000);
-        // DashboardView.get_overview();
-
-        // this.overviewInterval = setInterval(DashboardView.get_lists, 60000);
-        // DashboardView.get_lists();
+        this.interval = setInterval(DashboardView.get_stats, 10000);
+        DashboardView.get_stats();
     },
 
     teardown: function () {
-        if(this.overviewInterval !== null) {
-            clearInterval(this.overviewInterval);
-        }
-
-        if(this.listInterval !== null) {
-            clearInterval(this.listInterval);
+        if(this.interval !== null) {
+            clearInterval(this.interval);
         }
 
         $('#dashboard-view').hide()
