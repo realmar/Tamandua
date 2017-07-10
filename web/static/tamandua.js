@@ -203,7 +203,7 @@ DashboardView.get_lists = function () {
 
             selector.append($('<div>' +
                     '<span class="label label-default">' +
-                        parseInt(result['total']) +
+                        parseInt(result['total']) + ' (' + DashboardView.get_precentage(result['total']) + '%)' +
                     '</span> <span>' +
                         'Total' +
                     '</span>' +
