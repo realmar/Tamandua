@@ -193,7 +193,9 @@ DashboardView.get_lists = function () {
         return query;
     }
 
-    function get_data(selector, expression, additionalSearchFields) {
+    function get_data(selector_arg, expression, additionalSearchFields) {
+        var selector = selector_arg;
+
         $.ajax({
             url: api.advcount + 10,
             type: methods.post,
