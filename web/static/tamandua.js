@@ -82,7 +82,7 @@ function DashboardView() {
     this.interval = null;
 }
 
-DashboardView.go_to_sender = function (sender) {
+DashboardView.go_to_sender = function (sender, additionalFields) {
     change_view(new SearchView());
 
     for(var i in expressionLines) {
@@ -95,6 +95,17 @@ DashboardView.go_to_sender = function (sender) {
 
     expressionLines[0][0].find('.expression-input').val(sender);
     expressionLines[0][1].setValue('sender');
+
+    var counter = 0;
+    for(var i in additionalFields) {
+        add_expression_line();
+
+        expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[i]['value']);
+        expressionLines[counter + 1][0].find('.expression-comparator-button').html(comparatorMap[additionalFields[i]['comparator']]);
+        expressionLines[counter + 1][1].setValue(i);
+
+        counter++;
+    }
 
     $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
 
@@ -182,7 +193,7 @@ DashboardView.get_lists = function () {
         return query;
     }
 
-    function get_data(selector, expression) {
+    function get_data(selector, expression, additionalSearchFields) {
         $.ajax({
             url: api.advcount + 10,
             type: methods.post,
@@ -212,7 +223,7 @@ DashboardView.get_lists = function () {
             for(var k in result['items']) {
                 var element = $('<div><span class="label label-default">' + result['items'][k]['value'] + ' (' + get_precentage(result['items'][k]['value']) + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'] + '</span>');
                 element.click(function () {
-                    DashboardView.go_to_sender($(this).find('.dashboard-list-data').html())
+                    DashboardView.go_to_sender($(this).find('.dashboard-list-data').html(), additionalSearchFields)
 
                 });
                 selector.append(element);
@@ -244,11 +255,25 @@ DashboardView.get_lists = function () {
     $.extend(true, sendersQuery, excludeGreylistingQuery);
     $.extend(true, senderDomainsQuery, excludeGreylistingQuery);
 
-    get_data($('#list-top-senders'), sendersQuery);
-    get_data($('#list-top-senders-domain'), senderDomainsQuery);
+    var greylistAdditionalSearchFields = {
+        'rejectreason': {
+            'comparator': 're_i',
+            'value': 'Greylisted'
+        }
+    };
 
-    get_data($('#list-top-greylisted'), greylistedQuery);
-    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery);
+    var senderAdditionalSearchFields = {
+        'rejectreason': {
+            'comparator': '!=',
+            'value': 'Greylisted'
+        }
+    };
+
+    get_data($('#list-top-senders'), sendersQuery, senderAdditionalSearchFields);
+    get_data($('#list-top-senders-domain'), senderDomainsQuery, senderAdditionalSearchFields);
+
+    get_data($('#list-top-greylisted'), greylistedQuery, greylistAdditionalSearchFields);
+    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery, greylistAdditionalSearchFields);
 };
 
 DashboardView.get_stats = function () {
