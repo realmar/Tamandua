@@ -191,8 +191,26 @@ DashboardView.get_lists = function () {
             dataType: 'json'
         }).done(function (result) {
             selector.empty();
-            for(var k in result) {
-                var element = $('<div><span class="label label-default">' + result[k]['value'] + ' (' + DashboardView.get_precentage(result[k]['value']) + '%)</span> <span class="dashboard-list-data">' + result[k]['key'] + '</span>');
+
+            function get_precentage(value) {
+                var total = parseInt(result['total']);
+                if(!isNaN(total)) {
+                    return ((value / total) * 100).toFixed(2)
+                }else{
+                    return 0;
+                }
+            }
+
+            selector.append($('<div>' +
+                    '<span class="label label-default">' +
+                        parseInt(result['total']) +
+                    '</span> <span>' +
+                        'Total' +
+                    '</span>' +
+                '</div><hr class="dashboard-total-separator">'));
+
+            for(var k in result['items']) {
+                var element = $('<div><span class="label label-default">' + result['items'][k]['value'] + ' (' + get_precentage(result['items'][k]['value']) + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'] + '</span>');
                 element.click(function () {
                     DashboardView.go_to_sender($(this).find('.dashboard-list-data').html())
 
