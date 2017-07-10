@@ -844,15 +844,22 @@ function update_tags() {
 
             var tagsContainer = $("#tags-container");
             allbuttons = tagsContainer.find('.button-tag');
-            query = '';
+            query = '/(';
+            var isEmpty = true;
 
             allbuttons.each(function () {
                 if($(this).data('isactive') == 0) {
-                    query += '!' + $(this).html() + ' && '
+                    query += $(this).html() + '|';
+                    isEmpty = false;
                 }
             });
 
-            query = query.slice(0, -4);
+            if(!isEmpty) {
+                query = query.slice(0, -1);
+                query += ')/';
+            }else{
+                query = '';
+            }
 
             var result_table = $('#result-table');
 
@@ -863,11 +870,11 @@ function update_tags() {
         };
 
         for(i in tags) {
-            var isActive = '1';
+            var isActive = '0';
             var extraClass = 'btn-primary';
 
             if(tags[i] === 'incomplete') {
-                isActive = '0';
+                isActive = '1';
                 extraClass = '';
             }
 
