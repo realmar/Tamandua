@@ -18,19 +18,13 @@ var visibleColumns = [
 ];
 
 var comparatorMap = {
-    're_i': 're_i',
-    're': 're',
-    '=': '=',
+    '=': 're_i',
     '!=': '!=',
     '&gt;': '>',
     '&lt;': '<',
     '&gt;=': '>=',
     '&lt;=': '<='
 };
-
-/*
- *
- */
 
 /*
  * dashboard
