@@ -148,7 +148,9 @@ DashboardView.get_overview = function (callback) {
         }
     }];
 
-    function get_data(selector, expression, addPrecentages, callback) {
+    function get_data(selector_arg, expression, addPrecentages, callback) {
+        var selector = selector_arg;
+
         $.ajax({
             url: api.count,
             type: methods.post,
@@ -193,8 +195,9 @@ DashboardView.get_lists = function () {
         return query;
     }
 
-    function get_data(selector_arg, expression, additionalSearchFields) {
+    function get_data(selector_arg, expression, additionalSearchFields_arg) {
         var selector = selector_arg;
+        var additionalSearchFields = additionalSearchFields_arg;
 
         $.ajax({
             url: api.advcount + 10,
@@ -230,7 +233,7 @@ DashboardView.get_lists = function () {
                 });
                 selector.append(element);
             }
-        });
+        }.bind(this));
     }
 
     var sendersQuery = makelist('sender');
