@@ -35,8 +35,8 @@ class MongoCountSpecificIterable(CountableIterator):
 
     def __next__(self):
         x = next(self.__cursor)
-        while x['details']['field'] == '' or x['details']['field'] == 'null':
-            x = next(self.__cursor)
+        if x['details']['field'] is None or x['details']['field'] == '':
+            x['details']['field'] = 'nothing_found'
 
         if self.__sum == -1:
             self.__sum = x['sum']
