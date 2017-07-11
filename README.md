@@ -3,6 +3,39 @@ Tamandua
 
 Tamandua is a framework for logfile analysis and aggregation.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of contents
+
+  - [Setup](#setup)
+  - [Usage](#usage)
+    - [Parser](#parser)
+    - [Web](#web)
+  - [Docs](#docs)
+  - [Configuration](#configuration)
+- [Extending Tamandua](#extending-tamandua)
+  - [Directory Layout](#directory-layout)
+  - [Code Style](#code-style)
+  - [Containers](#containers)
+    - [Serialization](#serialization)
+    - [Use Processor Plugins in a data container](#use-processor-plugins-in-a-data-container)
+  - [Plugins](#plugins)
+    - [Data Collection](#data-collection)
+      - [Mail-Aggregation](#mail-aggregation)
+      - [Statistics](#statistics)
+      - [Generic data collection plugin](#generic-data-collection-plugin)
+    - [Processors](#processors)
+      - [Processors are chained](#processors-are-chained)
+      - [Order of execution](#order-of-execution)
+      - [Using metadata with Processors](#using-metadata-with-processors)
+    - [Introduce a new type of plugin](#introduce-a-new-type-of-plugin)
+- [Appendix](#appendix)
+  - [Project Name](#project-name)
+  - [System Requirements](#system-requirements)
+  - [Windows support](#windows-support)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 Setup
 -----
 Tamandua requires:
@@ -35,6 +68,18 @@ Usage
 (ve) $ tamandua_web
 
 # open your browser and navigate to: http://localhost:8080/
+```
+
+Docs
+----
+Generate TOC:
+```sh
+$ doctoc --title '## Table of contents' --github .\README.md
+```
+
+Although you first need to install `doctoc`:
+```sh
+$ npm install -g doctoc
 ```
 
 Configuration
