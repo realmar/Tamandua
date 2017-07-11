@@ -223,16 +223,27 @@ DashboardView.get_lists = function () {
                 }
             }
 
-            selector.append($('<div>' +
-                    '<span class="label label-default">' +
-                        parseInt(result['total']) + ' (' + DashboardView.get_precentage(result['total']) + '%)' +
+            function precentageVisualizer(precentage) {
+                var roundedPrecentage = Math.round(precentage);
+                return '<div class="dashboard-list-precentage-visualizer" style="background-color: ' + precentageBarColors[roundedPrecentage] + '; width: ' + roundedPrecentage + '%;"></div>'
+            }
+
+            var totalPrecentage = DashboardView.get_precentage(result['total'])
+
+            selector.append($('<div class="dashboard-list-item">' +
+                    precentageVisualizer(totalPrecentage) +
+                    '<span>' +
+                        parseInt(result['total']) + ' (' + totalPrecentage + '%)' +
                     '</span> <span>' +
                         'Total' +
                     '</span>' +
                 '</div><hr class="dashboard-total-separator">'));
 
             for(var k in result['items']) {
-                var element = $('<div><span class="label label-default">' + result['items'][k]['value'] + ' (' + get_precentage(result['items'][k]['value']) + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'] + '</span>');
+                var localPrecentage = get_precentage(result['items'][k]['value']);
+                var element = $('<div class="dashboard-list-item">' +
+                    precentageVisualizer(localPrecentage) +
+                    '<span>' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'] + '</span>');
                 element.click(function () {
                     DashboardView.go_to_sender($(this).find('.dashboard-list-data').html(), additionalSearchFields)
 
@@ -298,7 +309,7 @@ DashboardView.prototype = {
         $('#dashboard-nav-link').addClass('navbar-item-active');
         $('#dashboard-view').show();
 
-        this.interval = setInterval(DashboardView.get_stats, 10000);
+        // this.interval = setInterval(DashboardView.get_stats, 10000);
         DashboardView.get_stats();
     },
 
@@ -408,6 +419,12 @@ var colors = chroma.scale(
         '#63c56c'
     ]
 ).colors(15);
+
+var precentageBarColors = [];
+var pbctmp = chroma.scale(['green', 'red']).colors(100);
+for(var i in pbctmp) {
+    precentageBarColors.push(chroma(pbctmp[i]).luminance(0.4).hex());
+}
 
 function get_color(pos) {
     return chroma(
