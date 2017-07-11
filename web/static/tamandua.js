@@ -116,7 +116,7 @@ DashboardView.precentageHtml = function (total, total_text, addPercentage, color
     return final
 };
 
-DashboardView.go_to_sender = function (sender, additionalFields) {
+DashboardView.go_to_field = function (fieldName, fieldValue, additionalFields) {
     change_view(new SearchView());
 
     for(var i in expressionLines) {
@@ -125,36 +125,64 @@ DashboardView.go_to_sender = function (sender, additionalFields) {
 
     expressionLines = [];
 
-    add_expression_line();
+    if(additionalFields === undefined) {
+        additionalFields = {};
+    }
 
-    expressionLines[0][0].find('.expression-input').val(sender);
+    if(Object.keys(additionalFields).length === 0) {
+        additionalFields = {
+            'fields': []
+        }
+    }
+
+    var tmp = {};
+
+    var exists = false;
+    for(var i in additionalFields['fields']) {
+        if(Object.keys(additionalFields['fields'][i])[0] === fieldName) {
+            exists = true;
+        }
+    }
+
+    if(!exists) {
+        tmp[fieldName] = {
+            'comparator': '=',
+            'value': fieldValue
+        };
+    }
+
+    additionalFields['fields'].push(tmp);
+
+    /*add_expression_line();
+
+    expressionLines[0][0].find('.expression-input').val(field);
     expressionLines[0][1].setValue('sender');
 
-    additionalFields = additionalFields['fields'];
+    additionalFields = additionalFields['fields'];*/
 
     var counter = 0;
-    for(var j in additionalFields) {
-        for(var i in additionalFields[j]) {
-            add_expression_line();
+    for(var i in additionalFields['fields']) {
+        add_expression_line();
 
-            var c = additionalFields[j][i]['comparator'];
-            if(c === 're_i' || c ==='re') {
-                c = '='
-            }
+        var key = Object.keys(additionalFields['fields'][i])[0];
 
-            expressionLines[counter + 1][0].find('.expression-comparator-button').html(c);
-            expressionLines[counter + 1][1].setValue(i);
-
-            var optionselect = expressionLines[counter + 1][0].find('.search-field-selection-select');
-
-            if(optionselect.is(':visible')) {
-                optionselect[0].selectize.createItem(additionalFields[j][i]['value']);
-            }else{
-            expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[j][i]['value']);
-            }
-
-            counter++;
+        var c = additionalFields['fields'][i][key]['comparator'];
+        if(c === 're_i' || c ==='re') {
+            c = '='
         }
+
+        expressionLines[counter][0].find('.expression-comparator-button').html(c);
+        expressionLines[counter][1].setValue(key);
+
+        var optionselect = expressionLines[counter][0].find('.search-field-selection-select');
+
+        if(optionselect.is(':visible')) {
+            optionselect[0].selectize.createItem(additionalFields['fields'][i][key]['value']);
+        }else{
+        expressionLines[counter][0].find('.expression-input').val(additionalFields['fields'][i][key]['value']);
+        }
+
+        counter++;
     }
 
     $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
@@ -238,10 +266,11 @@ DashboardView.get_lists = function () {
         return query;
     }
 
-    function get_data(selector_arg, total_selector_arg, total_text_arg, expression, additionalSearchFields_arg) {
+    function get_data(selector_arg, total_selector_arg, total_text_arg, expression, field_arg, additionalSearchFields_arg) {
         var selector = selector_arg;
         var total_selector = total_selector_arg;
         var total_text = total_text_arg;
+        var field = field_arg;
         var additionalSearchFields = additionalSearchFields_arg;
 
         $.ajax({
@@ -272,7 +301,7 @@ DashboardView.get_lists = function () {
                     DashboardView.precentageVisualizer(localPrecentage, precentageBarColors) +
                     '<span>' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'].slice(0, 55) + '</span>');
                 element.click(function () {
-                    DashboardView.go_to_sender($(this).find('.dashboard-list-data').html(), additionalSearchFields)
+                    DashboardView.go_to_field(field, $(this).find('.dashboard-list-data').html(), additionalSearchFields)
 
                 });
                 selector.append(element);
@@ -328,16 +357,16 @@ DashboardView.get_lists = function () {
     $.extend(true, spamSendersQuery, spamSendersFields);
     $.extend(true, spamSendersDomainsQuery, spamSendersFields);
 
-    get_data($('#list-top-senders'), $('#dashboard-overview-delivered'), 'Delivered', sendersQuery, excludeGreylistingQuery);
-    get_data($('#list-top-senders-domain'), null, null, senderDomainsQuery, excludeGreylistingQuery);
+    get_data($('#list-top-senders'), $('#dashboard-overview-delivered'), 'Delivered', sendersQuery, 'sender', excludeGreylistingQuery);
+    get_data($('#list-top-senders-domain'), null, null, senderDomainsQuery, 'sender', excludeGreylistingQuery);
 
-    get_data($('#list-top-greylisted'), $('#dashboard-overview-greylisted'), 'Greylisted', greylistedQuery, greylistFields);
-    get_data($('#list-top-greylisted-domain'), null, null, greylistedDomainsQuery, greylistFields);
+    get_data($('#list-top-greylisted'), $('#dashboard-overview-greylisted'), 'Greylisted', greylistedQuery, 'sender', greylistFields);
+    get_data($('#list-top-greylisted-domain'), null, null, greylistedDomainsQuery, 'sender', greylistFields);
 
-    get_data($('#list-top-senders-spam'), $('#dashboard-overview-spam'), 'Spam', spamSendersQuery, spamSendersFields);
-    get_data($('#list-top-senders-spam-domain'), null, null, spamSendersDomainsQuery, spamSendersFields);
+    get_data($('#list-top-senders-spam'), $('#dashboard-overview-spam'), 'Spam', spamSendersQuery, 'sender', spamSendersFields);
+    get_data($('#list-top-senders-spam-domain'), null, null, spamSendersDomainsQuery, 'sender', spamSendersFields);
 
-    get_data($('#list-top-reject-resons'), null, null, rejectReasonsQuery, {});
+    get_data($('#list-top-reject-resons'), null, null, rejectReasonsQuery, 'rejectreason', {});
 };
 
 DashboardView.get_stats = function () {
