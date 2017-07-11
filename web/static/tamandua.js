@@ -1195,8 +1195,6 @@ function on_search_button_click() {
             value = optionselect.find('.search-field-selection-select')[0].selectize.getValue();
         }
 
-        console.log(value);
-
         var h = {};
         h[key] = {
             "comparator": comparatorMap[jq.find(".expression-comparator-button").html()],
