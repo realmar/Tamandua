@@ -187,12 +187,25 @@ button.hide-show-empty-fields-button {
     z-index: -100;
 }
 
+.dashboard-overview-list-item-right {
+    width: 70%;
+}
+
+.dashboard-overview-list-item-left {
+    width: 30%;
+}
+
 .redbackground {
     background-color: #EF9A9A;
 }
 
 .dashboard-total-separator {
     margin: 0.4em 0 0.2em 0;
+}
+
+#overview-stats {
+    width: 24%;
+    margin-bottom: 0.4em;
 }
 
 /* grid */

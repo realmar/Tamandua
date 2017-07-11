@@ -244,37 +244,49 @@
         </div>
         <div style="display: none;" id="dashboard-view" class="view">
             <div class="container">
-                <div id="overview-stats">
-                    <p class="inline">In the last <input id="overview-hours" type="text" class="form-control" placeholder="n"> hours there were <span id="overview-processed-mails" class="label label-default">n</span> mails processed. <span id="overview-virus" class="label label-default">n</span> of those are virus mails and <span id="overview-spam" class="label label-default">n</span> are spam mails.</p>
+                <div id="overview-stats" class="border-right">
+                    <div>
+                        <p class="inline">In the last</p>
+                        <input id="overview-hours" type="text" class="form-control" placeholder="n">
+                        <p class="inline">hours:</p>
+                    </div>
+                    <div>
+                        <div id="dashboard-overview-total" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-rejected" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-greylisted" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-delivered" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-spam" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-virus" class="dashboard-list-item"></div>
+                    </div>
                 </div>
                 <hr>
                 <div id="dashboard-list-stats">
                     <div class="list-grid">
                         <div class="grid-item grid-1">
-                            <h4>Top Senders</h4>
+                            <h4>Top delivered senders</h4>
                             <div id="list-top-senders"></div>
                         </div>
                         <div class="grid-item grid-2">
-                            <h4>Top Sender Domains</h4>
+                            <h4>Top delivered sender domains</h4>
                             <div id="list-top-senders-domain"></div>
                         </div>
                         <div class="grid-item grid-3">
-                            <h4>Top Greylisted</h4>
+                            <h4>Top greylisted</h4>
                             <div id="list-top-greylisted"></div>
                         </div>
                         <div class="grid-item grid-4">
-                            <h4>Top Greylisted Domains</h4>
+                            <h4>Top greylisted domains</h4>
                             <div id="list-top-greylisted-domain"></div>
                         </div>
                     </div>
                     <hr>
                     <div class="list-grid">
                         <div class="grid-item grid-1">
-                            <h4>Top Spam Senders</h4>
+                            <h4>Top spam senders</h4>
                             <div id="list-top-senders-spam"></div>
                         </div>
                         <div class="grid-item grid-2">
-                            <h4>Top Spam Sender Domains</h4>
+                            <h4>Top spam sender domains</h4>
                             <div id="list-top-senders-spam-domain"></div>
                         </div>
                         <div class="grid-item grid-3"></div>

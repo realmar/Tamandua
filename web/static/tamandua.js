@@ -83,6 +83,39 @@ function DashboardView() {
     this.interval = null;
 }
 
+DashboardView.get_precentage = function (value) {
+    var total = parseInt($('#dashboard-overview-total').find('.dashboard-overview-list-item-right').html());
+    return ((value / total) * 100).toFixed(2)
+};
+
+DashboardView.precentageVisualizer = function (precentage, colorRange) {
+    var roundedPrecentage = Math.round(precentage);
+    return '<div class="dashboard-list-precentage-visualizer" style="background-color: ' + colorRange[roundedPrecentage % (colorRange.length - 1)] + '; width: ' + roundedPrecentage + '%;"></div>'
+};
+
+DashboardView.precentageHtml = function (total, total_text, addPercentage, colorRange) {
+    var totalPrecentage = DashboardView.get_precentage(total);
+    var final = '';
+
+    if(addPercentage) {
+        final += DashboardView.precentageVisualizer(totalPrecentage, colorRange);
+    }
+
+    final += '<div class="dashboard-overview-list-item-left inline">' +
+                total_text +
+            ': </div>' +
+            '<div class="dashboard-overview-list-item-right inline">' +
+            parseInt(total);
+
+    if(addPercentage) {
+        final += ' (' + totalPrecentage + '%)';
+    }
+
+    final += '</div>';
+
+    return final
+};
+
 DashboardView.go_to_sender = function (sender, additionalFields) {
     change_view(new SearchView());
 
@@ -135,11 +168,6 @@ DashboardView.go_to_sender = function (sender, additionalFields) {
     on_search_button_click();
 };
 
-DashboardView.get_precentage = function (value) {
-    var total = parseInt($('#overview-processed-mails').html());
-    return ((value / total) * 100).toFixed(2)
-};
-
 DashboardView.get_overview = function (callback) {
     var dt = {
         'datetime': {
@@ -149,11 +177,11 @@ DashboardView.get_overview = function (callback) {
 
     var totalMailsQuery = $.extend({}, dt);
 
-    var totalSpamQuery = $.extend({}, dt);
-    totalSpamQuery['fields'] = [{
-        'spamscore': {
-            'comparator': '>=',
-            'value': 5
+    var totalRejectQuery = $.extend({}, dt);
+    totalRejectQuery['fields'] = [{
+        'action': {
+            'comparator': '=',
+            'value': 'reject'
         }
     }];
 
@@ -165,7 +193,7 @@ DashboardView.get_overview = function (callback) {
         }
     }];
 
-    function get_data(selector_arg, expression, addPrecentages, callback) {
+    function get_data(selector_arg, total_text, expression, addPrecentages, callback) {
         var selector = selector_arg;
 
         $.ajax({
@@ -175,18 +203,16 @@ DashboardView.get_overview = function (callback) {
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
         }).done(function (result) {
-            if(addPrecentages) {
-                selector.html(result + ' (' + DashboardView.get_precentage(result) + '%)');
-            }else{
-                selector.html(result);
-            }
+            selector.html(
+                DashboardView.precentageHtml(result, total_text, addPrecentages, precentageBarFlow)
+            );
             callback()
         });
     }
 
-    get_data($('#overview-processed-mails'), totalMailsQuery, false, function () {
-        get_data($('#overview-virus'), totalVirusQuery, true, function () {});
-        get_data($('#overview-spam'), totalSpamQuery, true, function () {});
+    get_data($('#dashboard-overview-total'), 'Total', totalMailsQuery, false, function () {
+        get_data($('#dashboard-overview-virus'), 'Virus', totalVirusQuery, true, function () {});
+        get_data($('#dashboard-overview-rejected'), 'Rejected', totalRejectQuery, true, function () {});
         callback();
     });
 };
@@ -212,8 +238,10 @@ DashboardView.get_lists = function () {
         return query;
     }
 
-    function get_data(selector_arg, expression, additionalSearchFields_arg) {
+    function get_data(selector_arg, total_selector_arg, total_text_arg, expression, additionalSearchFields_arg) {
         var selector = selector_arg;
+        var total_selector = total_selector_arg;
+        var total_text = total_text_arg;
         var additionalSearchFields = additionalSearchFields_arg;
 
         $.ajax({
@@ -234,26 +262,14 @@ DashboardView.get_lists = function () {
                 }
             }
 
-            function precentageVisualizer(precentage) {
-                var roundedPrecentage = Math.round(precentage);
-                return '<div class="dashboard-list-precentage-visualizer" style="background-color: ' + precentageBarColors[roundedPrecentage] + '; width: ' + roundedPrecentage + '%;"></div>'
+            if(total_selector !== null) {
+                total_selector.html(DashboardView.precentageHtml(result['total'], total_text, true, precentageBarFlow));
             }
-
-            var totalPrecentage = DashboardView.get_precentage(result['total'])
-
-            selector.append($('<div class="dashboard-list-item">' +
-                    precentageVisualizer(totalPrecentage) +
-                    '<span>' +
-                        parseInt(result['total']) + ' (' + totalPrecentage + '%)' +
-                    '</span> <span>' +
-                        'Total' +
-                    '</span>' +
-                '</div><hr class="dashboard-total-separator">'));
 
             for(var k in result['items']) {
                 var localPrecentage = get_precentage(result['items'][k]['value']);
                 var element = $('<div class="dashboard-list-item">' +
-                    precentageVisualizer(localPrecentage) +
+                    DashboardView.precentageVisualizer(localPrecentage, precentageBarColors) +
                     '<span>' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'] + '</span>');
                 element.click(function () {
                     DashboardView.go_to_sender($(this).find('.dashboard-list-data').html(), additionalSearchFields)
@@ -266,6 +282,12 @@ DashboardView.get_lists = function () {
 
     var sendersQuery = makelist('sender');
     var senderDomainsQuery = makelistdomain('sender');
+    var sendersAdditionalFields = {'fields': [{
+        'deliverystatus': {
+            'comparator': '=',
+            'value': 'sent'
+        }
+    }]};
 
     var greylistedQuery = makelist('sender');
     var greylistedDomainsQuery = makelistdomain('sender');
@@ -295,20 +317,20 @@ DashboardView.get_lists = function () {
     $.extend(true, greylistedQuery, greylistFields);
     $.extend(true, greylistedDomainsQuery, greylistFields);
 
-    $.extend(true, sendersQuery, excludeGreylistingQuery);
-    $.extend(true, senderDomainsQuery, excludeGreylistingQuery);
+    $.extend(true, sendersQuery, sendersAdditionalFields);
+    $.extend(true, senderDomainsQuery, sendersAdditionalFields);
 
     $.extend(true, spamSendersQuery, spamSendersFields);
     $.extend(true, spamSendersDomainsQuery, spamSendersFields);
 
-    get_data($('#list-top-senders'), sendersQuery, excludeGreylistingQuery);
-    get_data($('#list-top-senders-domain'), senderDomainsQuery, excludeGreylistingQuery);
+    get_data($('#list-top-senders'), $('#dashboard-overview-delivered'), 'Delivered', sendersQuery, excludeGreylistingQuery);
+    get_data($('#list-top-senders-domain'), null, null, senderDomainsQuery, excludeGreylistingQuery);
 
-    get_data($('#list-top-greylisted'), greylistedQuery, greylistFields);
-    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery, greylistFields);
+    get_data($('#list-top-greylisted'), $('#dashboard-overview-greylisted'), 'Greylisted', greylistedQuery, greylistFields);
+    get_data($('#list-top-greylisted-domain'), null, null, greylistedDomainsQuery, greylistFields);
 
-    get_data($('#list-top-senders-spam'), spamSendersQuery, spamSendersFields);
-    get_data($('#list-top-senders-spam-domain'), spamSendersDomainsQuery, spamSendersFields);
+    get_data($('#list-top-senders-spam'), $('#dashboard-overview-spam'), 'Spam', spamSendersQuery, spamSendersFields);
+    get_data($('#list-top-senders-spam-domain'), null, null, spamSendersDomainsQuery, spamSendersFields);
 };
 
 DashboardView.get_stats = function () {
@@ -436,6 +458,8 @@ var pbctmp = chroma.scale(['green', 'red']).colors(100);
 for(var i in pbctmp) {
     precentageBarColors.push(chroma(pbctmp[i]).luminance(0.4).hex());
 }
+
+var precentageBarFlow = chroma.scale(['#E1F5FE', '#03A9F4']).colors(100);;
 
 function get_color(pos) {
     return chroma(
@@ -1306,14 +1330,14 @@ function init_expression_template() {
                     return;
                 }
 
-                $.ajax({
+                /*$.ajax({
                     url: api.fieldchoices.replace('%s', localColumn)
                                          .replace('%d', maxFieldsPerColumns + 1),
                     type: methods.get,
                     dataType: 'json'
                 }).done(function (result) {
                     fieldsPerColumns[localColumn] = result;
-                });
+                });*/
             })();
 
             $('.expression-select').append('<option value="' + columns[i] + '">'  + columns[i] +'</option>')
