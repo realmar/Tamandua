@@ -1317,8 +1317,7 @@ function on_overview_hours_focus_loss() {
     }
     
     $("#overview-hours").val(overviewHours);
-    DashboardView.get_overview();
-    DashboardView.get_lists();
+    DashboardView.get_stats();
 }
 
 //endregion
