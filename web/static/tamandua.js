@@ -270,7 +270,7 @@ DashboardView.get_lists = function () {
                 var localPrecentage = get_precentage(result['items'][k]['value']);
                 var element = $('<div class="dashboard-list-item">' +
                     DashboardView.precentageVisualizer(localPrecentage, precentageBarColors) +
-                    '<span>' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'] + '</span>');
+                    '<span>' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'].slice(0, 55) + '</span>');
                 element.click(function () {
                     DashboardView.go_to_sender($(this).find('.dashboard-list-data').html(), additionalSearchFields)
 
@@ -294,6 +294,11 @@ DashboardView.get_lists = function () {
 
     var spamSendersQuery = makelist('sender');
     var spamSendersDomainsQuery = makelistdomain('sender');
+
+    var rejectReasonsQuery = {};
+
+    $.extend(true, rejectReasonsQuery, dt);
+    rejectReasonsQuery['advcount'] = {'field': 'rejectreason'};
 
     var greylistFields = {'fields': [{
         'rejectreason': {
@@ -331,6 +336,8 @@ DashboardView.get_lists = function () {
 
     get_data($('#list-top-senders-spam'), $('#dashboard-overview-spam'), 'Spam', spamSendersQuery, spamSendersFields);
     get_data($('#list-top-senders-spam-domain'), null, null, spamSendersDomainsQuery, spamSendersFields);
+
+    get_data($('#list-top-reject-resons'), null, null, rejectReasonsQuery, {});
 };
 
 DashboardView.get_stats = function () {
