@@ -1366,14 +1366,14 @@ function init_expression_template() {
                     return;
                 }
 
-                /*$.ajax({
+                $.ajax({
                     url: api.fieldchoices.replace('%s', localColumn)
                                          .replace('%d', maxFieldsPerColumns + 1),
                     type: methods.get,
                     dataType: 'json'
                 }).done(function (result) {
                     fieldsPerColumns[localColumn] = result;
-                });*/
+                });
             })();
 
             $('.expression-select').append('<option value="' + columns[i] + '">'  + columns[i] +'</option>')
