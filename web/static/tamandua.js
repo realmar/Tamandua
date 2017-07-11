@@ -6,6 +6,9 @@
 var expressionLineTemplate = null;
 var expressionLines = [];
 var allColumns = [];
+var fieldsPerColumns = {};
+
+var maxFieldsPerColumns = 20;
 
 var currentColorLength = 0;
 
@@ -45,7 +48,8 @@ var api = {
     count: '/api/count',
     advcount: '/api/advcount/',
     tags: '/api/tags',
-    search: '/api/search/0/' + maxPageSize
+    search: '/api/search/0/' + maxPageSize,
+    fieldchoices: '/api/fieldchoices/%s/%d'
 };
 
 var methods = {
@@ -105,9 +109,16 @@ DashboardView.go_to_sender = function (sender, additionalFields) {
                 c = '='
             }
 
-            expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[j][i]['value']);
             expressionLines[counter + 1][0].find('.expression-comparator-button').html(c);
             expressionLines[counter + 1][1].setValue(i);
+
+            var optionselect = expressionLines[counter + 1][0].find('.search-field-selection-select');
+
+            if(optionselect.is(':visible')) {
+                optionselect[0].selectize.createItem(additionalFields[j][i]['value']);
+            }else{
+            expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[j][i]['value']);
+            }
 
             counter++;
         }
@@ -487,10 +498,46 @@ function setup_selectizer(item) {
             if(!item.data('noclear')) {
                 this.clear(true);
             }
+        },
+        onChange: function (selectedItem) {
+            var element = this.$wrapper;
+            var textselect = element.parent().parent().find('.search-text-selection');
+            var optionselect = element.parent().parent().find('.search-field-selection');
+
+            var fields = fieldsPerColumns[selectedItem];
+
+            if(fields !== undefined) {
+                if(fields.length <= maxFieldsPerColumns) {
+                    textselect.hide();
+                    optionselect.show();
+
+                    optionselect.find('select').remove();
+                    optionselect.find('.search-field-selection-select').remove();
+                    optionselect.append('<select class="search-field-selection-select"></select>');
+
+                    var select = optionselect.find('select');
+
+                    for(var i in fields) {
+                        select.append('<option value="' + fields[i] + '">'  + fields[i] +'</option>')
+                    }
+
+                    select.selectize({
+                        create: true
+                    });
+
+                    return;
+                }
+            }
+
+            textselect.show();
+            optionselect.hide();
         }
     });
 
-    return $select[0].selectize;
+    var inst = $select[0].selectize;
+    inst.trigger('change', inst.getValue());
+
+    return inst;
 }
 
 function setup_datetimepicker(item) {
@@ -1023,9 +1070,18 @@ function has_empty_expression_fields() {
 
     $.each(expressionLines, function () {
         var expInput = $(this[0]).find('.expression-input');
-        if(!expInput.val()) {
-            hasEmptyFields = true;
+        var optionselect = $(this[0]).find('.search-field-selection');
+
+        if(optionselect.is(':visible')) {
+            if(optionselect.find('.search-field-selection-select')[0].selectize.getValue() === '') {
+                hasEmptyFields = true
+            }
+        }else{
+            if(!expInput.val()) {
+                hasEmptyFields = true;
+            }
         }
+
     });
 
     return hasEmptyFields;
@@ -1130,7 +1186,16 @@ function on_search_button_click() {
         var s = this[1];
 
         var key = s.getValue();
+
+        var optionselect = jq.find('.search-field-selection');
+
         var value = jq.find('.expression-input').val();
+
+        if(optionselect.is(':visible')) {
+            value = optionselect.find('.search-field-selection-select')[0].selectize.getValue();
+        }
+
+        console.log(value);
 
         var h = {};
         h[key] = {
@@ -1237,6 +1302,22 @@ function init_expression_template() {
         sort_columns(columns);
 
         for(var i in columns) {
+            (function () {
+                const localColumn = columns[i];
+                if(localColumn === 'loglines') {
+                    return;
+                }
+
+                $.ajax({
+                    url: api.fieldchoices.replace('%s', localColumn)
+                                         .replace('%d', maxFieldsPerColumns + 1),
+                    type: methods.get,
+                    dataType: 'json'
+                }).done(function (result) {
+                    fieldsPerColumns[localColumn] = result;
+                });
+            })();
+
             $('.expression-select').append('<option value="' + columns[i] + '">'  + columns[i] +'</option>')
         }
 
