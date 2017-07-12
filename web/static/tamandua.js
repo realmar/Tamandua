@@ -179,7 +179,8 @@ DashboardView.go_to_field = function (fieldName, fieldValue, additionalFields) {
         if(optionselect.is(':visible')) {
             optionselect[0].selectize.createItem(additionalFields['fields'][i][key]['value']);
         }else{
-        expressionLines[counter][0].find('.expression-input').val(additionalFields['fields'][i][key]['value']);
+            var v = additionalFields['fields'][i][key]['value'].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            expressionLines[counter][0].find('.expression-input').val(v);
         }
 
         counter++;
