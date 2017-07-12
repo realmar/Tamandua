@@ -1,6 +1,7 @@
 """Module which contains the MailContainer class."""
 
 import copy
+import sys
 from datetime import datetime
 from typing import List, Dict
 from functools import partial
@@ -231,7 +232,8 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             else:
                 self.__build_final_metadata['aggregatedmails'] += 1
 
-            print('\r\x1b[KAggregated %d mails' % self.__build_final_metadata['aggregatedmails'])
+            sys.stdout.write('\r\x1b[KAggregated %d mails' % self.__build_final_metadata['aggregatedmails'])
+            sys.stdout.flush()
 
         self._repository.insert_or_update(mail, scope)
 
