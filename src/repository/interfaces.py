@@ -1,7 +1,7 @@
 """This Module contains all interfaces used for the repository."""
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict
+from typing import List, Tuple, Dict
 from datetime import datetime
 
 from .misc import SearchScope, CountableIterator
@@ -82,5 +82,14 @@ class IRepository(metaclass=ABCMeta):
 
     @abstractmethod
     def save_time_of_last_run(self, dt: datetime):
+        """"""
+        pass
+
+    @abstractmethod
+    def get_choices_for_field(self,
+                              field: str,
+                              limit: int,
+                              separator: str = None,
+                              separatorResultPos: int = 0) -> Tuple[int, List[str]]:
         """"""
         pass

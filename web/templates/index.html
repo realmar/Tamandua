@@ -11,6 +11,10 @@
     <!-- IE: disable compatibility mode -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
+    <!-- favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
+
     <!-- jquery -->
     <script src="//code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 
@@ -244,41 +248,56 @@
         </div>
         <div style="display: none;" id="dashboard-view" class="view">
             <div class="container">
-                <div id="overview-stats">
-                    <p class="inline">In the last <input id="overview-hours" type="text" class="form-control" placeholder="n"> hours there were <span id="overview-processed-mails" class="label label-default">n</span> mails processed. <span id="overview-virus" class="label label-default">n</span> of those are virus mails and <span id="overview-spam" class="label label-default">n</span> are spam mails.</p>
+                <div id="overview-stats" class="border-right">
+                    <div>
+                        <p class="inline">In the last</p>
+                        <input id="overview-hours" type="text" class="form-control" placeholder="n">
+                        <p class="inline">hours:</p>
+                    </div>
+                    <div>
+                        <div id="dashboard-overview-total" class="dashboard-list-item bold"></div>
+                        <hr>
+                        <div id="dashboard-overview-rejected" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-greylisted" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-delivered" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-spam" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-virus" class="dashboard-list-item"></div>
+                    </div>
                 </div>
                 <hr>
                 <div id="dashboard-list-stats">
                     <div class="list-grid">
                         <div class="grid-item grid-1">
-                            <h4>Top Senders</h4>
+                            <h4>Top delivered senders</h4>
                             <div id="list-top-senders"></div>
                         </div>
                         <div class="grid-item grid-2">
-                            <h4>Top Sender Domains</h4>
+                            <h4>Top delivered sender domains</h4>
                             <div id="list-top-senders-domain"></div>
                         </div>
                         <div class="grid-item grid-3">
-                            <h4>Top Greylisted</h4>
+                            <h4>Top greylisted</h4>
                             <div id="list-top-greylisted"></div>
                         </div>
                         <div class="grid-item grid-4">
-                            <h4>Top Greylisted Domains</h4>
+                            <h4>Top greylisted domains</h4>
                             <div id="list-top-greylisted-domain"></div>
                         </div>
                     </div>
                     <hr>
                     <div class="list-grid">
                         <div class="grid-item grid-1">
-                            <h4>Top Spam Senders</h4>
+                            <h4>Top spam senders</h4>
                             <div id="list-top-senders-spam"></div>
                         </div>
                         <div class="grid-item grid-2">
-                            <h4>Top Spam Sender Domains</h4>
+                            <h4>Top spam sender domains</h4>
                             <div id="list-top-senders-spam-domain"></div>
                         </div>
-                        <div class="grid-item grid-3"></div>
-                        <div class="grid-item grid-4"></div>
+                        <div class="grid-item grid-3">
+                            <h4>Top reject reasons</h4>
+                            <div id="list-top-reject-resons"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -300,8 +319,11 @@
         <div class="col-xs-1 col-md-1 padding-0-left padding-1-right">
             <button type="button" class="btn btn-default width-100 expression-comparator-button bold"></button>
         </div>
-        <div class="col-xs-5 col-md-5 padding-0-left padding-1-right">
+        <div class="col-xs-5 col-md-5 padding-0-left padding-1-right search-text-selection">
             <input class="form-control expression-input" type="text" aria-label="...">
+        </div>
+        <div class="col-xs-5 col-md-5 padding-0-left padding-1-right search-field-selection" style="display: none;">
+            <select class="search-field-selection-select"></select>
         </div>
         <div class="col-xs-2 col-md-2 padding-0-left">
             <button type="button" class="btn btn-default width-100 expression-remove-button"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>

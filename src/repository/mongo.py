@@ -2,9 +2,11 @@
 
 
 import itertools
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo import MongoClient
+from pymongo.collection import Collection as PyMongoCollection
 import pymongo.errors as pymongo_errors
 import re
+from functools import partial
 
 from bson.code import Code
 from datetime import datetime
@@ -33,8 +35,8 @@ class MongoCountSpecificIterable(CountableIterator):
 
     def __next__(self):
         x = next(self.__cursor)
-        while x['details']['field'] == '' or x['details']['field'] == 'null':
-            x = next(self.__cursor)
+        if x['details']['field'] is None or x['details']['field'] == '':
+            x['details']['field'] = 'nothing_found'
 
         if self.__sum == -1:
             self.__sum = x['sum']
@@ -363,26 +365,67 @@ class MongoRepository(IRepository):
 
         return res
 
+    def __group_field_values(self,
+                             field: str,
+                             collection: PyMongoCollection,
+                             limit: int = 0,
+                             separator: str = None,
+                             separatorResultPos: int = 0) -> List[str]:
+        """"""
+        if isinstance(separator, str):
+            groupExp = {'$arrayElemAt':
+                [
+                    {'$split':
+                         ['$field', separator]
+                     }, separatorResultPos
+                ]
+            }
+        else:
+            groupExp = '$field'
+
+        pipeline = [
+            {'$project': {'field': '$' + field}},
+            {'$unwind': '$field'},
+            {'$group':
+                {'_id': groupExp}
+            },
+            {'$project': {'field': '$_id'}},
+            {'$unwind': '$field'},
+        ]
+
+        if limit > 0:
+            pipeline.append({'$limit': limit})
+
+        return [x['field'] for x in collection.aggregate(pipeline)]
+
+
+    def get_choices_for_field(self,
+                              field: str,
+                              limit: int,
+                              separator: str = None,
+                              separatorResultPos: int = 0) -> List[str]:
+        """"""
+        query = partial(self.__group_field_values,
+                        field=field,
+                        limit=limit,
+                        separator=separator,
+                        separatorResultPos=separatorResultPos)
+
+        resultsComplete = query(collection=self._collection_complete)
+        resultsIncomplete = query(collection=self._collection_incomplete)
+
+        return list(set().union(resultsComplete,resultsIncomplete))
 
     def get_all_tags(self) -> List[str]:
         """"""
-        pipeline = [
-            {'$project':
-                 {'tags': '$tags'}
-             },
-            {'$unwind': '$tags'},
-            {'$group':
-                 {'_id': '$tags'}
-             }
-        ]
 
-        def do_query(collection):
-            return [x['_id'] for x in collection.aggregate(pipeline)]
+        query = partial(self.__group_field_values,
+                        field='tags')
 
-        tagsComplete = do_query(self._collection_complete)
-        tagsincomplete = do_query(self._collection_incomplete)
+        tagsComplete = query(collection=self._collection_complete)
+        tagsIncomplete = query(collection=self._collection_incomplete)
 
-        return list(set().union(tagsComplete, tagsincomplete))
+        return list(set().union(tagsComplete, tagsIncomplete))
 
     def save_time_of_last_run(self, dt: datetime):
         """"""

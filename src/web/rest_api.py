@@ -2,8 +2,12 @@
 
 from flask import request
 from flask_restful import Resource
+
+from typing import List
+
 from .data_finder import DataFinder
 from ..expression.builder import Expression
+from ..repository.factory import RepositoryFactory
 
 
 class BaseResource(Resource):
@@ -92,3 +96,20 @@ class AdvancedCount(BaseResource):
             'items': final,
             'total': len(results)
         }
+
+
+class FieldChoices(BaseResource):
+    """"""
+
+    def __init__(self, dataFinder: DataFinder):
+        super().__init__(dataFinder)
+        self._repository = RepositoryFactory.create_repository()
+
+    def get(self, field: str, maxChoices: int) -> List[str]:
+        separator = None
+        if field == 'virusresult':
+            separator = '('
+
+        return self._repository.get_choices_for_field(field,
+                                                               maxChoices,
+                                                               separator=separator)

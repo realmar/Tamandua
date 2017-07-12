@@ -6,6 +6,9 @@
 var expressionLineTemplate = null;
 var expressionLines = [];
 var allColumns = [];
+var fieldsPerColumns = {};
+
+var maxFieldsPerColumns = 20;
 
 var currentColorLength = 0;
 
@@ -45,7 +48,8 @@ var api = {
     count: '/api/count',
     advcount: '/api/advcount/',
     tags: '/api/tags',
-    search: '/api/search/0/' + maxPageSize
+    search: '/api/search/0/' + maxPageSize,
+    fieldchoices: '/api/fieldchoices/%s/%d'
 };
 
 var methods = {
@@ -79,7 +83,40 @@ function DashboardView() {
     this.interval = null;
 }
 
-DashboardView.go_to_sender = function (sender, additionalFields) {
+DashboardView.get_precentage = function (value) {
+    var total = parseInt($('#dashboard-overview-total').find('.dashboard-overview-list-item-right').html());
+    return ((value / total) * 100).toFixed(2)
+};
+
+DashboardView.precentageVisualizer = function (precentage, colorRange) {
+    var roundedPrecentage = Math.round(precentage);
+    return '<div class="dashboard-list-precentage-visualizer" style="background-color: ' + colorRange[roundedPrecentage % (colorRange.length - 1)] + '; width: ' + roundedPrecentage + '%;"></div>'
+};
+
+DashboardView.precentageHtml = function (total, total_text, addPercentage, colorRange) {
+    var totalPrecentage = DashboardView.get_precentage(total);
+    var final = '';
+
+    if(addPercentage) {
+        final += DashboardView.precentageVisualizer(totalPrecentage, colorRange);
+    }
+
+    final += '<div class="dashboard-overview-list-item-left inline">' +
+                total_text +
+            ': </div>' +
+            '<div class="dashboard-overview-list-item-right inline">' +
+            parseInt(total);
+
+    if(addPercentage) {
+        final += ' (' + totalPrecentage + '%)';
+    }
+
+    final += '</div>';
+
+    return final
+};
+
+DashboardView.go_to_field = function (fieldName, fieldValue, additionalFields) {
     change_view(new SearchView());
 
     for(var i in expressionLines) {
@@ -88,29 +125,64 @@ DashboardView.go_to_sender = function (sender, additionalFields) {
 
     expressionLines = [];
 
-    add_expression_line();
+    if(additionalFields === undefined) {
+        additionalFields = {};
+    }
 
-    expressionLines[0][0].find('.expression-input').val(sender);
+    if(Object.keys(additionalFields).length === 0) {
+        additionalFields = {
+            'fields': []
+        }
+    }
+
+    var tmp = {};
+
+    var exists = false;
+    for(var i in additionalFields['fields']) {
+        if(Object.keys(additionalFields['fields'][i])[0] === fieldName) {
+            exists = true;
+        }
+    }
+
+    if(!exists) {
+        tmp[fieldName] = {
+            'comparator': '=',
+            'value': fieldValue
+        };
+    }
+
+    additionalFields['fields'].push(tmp);
+
+    /*add_expression_line();
+
+    expressionLines[0][0].find('.expression-input').val(field);
     expressionLines[0][1].setValue('sender');
 
-    additionalFields = additionalFields['fields'];
+    additionalFields = additionalFields['fields'];*/
 
     var counter = 0;
-    for(var j in additionalFields) {
-        for(var i in additionalFields[j]) {
-            add_expression_line();
+    for(var i in additionalFields['fields']) {
+        add_expression_line();
 
-            var c = additionalFields[j][i]['comparator'];
-            if(c === 're_i' || c ==='re') {
-                c = '='
-            }
+        var key = Object.keys(additionalFields['fields'][i])[0];
 
-            expressionLines[counter + 1][0].find('.expression-input').val(additionalFields[j][i]['value']);
-            expressionLines[counter + 1][0].find('.expression-comparator-button').html(c);
-            expressionLines[counter + 1][1].setValue(i);
-
-            counter++;
+        var c = additionalFields['fields'][i][key]['comparator'];
+        if(c === 're_i' || c ==='re') {
+            c = '='
         }
+
+        expressionLines[counter][0].find('.expression-comparator-button').html(c);
+        expressionLines[counter][1].setValue(key);
+
+        var optionselect = expressionLines[counter][0].find('.search-field-selection-select');
+
+        if(optionselect.is(':visible')) {
+            optionselect[0].selectize.createItem(additionalFields['fields'][i][key]['value']);
+        }else{
+        expressionLines[counter][0].find('.expression-input').val(additionalFields['fields'][i][key]['value']);
+        }
+
+        counter++;
     }
 
     $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
@@ -124,11 +196,6 @@ DashboardView.go_to_sender = function (sender, additionalFields) {
     on_search_button_click();
 };
 
-DashboardView.get_precentage = function (value) {
-    var total = parseInt($('#overview-processed-mails').html());
-    return ((value / total) * 100).toFixed(2)
-};
-
 DashboardView.get_overview = function (callback) {
     var dt = {
         'datetime': {
@@ -138,11 +205,11 @@ DashboardView.get_overview = function (callback) {
 
     var totalMailsQuery = $.extend({}, dt);
 
-    var totalSpamQuery = $.extend({}, dt);
-    totalSpamQuery['fields'] = [{
-        'spamscore': {
-            'comparator': '>=',
-            'value': 5
+    var totalRejectQuery = $.extend({}, dt);
+    totalRejectQuery['fields'] = [{
+        'action': {
+            'comparator': '=',
+            'value': 'reject'
         }
     }];
 
@@ -154,7 +221,7 @@ DashboardView.get_overview = function (callback) {
         }
     }];
 
-    function get_data(selector_arg, expression, addPrecentages, callback) {
+    function get_data(selector_arg, total_text, expression, addPrecentages, callback) {
         var selector = selector_arg;
 
         $.ajax({
@@ -164,18 +231,16 @@ DashboardView.get_overview = function (callback) {
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
         }).done(function (result) {
-            if(addPrecentages) {
-                selector.html(result + ' (' + DashboardView.get_precentage(result) + '%)');
-            }else{
-                selector.html(result);
-            }
+            selector.html(
+                DashboardView.precentageHtml(result, total_text, addPrecentages, precentageBarFlow)
+            );
             callback()
         });
     }
 
-    get_data($('#overview-processed-mails'), totalMailsQuery, false, function () {
-        get_data($('#overview-virus'), totalVirusQuery, true, function () {});
-        get_data($('#overview-spam'), totalSpamQuery, true, function () {});
+    get_data($('#dashboard-overview-total'), 'Total', totalMailsQuery, false, function () {
+        get_data($('#dashboard-overview-virus'), 'Virus', totalVirusQuery, true, function () {});
+        get_data($('#dashboard-overview-rejected'), 'Rejected', totalRejectQuery, true, function () {});
         callback();
     });
 };
@@ -201,8 +266,11 @@ DashboardView.get_lists = function () {
         return query;
     }
 
-    function get_data(selector_arg, expression, additionalSearchFields_arg) {
+    function get_data(selector_arg, total_selector_arg, total_text_arg, expression, field_arg, additionalSearchFields_arg) {
         var selector = selector_arg;
+        var total_selector = total_selector_arg;
+        var total_text = total_text_arg;
+        var field = field_arg;
         var additionalSearchFields = additionalSearchFields_arg;
 
         $.ajax({
@@ -223,18 +291,17 @@ DashboardView.get_lists = function () {
                 }
             }
 
-            selector.append($('<div>' +
-                    '<span class="label label-default">' +
-                        parseInt(result['total']) + ' (' + DashboardView.get_precentage(result['total']) + '%)' +
-                    '</span> <span>' +
-                        'Total' +
-                    '</span>' +
-                '</div><hr class="dashboard-total-separator">'));
+            if(total_selector !== null) {
+                total_selector.html(DashboardView.precentageHtml(result['total'], total_text, true, precentageBarFlow));
+            }
 
             for(var k in result['items']) {
-                var element = $('<div><span class="label label-default">' + result['items'][k]['value'] + ' (' + get_precentage(result['items'][k]['value']) + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'] + '</span>');
+                var localPrecentage = get_precentage(result['items'][k]['value']);
+                var element = $('<div class="dashboard-list-item">' +
+                    DashboardView.precentageVisualizer(localPrecentage, precentageBarColors) +
+                    '<span>' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'].slice(0, 55) + '</span>');
                 element.click(function () {
-                    DashboardView.go_to_sender($(this).find('.dashboard-list-data').html(), additionalSearchFields)
+                    DashboardView.go_to_field(field, $(this).find('.dashboard-list-data').html(), additionalSearchFields)
 
                 });
                 selector.append(element);
@@ -244,12 +311,23 @@ DashboardView.get_lists = function () {
 
     var sendersQuery = makelist('sender');
     var senderDomainsQuery = makelistdomain('sender');
+    var sendersAdditionalFields = {'fields': [{
+        'deliverystatus': {
+            'comparator': '=',
+            'value': 'sent'
+        }
+    }]};
 
     var greylistedQuery = makelist('sender');
     var greylistedDomainsQuery = makelistdomain('sender');
 
     var spamSendersQuery = makelist('sender');
     var spamSendersDomainsQuery = makelistdomain('sender');
+
+    var rejectReasonsQuery = {};
+
+    $.extend(true, rejectReasonsQuery, dt);
+    rejectReasonsQuery['advcount'] = {'field': 'rejectreason'};
 
     var greylistFields = {'fields': [{
         'rejectreason': {
@@ -273,20 +351,22 @@ DashboardView.get_lists = function () {
     $.extend(true, greylistedQuery, greylistFields);
     $.extend(true, greylistedDomainsQuery, greylistFields);
 
-    $.extend(true, sendersQuery, excludeGreylistingQuery);
-    $.extend(true, senderDomainsQuery, excludeGreylistingQuery);
+    $.extend(true, sendersQuery, sendersAdditionalFields);
+    $.extend(true, senderDomainsQuery, sendersAdditionalFields);
 
     $.extend(true, spamSendersQuery, spamSendersFields);
     $.extend(true, spamSendersDomainsQuery, spamSendersFields);
 
-    get_data($('#list-top-senders'), sendersQuery, excludeGreylistingQuery);
-    get_data($('#list-top-senders-domain'), senderDomainsQuery, excludeGreylistingQuery);
+    get_data($('#list-top-senders'), $('#dashboard-overview-delivered'), 'Delivered', sendersQuery, 'sender', excludeGreylistingQuery);
+    get_data($('#list-top-senders-domain'), null, null, senderDomainsQuery, 'sender', excludeGreylistingQuery);
 
-    get_data($('#list-top-greylisted'), greylistedQuery, greylistFields);
-    get_data($('#list-top-greylisted-domain'), greylistedDomainsQuery, greylistFields);
+    get_data($('#list-top-greylisted'), $('#dashboard-overview-greylisted'), 'Greylisted', greylistedQuery, 'sender', greylistFields);
+    get_data($('#list-top-greylisted-domain'), null, null, greylistedDomainsQuery, 'sender', greylistFields);
 
-    get_data($('#list-top-senders-spam'), spamSendersQuery, spamSendersFields);
-    get_data($('#list-top-senders-spam-domain'), spamSendersDomainsQuery, spamSendersFields);
+    get_data($('#list-top-senders-spam'), $('#dashboard-overview-spam'), 'Spam', spamSendersQuery, 'sender', spamSendersFields);
+    get_data($('#list-top-senders-spam-domain'), null, null, spamSendersDomainsQuery, 'sender', spamSendersFields);
+
+    get_data($('#list-top-reject-resons'), null, null, rejectReasonsQuery, 'rejectreason', {});
 };
 
 DashboardView.get_stats = function () {
@@ -298,7 +378,7 @@ DashboardView.prototype = {
         $('#dashboard-nav-link').addClass('navbar-item-active');
         $('#dashboard-view').show();
 
-        this.interval = setInterval(DashboardView.get_stats, 10000);
+        // this.interval = setInterval(DashboardView.get_stats, 10000);
         DashboardView.get_stats();
     },
 
@@ -409,6 +489,14 @@ var colors = chroma.scale(
     ]
 ).colors(15);
 
+var precentageBarColors = [];
+var pbctmp = chroma.scale(['green', 'red']).colors(100);
+for(var i in pbctmp) {
+    precentageBarColors.push(chroma(pbctmp[i]).luminance(0.4).hex());
+}
+
+var precentageBarFlow = chroma.scale(['#E1F5FE', '#03A9F4']).colors(100);;
+
 function get_color(pos) {
     return chroma(
         colors[pos % (colors.length - 1)]
@@ -470,10 +558,46 @@ function setup_selectizer(item) {
             if(!item.data('noclear')) {
                 this.clear(true);
             }
+        },
+        onChange: function (selectedItem) {
+            var element = this.$wrapper;
+            var textselect = element.parent().parent().find('.search-text-selection');
+            var optionselect = element.parent().parent().find('.search-field-selection');
+
+            var fields = fieldsPerColumns[selectedItem];
+
+            if(fields !== undefined) {
+                if(fields.length <= maxFieldsPerColumns) {
+                    textselect.hide();
+                    optionselect.show();
+
+                    optionselect.find('select').remove();
+                    optionselect.find('.search-field-selection-select').remove();
+                    optionselect.append('<select class="search-field-selection-select"></select>');
+
+                    var select = optionselect.find('select');
+
+                    for(var i in fields) {
+                        select.append('<option value="' + fields[i] + '">'  + fields[i] +'</option>')
+                    }
+
+                    select.selectize({
+                        create: true
+                    });
+
+                    return;
+                }
+            }
+
+            textselect.show();
+            optionselect.hide();
         }
     });
 
-    return $select[0].selectize;
+    var inst = $select[0].selectize;
+    inst.trigger('change', inst.getValue());
+
+    return inst;
 }
 
 function setup_datetimepicker(item) {
@@ -1006,9 +1130,18 @@ function has_empty_expression_fields() {
 
     $.each(expressionLines, function () {
         var expInput = $(this[0]).find('.expression-input');
-        if(!expInput.val()) {
-            hasEmptyFields = true;
+        var optionselect = $(this[0]).find('.search-field-selection');
+
+        if(optionselect.is(':visible')) {
+            if(optionselect.find('.search-field-selection-select')[0].selectize.getValue() === '') {
+                hasEmptyFields = true
+            }
+        }else{
+            if(!expInput.val()) {
+                hasEmptyFields = true;
+            }
         }
+
     });
 
     return hasEmptyFields;
@@ -1113,7 +1246,14 @@ function on_search_button_click() {
         var s = this[1];
 
         var key = s.getValue();
+
+        var optionselect = jq.find('.search-field-selection');
+
         var value = jq.find('.expression-input').val();
+
+        if(optionselect.is(':visible')) {
+            value = optionselect.find('.search-field-selection-select')[0].selectize.getValue();
+        }
 
         var h = {};
         h[key] = {
@@ -1177,8 +1317,7 @@ function on_overview_hours_focus_loss() {
     }
     
     $("#overview-hours").val(overviewHours);
-    DashboardView.get_overview();
-    DashboardView.get_lists();
+    DashboardView.get_stats();
 }
 
 //endregion
@@ -1220,6 +1359,22 @@ function init_expression_template() {
         sort_columns(columns);
 
         for(var i in columns) {
+            (function () {
+                const localColumn = columns[i];
+                if(localColumn === 'loglines') {
+                    return;
+                }
+
+                $.ajax({
+                    url: api.fieldchoices.replace('%s', localColumn)
+                                         .replace('%d', maxFieldsPerColumns + 1),
+                    type: methods.get,
+                    dataType: 'json'
+                }).done(function (result) {
+                    fieldsPerColumns[localColumn] = result;
+                });
+            })();
+
             $('.expression-select').append('<option value="' + columns[i] + '">'  + columns[i] +'</option>')
         }
 
