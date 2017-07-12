@@ -4,11 +4,7 @@ import copy
 from datetime import datetime
 from typing import List, Dict
 from functools import partial
-# from pprint import pprint
-
-import colorama
-
-colorama.init(autoreset=True)
+from pprint import pprint
 
 from src.plugins.interfaces import IDataContainer, IRequiresPlugins, IRequiresRepository
 from src.repository.interfaces import IRepository
@@ -17,7 +13,8 @@ from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
 from src.repository.misc import SearchScope
 from src.plugins.bases.mail_edge_case_processor import MailEdgeCaseProcessorData
-from src.expression.builder import ExpressionBuilder, ExpressionField, Expression, Comparator
+from src.expression.builder import ExpressionBuilder, ExpressionField, Comparator
+from src.config import Config
 
 
 class AlreadyInRepository(Exception):
@@ -224,7 +221,9 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         else:
             scope = SearchScope.COMPLETE
 
-        # pprint(mail)
+
+        if not Config().get('noprint'):
+            pprint(mail)
 
         self._repository.insert_or_update(mail, scope)
 
@@ -510,64 +509,3 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                     self.__process_aggregated_mail(mail)
 
         self._map_pickup.clear()
-
-    def represent(self) -> None:
-        """Print the contents of this container in a human readable format to stdout."""
-
-        """
-        def print_title(**kv):
-            finalStr = '---- '
-            for k, v in kv.items():
-                finalStr += k + ': ' + colorama.Style.BRIGHT + str(v) + colorama.Style.NORMAL + ' '
-
-            finalStr += '----'
-
-            print(finalStr)
-
-        def print_list(key, value):
-            print('    ' + colorama.Style.BRIGHT + key)
-            for v in value:
-                print('        ' + str(v).strip())
-
-        print('\n========' + colorama.Style.BRIGHT + ' List of collected Mails ' +
-              colorama.Style.NORMAL + '========')
-
-        # begin printing mails
-
-        for mail in self._aggregated_mails:
-            print('\n')
-            print(colorama.Back.LIGHTMAGENTA_EX + '>>>>' * 4 + colorama.Style.BRIGHT + ' Mail ' +
-                  colorama.Style.NORMAL + '<<<<' * 4)
-
-            mxin_qid = mail.get(constants.PHD_MXIN_QID)
-            imap_qid = mail.get(constants.PHD_IMAP_QID)
-            msgid = mail.get(constants.MESSAGEID)
-
-            d = {}
-
-            if imap_qid is not None:
-                d['Queue-ID phd-imap'] = imap_qid
-
-            if mxin_qid is not None:
-                d['Queue-ID phd-mxin'] = mxin_qid
-
-            if msgid is not None:
-                d['Message-ID'] = msgid
-
-            print_title(**d)
-
-            for key, value in sorted(mail.items(), key=lambda x: x[0]):
-                if key == constants.LOGLINES:
-                    continue
-
-                if isinstance(value, list):
-                    print_list(key, value)
-                else:
-                    print('    ' + colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
-
-            loglines = mail.get(constants.LOGLINES)
-            if loglines is not None:
-                print_list(constants.LOGLINES, loglines)
-        """
-
-        pass

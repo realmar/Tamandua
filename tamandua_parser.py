@@ -28,7 +28,7 @@ from src.repository.factory import RepositoryFactory
 
 
 class DefaultArgs():
-    logfile = 'mock_logs' + os.path.sep + 'extern-intern_to_intern.log'
+    logfile = os.path.join('mock_logs', 'extern-intern_to_intern.log')
     noprint = False
     configfile = os.path.join(BASEDIR, CONFIGFILE)
 
@@ -38,7 +38,8 @@ def main(args: DefaultArgs):
     try:
         Config().setup(
             args.configfile,
-            BASEDIR
+            BASEDIR,
+            vars(args)
         )
     except FileNotFoundError as e:
         print_exception(
@@ -81,9 +82,10 @@ def main(args: DefaultArgs):
     try:
         for line in logfilehandle:
             pluginManager.process_line(line)
-            linecounter += 1
-            sys.stdout.write('\r\x1b[KProcessed %d lines' % linecounter)
-            sys.stdout.flush()
+            if not args.noprint:
+                linecounter += 1
+                sys.stdout.write('\r\x1b[KProcessed %d lines' % linecounter)
+                sys.stdout.flush()
     except UnicodeDecodeError as e:
         print_exception(
             e,
@@ -97,18 +99,20 @@ def main(args: DefaultArgs):
             fatal=True)
         sys.exit(9)
 
-    print('')
+    if not args.noprint:
+        print('')
 
     # save the current byte position
 
     repository.save_position_of_last_read_byte(currByte + logfilehandle.tell())
 
-    print('Aggregating fragments to objects')
+    if not args.noprint:
+        print('Aggregating fragments to objects')
 
-    # print data to stdout
+    # aggregate fragments to objects
     for container in pluginManager.dataReceiver.containers:
         try:
-            container.build_final()                 # build final data
+            container.build_final()
         except Exception as e:
             print_exception(
                 e,
@@ -116,19 +120,6 @@ def main(args: DefaultArgs):
                 'Discarding aggregation and exiting application',
                 fatal=True)
             sys.exit(10)
-
-        if not args.noprint:
-            try:
-                container.represent()                   # represent data
-
-                print('\n')
-                print('-' * 60)
-                print('\n')
-            except Exception as e:
-                print_exception(
-                    e,
-                    'Printing container to stdout: ' + container.__class__.__name__,
-                    'ignoring current container')
 
         
 """We only start with the executation if we are the main."""
