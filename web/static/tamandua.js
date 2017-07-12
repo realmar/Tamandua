@@ -142,6 +142,8 @@ DashboardItem.prototype = {
                 }
             }
 
+            this.listSelector.empty();
+
             for(var k in result['items']) {
                 var localPrecentage = get_precentage(result['items'][k]['value']);
                 var v = result['items'][k]['key'];
