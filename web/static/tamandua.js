@@ -1358,6 +1358,26 @@ function init_expression_template() {
 
         sort_columns(columns);
 
+        excludedColumns = [
+            'phdmxin_qid',
+            'phdimap_qid',
+            'messageid',
+            'phdmxin_time',
+            'phdimap_time',
+            'sender',
+            'recipient',
+            'connectclient',
+            'connectip',
+            'deliveryrelay',
+            'spamscantime',
+            'spamscore',
+            'spamdesc',
+            'username',
+            'uid',
+            'size',
+            'saslusername'
+        ];
+
         for(var i in columns) {
             (function () {
                 const localColumn = columns[i];
@@ -1365,14 +1385,16 @@ function init_expression_template() {
                     return;
                 }
 
-                $.ajax({
-                    url: api.fieldchoices.replace('%s', localColumn)
-                                         .replace('%d', maxFieldsPerColumns + 1),
-                    type: methods.get,
-                    dataType: 'json'
-                }).done(function (result) {
-                    fieldsPerColumns[localColumn] = result;
-                });
+                if(excludedColumns.indexOf(localColumn) === -1) {
+                    $.ajax({
+                        url: api.fieldchoices.replace('%s', localColumn)
+                            .replace('%d', maxFieldsPerColumns + 1),
+                        type: methods.get,
+                        dataType: 'json'
+                    }).done(function (result) {
+                        fieldsPerColumns[localColumn] = result;
+                    });
+                }
             })();
 
             $('.expression-select').append('<option value="' + columns[i] + '">'  + columns[i] +'</option>')
