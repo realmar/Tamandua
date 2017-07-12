@@ -21,8 +21,8 @@ import subprocess
 from src.repository.factory import RepositoryFactory
 from src.repository.misc import SearchScope
 from src.config import Config
-from src.constants import CONFIGFILE, PHD_MXIN_TIME, PHD_IMAP_TIME
-from src.expression.builder import ExpressionBuilder, Comparator
+from src.constants import CONFIGFILE
+from src.expression.builder import ExpressionBuilder
 
 
 Config().setup(
