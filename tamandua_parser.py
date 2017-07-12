@@ -30,6 +30,7 @@ from src.repository.factory import RepositoryFactory
 class DefaultArgs():
     logfile = os.path.join('mock_logs', 'extern-intern_to_intern.log')
     noprint = False
+    onlyprintmsgs = False
     configfile = os.path.join(BASEDIR, CONFIGFILE)
 
 
@@ -83,9 +84,9 @@ def main(args: DefaultArgs):
         for line in logfilehandle:
             pluginManager.process_line(line)
             if not args.noprint:
-                linecounter += 1
-                sys.stdout.write('\r\x1b[KProcessed %d lines' % linecounter)
-                sys.stdout.flush()
+                    linecounter += 1
+                    sys.stdout.write('\r\x1b[KProcessed %d lines' % linecounter)
+                    sys.stdout.flush()
     except UnicodeDecodeError as e:
         print_exception(
             e,
@@ -144,6 +145,12 @@ if __name__ == '__main__':
         default=False,
         action='store_true',
         help='Do not print results to stdout')
+    parser.add_argument(
+        '--only-print-msgs',
+        dest='onlyprintmsgs',
+        default=False,
+        action='store_true',
+        help='Only print system messages')
 
     # https://docs.python.org/3/library/argparse.html#argparse.Namespace
     args = DefaultArgs()

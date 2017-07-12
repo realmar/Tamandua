@@ -223,7 +223,8 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
 
 
         if not Config().get('noprint'):
-            pprint(mail)
+            if not Config().get('onlyprintmsgs'):
+                pprint(mail)
 
         self._repository.insert_or_update(mail, scope)
 
