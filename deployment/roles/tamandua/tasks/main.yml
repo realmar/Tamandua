@@ -144,8 +144,11 @@
   notify:
     - restart apache2
 
-- name: install tamandua cronjob
+- name: install tamandua cronjobs
   template:
-    src: tamandua_cron
-    dest: /etc/cron.d/tamandua_cron
+    src: "{{ item }}"
+    dest: /etc/cron.d/"{{ item }}"
     mode: 644
+  with_items:
+    - tamandua_cron
+    - mongodb_dump_cron
