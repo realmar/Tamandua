@@ -55,6 +55,11 @@ def remove_pid():
     if cleanupPID:
         os.remove(pidfile)
 
+    try:
+        os.remove(os.path.join(BASEDIR, 'logfile'))
+    except FileNotFoundError as e:
+        pass
+
 
 @manager.command(namespace='reset')
 def logfile_pos():
@@ -147,6 +152,9 @@ def run():
     process = run_remotesshwrapper_command('getmaillogsize')
     currlogfilesize = int(process.communicate()[0].decode('utf-8'))
 
+    print('Last logfile size: %d' % lastlogfilesize)
+    print('Current logfile size: %d' % currlogfilesize)
+
     if currlogfilesize < lastlogfilesize:
         print('New logfile detected, reading from beginning.')
         logfile_pos()
@@ -154,7 +162,10 @@ def run():
     repository.save_size_of_last_logfile(currlogfilesize)
     currByte = repository.get_position_of_last_read_byte()
 
+    print('Position of last read byte: %d' % currByte)
+
     with open(logfilename, 'wb') as f:
+        print('Start transferring logfile diff to local machine\n')
         process = run_remotesshwrapper_command('tamandua', args=[str(max(0, currByte - 1000))], stdout=f)
         process.wait()
 
@@ -164,6 +175,8 @@ def run():
     args = DefaultArgs()
     args.logfile = logfilename
     args.noprint = True
+
+    print('\nStart reading the logfile')
 
     tamandua_main(args)
     cleanup()

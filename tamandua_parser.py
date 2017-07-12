@@ -76,10 +76,14 @@ def main(args: DefaultArgs):
     currByte = repository.get_position_of_last_read_byte()
 
     logfilehandle = open(args.logfile, 'r')
+    linecounter = 0
 
     try:
         for line in logfilehandle:
             pluginManager.process_line(line)
+            linecounter += 1
+            sys.stdout.write('\r\x1b[KProcessed %d lines' % linecounter)
+            sys.stdout.flush()
     except UnicodeDecodeError as e:
         print_exception(
             e,
@@ -93,9 +97,13 @@ def main(args: DefaultArgs):
             fatal=True)
         sys.exit(9)
 
+    print('')
+
     # save the current byte position
 
     repository.save_position_of_last_read_byte(currByte + logfilehandle.tell())
+
+    print('Aggregating fragments to objects')
 
     # print data to stdout
     for container in pluginManager.dataReceiver.containers:
