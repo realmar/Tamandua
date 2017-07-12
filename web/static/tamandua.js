@@ -486,7 +486,7 @@ DashboardView.get_overview_generic = function (cls, callback) {
             inst.process_data(result);
         });
     })();
-}
+};
 
 DashboardView.get_overview = function (callback) {
     DashboardView.get_overview_generic(TotalMailsItem, callback);
