@@ -226,6 +226,13 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             if not Config().get('onlyprintmsgs'):
                 pprint(mail)
 
+            if not isinstance(self.__build_final_metadata.get('aggregatedmails'), int):
+                self.__build_final_metadata['aggregatedmails'] = 1
+            else:
+                self.__build_final_metadata['aggregatedmails'] += 1
+
+            print('\r\x1b[KAggregated %d mails' % self.__build_final_metadata['aggregatedmails'])
+
         self._repository.insert_or_update(mail, scope)
 
     def __aggregate_mails(self,
@@ -510,3 +517,6 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                     self.__process_aggregated_mail(mail)
 
         self._map_pickup.clear()
+
+        if not Config().get('noprint'):
+            print('')

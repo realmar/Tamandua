@@ -107,9 +107,6 @@ def main(args: DefaultArgs):
 
     repository.save_position_of_last_read_byte(currByte + logfilehandle.tell())
 
-    if not args.noprint:
-        print('Aggregating fragments to objects')
-
     # aggregate fragments to objects
     for container in pluginManager.dataReceiver.containers:
         try:
