@@ -298,9 +298,10 @@ DashboardView.get_lists = function () {
 
             for(var k in result['items']) {
                 var localPrecentage = get_precentage(result['items'][k]['value']);
-                var element = $('<div class="dashboard-list-item">' +
+                var v = result['items'][k]['key'];
+                var element = $('<div class="dashboard-list-item dashboard-list-overflow">' +
                     DashboardView.precentageVisualizer(localPrecentage, precentageBarColors) +
-                    '<span>' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span class="dashboard-list-data">' + result['items'][k]['key'].slice(0, 55) + '</span>');
+                    '<span class="dashboard-list-overflow">' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span title="' + v + '" class="dashboard-list-data dashboard-list-overflow">' + v + '</span>');
                 element.click(function () {
                     DashboardView.go_to_field(field, $(this).find('.dashboard-list-data').html(), additionalSearchFields)
 

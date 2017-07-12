@@ -208,6 +208,14 @@ button.hide-show-empty-fields-button {
     margin-bottom: 0.4em;
 }
 
+.dashboard-list-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 24em;
+    white-space: nowrap;
+
+}
+
 /* grid */
 
 .list-grid {
