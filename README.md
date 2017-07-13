@@ -55,14 +55,27 @@ $ source ve/bin/activate
 
 Usage
 -----
+### Manager
+The manager encapsulated the parser and associated administrative tasks. In almost all cases you will use the manager.
+
+Most commonly used options:
+```sh
+$ tamandua_manager  --help              # show all CLI options with description
+                    run                 # run the parser pipeline:
+                                        # get logfile diff --> run parser --> cleanup --> remove local temp data
+                    cleanup             # remove data which is older than 30 days (default)
+```
+
 ### Parser
 ```sh
 (ve) $ tamandua_parser  <logfile>
-                        --help      # show all options
+                        --print-data        # print data after aggregation (eg. mail objects)
+                        --print-msgs        # print system messages (eg. number of currently processed lines or aggregated objects)
+                        --help              # show all options
 ```
 
 ### Web
-**NOTE:** For production, use the web-app in combination with wsgi, ssl, auth and apache2. (Or something similar)
+**NOTE:** For production, use the web-app in combination with wsgi, **ssl**, **auth** and apache2. (Or something similar)
 ```sh
 # Run web-app in debug mode
 (ve) $ tamandua_web
@@ -96,11 +109,26 @@ $ <your-fav-editor> config.json
         # regex which extracts month, day, time and hostname from every logline
         "preregex": "^(?P<month>[^\\s]*?)\\s{1,2}(?P<day>[^\\s]*?)\\s(?P<time>[^\\s]*?)\\s(?P<hostname>[^\/\\s]*?)[^\\w-]+?",
 
-        # output format, can be either 'pyobj-store' or 'json'
-        "store_type": "pyobj-store",
+        # specify database type
+        "database_type": "mongo",
 
-        # path of the output
-        "store_path": "mails.data"
+        # name of the database to store the data
+        "database_name": "tamandua",
+
+        # name of the collection containing the complete data
+        "collection_complete": "complete",
+
+        # and the incomplete data
+        "collection_incomplete": "incomplete",
+
+        # name of the collection of the metadata
+        "collection_metadata": "metadata",
+
+        # servername/ip
+        "dbserver": "localhost",
+
+        # port
+        "dbport": 27017
     }
 ```
 
@@ -141,13 +169,13 @@ class UpperCamelCase():
         self.publicField
 
     # through the whole project type annotations are used
-    # so please also add them in your contibution
+    # in order to keep tamandua typesafe, _always_ use them
     # https://docs.python.org/3/library/typing.html
     #
     # eg.:
-    def method(s: str, i: int) -> list:
+    def method(s: str, i: int) -> List[Union[str, int]]:
         """Always add docstrings."""
-        return []
+        return [s, i]
 
 # Interface coding style
 
@@ -159,6 +187,54 @@ class IUpperCamelCase(metaclass=ABCMeta):
     @abstractmethod
     def method_name(self) -> None:
         pass
+
+    @property
+    @abstractmethod
+    def property(self):
+        return 'foobar'
+```
+
+Modules and packages: (snake case)
+```sh
+package_name/module_name.py
+```
+
+Remember:
+ - Add type hints
+ - Add docstrings
+ - Evaluate member visibility
+   - Do not make the public interface of a class more complex than needed
+
+Components
+----------
+Tamandua consists of 2 main components: the parser which extracts and aggregates data from a given logfile and the web-app which represents this gathered data to the user. Each of those two components is further divided into internal components.
+
+The parser will store the processed data in a database which is also used by the web-app. This database is abstracted using the [repository pattern](https://msdn.microsoft.com/en-us/library/ff649690.aspx). (More to it later)
+
+### Parser
+The parser consists of:
+ - PluginManager
+   - Plugins
+     - Containers
+     - Data Extraction
+     - Processors (pre/post/edge cases)
+ - Repository
+   - MongoDB
+
+Data flow:
+```sh
+logfile --> logline --> pluginmanager --> data extraction --> containers --> pre/post/edge case processors --> repository --> store data to disk
+```
+
+### Web-App
+The web-app follows the design principle of MVC:
+
+ - Controller, Model runs on the server
+ - View run in the browser of the user
+
+User searches data:
+```sh
+view search form --> controller --> repository --> get data from database --> controller --> return results to view
 ```
 
 Containers
@@ -359,6 +435,84 @@ The `Chain` will detect, that a given plugin has marked its data to be deleted. 
 ### Introduce a new type of plugin
 If a new type of plugins are required, then the internals of `src.plugins.plugin_manager.PluginManager` have to be adapted. Every plugin has to inherit from the marker interface `src.interfaces.IAbstractPlugin`. Classes of this type are detected by the PluginManager as plugins. After all those plugins are loaded you have to decide what to do with them. Data collection plugins inherit from `IPlugin` and Processors inherit from `IProcessorPlugin`, so you need to create a new interface for the new plugin type, eg. `IExamplePlugin` and tell the PluginManager what to do with those plugins.
 
+Expressions
+-----------
+In order to abstract the query language of each concrete repository (eg. MongoDB and MySQL) Tamandua has its own intermediate query language. (aka intermediate expression) This query language is used extensively throughout the project. (`View --> Controller --> Repository`, `Parser --> Repository`) Each concrete repository then has to compile this intermediate expression to its specific query language.
+
+In order to abstract the expression itself and make building expressions easier an `ExpressionBuilder` was implemented:
+
+```python
+from src.expression.builder import ExpressionBuilder, ExpressionField, Comparator
+
+builder = ExpressionBuilder()
+builder.add_field(
+    ExpressionField('field', 'value', Comparator(Comparator.regex_i))
+)
+
+# check source for more methods (eg. adding datetime)
+```
+
+As you can see an `ExpressionField` and a `Comparator` are used to further abstract the components of an expression.
+
+An `ExpressionField` represents a field you want to search for. A `Comparator` is, well, a comparator, checkout source for all options.
+
+See also [builder pattern](https://sourcemaking.com/design_patterns/builder).
+
+Countable Iterables
+-------------------
+
+Inspired by: [.NET's IEnumerable.Count](https://msdn.microsoft.com/en-us/library/bb338038(v=vs.110).aspx)
+
+Repository
+----------
+Tamandua abstract the storage backend using a repository pattern. This allows the developer to easily extend Tamandua with a new storage backend. The creation of this repository is handled by a `RepositoryFactory`.
+
+Lets assume that Tamandua should be changed so that it writes its data to a couchbase db. For this we will first create a new concrete repository:
+
+Each repository has to implement the `IRepository` interface:
+
+```python
+from src.repository.interfaces import IRepository
+
+class CouchbaseRepository(IRepository):
+    ( ... )
+    # Look at docstrings in interface source for implementation details
+```
+
+Then we will need to add the new repository to the `RepositoryFactory`:
+
+```python
+class RepositoryFactory():
+
+    __repo_map = {
+        # the existing mongo repository
+        'mongo': {
+            'config': MongoRepository.get_config_fields(),
+            'cls': MongoRepository
+        }
+
+        # the new couchbase repository
+        'couchbase': {
+            'config': CouchbaseRepository.get_config_fields(),
+            'cls': CouchbaseRepository
+        }
+    }
+
+    ( ... )
+```
+
+Now its time to change the database type in the config file in order for the framework to actually use the new repository:
+
+```json
+{
+    "database_type": "couchbase"
+}
+```
+
+Note, that the `database_type` field has to match the key in the `__repo_map`.
+
+See also [repository pattern](https://msdn.microsoft.com/en-us/library/ff649690.aspx), [factory method](https://sourcemaking.com/design_patterns/factory_method).
+
 Appendix
 ========
 ## Project Name
@@ -370,33 +524,24 @@ Tamandua consumes a lot of RAM, so plan accordingly. (memusage: > 2x size of log
 ```sh
 -rw-r----- 1 amartako amartako 264M Jun 14 12:09 /ashscr1/jupyter/mail.log-20170613
 
-amartako@ash:~/Documents/Projects/IPA/Tamandua (master)$ /usr/bin/time -v ./tamandua_parser.py /ashscr1/jupyter/mail.log-20170613 --no-print
-	Command being timed: "./tamandua_parser.py /ashscr1/jupyter/mail.log-20170613 --no-print"
-	User time (seconds): 113.74
-	System time (seconds): 1.23
-	Percent of CPU this job got: 94%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:02.20
-	Average shared text size (kbytes): 0
-	Average unshared data size (kbytes): 0
-	Average stack size (kbytes): 0
-	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 593768       <--------
-	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 189591
-	Voluntary context switches: 4390
-	Involuntary context switches: 396
-	Swaps: 0
-	File system inputs: 539720
-	File system outputs: 152672
-	Socket messages sent: 0
-	Socket messages received: 0
-	Signals delivered: 0
-	Page size (bytes): 4096
-	Exit status: 0
+amartako@ash:~/Documents/Projects/IPA/Tamandua (master)$ /usr/bin/time -v ./tamandua_parser.py
+        # TODO
 ```
 
 ## Windows support
 Tamandua has full Windows support.
 
-The only thing you need to pay attention on Windows is, that linux symlinks won't work. This means that the plugins have to go into the `plugins-enabled` folder by another mean.
+The only thing you need to pay attention on Windows is, that linux symlinks won't work out of the box. You need to install git for windows and either enable symlinks during the installation or enable them when you clone the repo:
+
+```sh
+$ git clone -c core.symlinks=true <URL>
+```
+
+Although in order to make the actual symlinks you need to have admin rights.
+
+[More info on this topic](https://github.com/git-for-windows/git/wiki/Symbolic-Links)
+
+Git GUIs like GitKraken also seems to have problems working with symlinks on windows. (You may use the powershell instead)
+
+## Concrete?? You mean cement?
+[Not exactly](https://en.wikipedia.org/wiki/Class_(computer_programming)#Abstract_and_concrete)
