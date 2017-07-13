@@ -232,7 +232,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             else:
                 self.__build_final_metadata['aggregatedmails'] += 1
 
-            sys.stdout.write('\r\x1b[KAggregated %d mails' % self.__build_final_metadata['aggregatedmails'])
+            sys.stdout.write('\rAggregated %d mails' % self.__build_final_metadata['aggregatedmails'])
             sys.stdout.flush()
 
         self._repository.insert_or_update(mail, scope)
@@ -454,19 +454,22 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             # this list, as the actual fragments are in this list
             # This happens when multiple fragments have the same id
             # in the case of NOQUEUE (rejected mails)
-            try:
-                if isinstance(frag, list):
-                    for f in frag:
+            if isinstance(frag, list):
+                for f in frag:
+                    try:
                         process(agg_wrapp(f))
+                    except AlreadyInRepository as e:
+                        continue
 
-                else:
-                    # if the fragment is not a list, then it is
-                    # a dict, so we can just aggregate it
+            else:
+                # if the fragment is not a list, then it is
+                # a dict, so we can just aggregate it
+                try:
                     process(agg_wrapp(frag))
-            except AlreadyInRepository as e:
-                # if we already stored this fragment in the repo
-                # we will continue with the next
-                continue
+                except AlreadyInRepository as e:
+                    # if we already stored this fragment in the repo
+                    # we will continue with the next
+                    continue
 
         # all fragments have been aggregated now, we will therefore
         # clear the list of fragments
