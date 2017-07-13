@@ -31,22 +31,19 @@ class MongoCountSpecificIterable(CountableIterator):
 
     def __init__(self, cursor):
         self.__cursor = cursor
-        self.__sum = -1
+        self.__sum = 0
 
     def __next__(self):
         x = next(self.__cursor)
         if x['details']['field'] is None or x['details']['field'] == '':
             x['details']['field'] = 'nothing_found'
 
-        if self.__sum == -1:
+        if self.__sum == 0:
             self.__sum = x['sum']
 
         return {'key': x['details']['field'], 'value': x['details']['value']}
 
     def __len__(self):
-        if self.__sum == -1:
-            raise KeyError()
-
         return self.__sum
 
 
