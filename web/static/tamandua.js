@@ -63,6 +63,321 @@ var methods = {
 
 //endregion
 
+//region Dashboard Item
+
+function DashboardItem() {
+    this.query = {
+        'datetime': {
+            'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
+        }
+    };
+
+    this.listSelector = null;
+    this.totalSelector = null;
+    this.totalText = null;
+    this.precentageTotalSelector = $('#dashboard-overview-total');
+}
+
+DashboardItem.get_total_form_selector = function (selector) {
+    return parseInt(selector.find('.dashboard-overview-list-item-right').html());
+};
+
+DashboardItem.prototype = {
+    add_default_query: function (field) {
+        this.query['advcount'] = {
+            'field': field
+        }
+    },
+
+    add_sep_to_query: function (sep) {
+        this.query['advcount']['sep'] = sep;
+    },
+
+
+    get_precentage: function (value) {
+        var total = DashboardItem.get_total_form_selector(this.precentageTotalSelector);
+        return ((value / total) * 100).toFixed(2)
+    },
+
+    precentageVisualizer: function (precentage, colorRange) {
+        var roundedPrecentage = Math.round(precentage);
+        return '<div class="dashboard-list-precentage-visualizer" style="background-color: ' + colorRange[roundedPrecentage % (colorRange.length - 1)] + '; width: ' + roundedPrecentage + '%;"></div>'
+    },
+
+    precentageHtml: function (total, total_text, addPercentage, colorRange) {
+        var totalPrecentage = this.get_precentage(total);
+        var final = '';
+
+        if(addPercentage) {
+            final += this.precentageVisualizer(totalPrecentage, colorRange);
+        }
+
+        final += '<div class="dashboard-overview-list-item-left inline">' +
+                    total_text +
+                ': </div>' +
+                '<div class="dashboard-overview-list-item-right inline">' +
+                parseInt(total);
+
+        if(addPercentage) {
+            final += ' (' + totalPrecentage + '%)';
+        }
+
+        final += '</div>';
+
+        return final
+    },
+
+    process_data: function(result) {
+        if(this.totalSelector !== null) {
+            this.totalSelector.html(this.precentageHtml(result['total'], this.totalText, true, precentageBarFlow));
+        }
+
+        if(this.listSelector !== null) {
+            function get_precentage(value) {
+                var total = parseInt(result['total']);
+                if(!isNaN(total)) {
+                    return ((value / total) * 100).toFixed(2)
+                }else{
+                    return 0;
+                }
+            }
+
+            this.listSelector.empty();
+
+            for(var k in result['items']) {
+                var localPrecentage = get_precentage(result['items'][k]['value']);
+                var v = result['items'][k]['key'];
+                var element = $('<div class="dashboard-list-item dashboard-list-overflow">' +
+                    this.precentageVisualizer(localPrecentage, precentageBarColors) +
+                    '<span class="dashboard-list-overflow">' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span title="' + v + '" class="dashboard-list-data dashboard-list-overflow">' + v + '</span>');
+                element.click(function () {
+                    this.go_to_field(field, $(this).find('.dashboard-list-data').html(), additionalSearchFields)
+
+                });
+
+                this.listSelector.append(element);
+            }
+        }
+
+        this.callback();
+    },
+
+    callback: function () {
+
+    }
+};
+
+function TopDeliveredSenders() {
+    DashboardItem.call(this);
+
+    this.listSelector = $('#list-top-senders');
+    this.totalSelector = $('#dashboard-overview-delivered');
+    this.totalText = 'Delivered';
+
+    this.add_default_query('sender');
+    this.query['fields'] = [{
+        'deliverystatus': {
+            'comparator': '=',
+            'value': 'sent'
+        }
+    }];
+}
+
+TopDeliveredSenders.prototype = Object.create(DashboardItem.prototype);
+TopDeliveredSenders.prototype.constructor = TopDeliveredSenders;
+
+TopDeliveredSenders.prototype.callback = function () {
+    DashboardView.get_lists_generic([
+        TopSpamSenders,
+        TopSpamSenderDomains
+    ])
+};
+
+function TopDeliveredSenderDomains() {
+    TopDeliveredSenders.call(this);
+
+    this.listSelector = $('#list-top-senders-domain');
+
+    this.add_sep_to_query('@')
+}
+
+TopDeliveredSenderDomains.prototype = Object.create(TopDeliveredSenders.prototype);
+TopDeliveredSenderDomains.prototype.constructor = TopDeliveredSenderDomains;
+
+TopDeliveredSenderDomains.prototype.callback = function () { };
+
+function TopGreylisted() {
+    DashboardItem.call(this);
+
+    this.listSelector = $('#list-top-greylisted');
+    this.totalSelector = $('#dashboard-overview-greylisted');
+    this.totalText = 'Greylisted';
+    this.precentageTotalSelector = $('#dashboard-overview-rejected');
+
+    this.add_default_query('sender');
+    this.query['fields'] = [{
+        'rejectreason': {
+            'comparator': 're_i',
+            'value': 'Recipient address rejected: Greylisted'
+        }
+    }];
+}
+
+TopGreylisted.prototype = Object.create(DashboardItem.prototype);
+TopGreylisted.prototype.constructor = TopGreylisted;
+
+TopGreylisted.prototype.callback = function () {
+    $('#dashboard-overview-rejected-rest').html(this.precentageHtml(DashboardItem.get_total_form_selector($('#dashboard-overview-rejected')) - DashboardItem.get_total_form_selector($('#dashboard-overview-greylisted')), 'Rest', true, precentageBarFlow));
+};
+
+function TopGreylistedDomains() {
+    TopGreylisted.call(this);
+
+    this.listSelector = $('#list-top-greylisted-domain');
+
+    this.add_sep_to_query('@')
+}
+
+TopGreylistedDomains.prototype = Object.create(TopGreylisted.prototype);
+TopGreylistedDomains.prototype.constructor = TopGreylistedDomains;
+
+function TopSpamSenders() {
+    DashboardItem.call(this);
+
+    this.listSelector = $('#list-top-senders-spam');
+    this.totalSelector = $('#dashboard-overview-spam');
+    this.totalText = 'Spam';
+    this.precentageTotalSelector = $('#dashboard-overview-delivered');
+
+    this.add_default_query('sender');
+    this.query['fields'] = [{
+        'spamscore': {
+            'comparator': '>=',
+            'value': 5
+        }
+    }];
+}
+
+TopSpamSenders.prototype = Object.create(DashboardItem.prototype);
+TopSpamSenders.prototype.constructor = TopSpamSenders;
+
+TopSpamSenders.prototype.callback = function () {
+    $('#dashboard-overview-no-spam').html(this.precentageHtml(DashboardItem.get_total_form_selector($('#dashboard-overview-delivered')) - DashboardItem.get_total_form_selector($('#dashboard-overview-spam')), 'Rest', true, precentageBarFlow));
+};
+
+function TopSpamSenderDomains() {
+    TopSpamSenders.call(this);
+
+    this.listSelector = $('#list-top-senders-spam-domain');
+
+    this.add_sep_to_query('@')
+}
+
+TopSpamSenderDomains.prototype = Object.create(TopSpamSenders.prototype);
+TopSpamSenderDomains.prototype.constructor = TopSpamSenderDomains;
+
+function TopRejectReasons() {
+    DashboardItem.call(this);
+
+    this.listSelector = $('#list-top-reject-resons');
+    this.totalSelector = $('#dashboard-overview-rejected');
+    this.totalText = 'Rejected';
+
+    this.add_default_query('rejectreason');
+}
+
+TopRejectReasons.prototype = Object.create(DashboardItem.prototype);
+TopRejectReasons.prototype.constructor = TopRejectReasons;
+
+TopRejectReasons.prototype.callback = function () {
+    DashboardView.get_lists_generic([
+        TopGreylisted,
+        TopGreylistedDomains
+    ])
+};
+
+function DashboardItemTotal(callback) {
+    DashboardItem.call(this);
+
+    this.addPrecentage = true;
+
+    if(callback !== undefined) {
+        this.callback = callback;
+    }
+}
+
+DashboardItemTotal.prototype = Object.create(DashboardItem.prototype);
+DashboardItemTotal.prototype.constructor = DashboardItemTotal;
+
+DashboardItemTotal.prototype.process_data = function (result) {
+    this.totalSelector.html(this.precentageHtml(result, this.totalText, this.addPrecentage, precentageBarFlow));
+    this.callback();
+};
+
+function TotalMailsItem(callback) {
+    DashboardItemTotal.call(this, callback);
+
+    this.totalSelector = $('#dashboard-overview-total');
+    this.totalText = 'Total';
+    this.addPrecentage = false;
+}
+
+TotalMailsItem.prototype = Object.create(DashboardItemTotal.prototype);
+TotalMailsItem.prototype.constructor = TotalMailsItem;
+
+function TotalVirusItem(callback) {
+    DashboardItemTotal.call(this, callback);
+
+    this.totalSelector = $('#dashboard-overview-virus');
+    this.totalText = 'Virus';
+
+    this.query['fields'] = [{
+        'virusresult': {
+            'comparator': 're_i',
+            'value': 'INFECTED'
+        }
+    }];
+}
+
+TotalVirusItem.prototype = Object.create(DashboardItemTotal.prototype);
+TotalVirusItem.prototype.constructor = TotalVirusItem;
+
+function TotalDeferredItem(callback) {
+    DashboardItemTotal.call(this, callback);
+
+    this.totalSelector = $('#dashboard-overview-deferred');
+    this.totalText = 'Deferred';
+
+    this.query['fields'] = [{
+        'deliverystatus': {
+            'comparator': '=',
+            'value': 'deferred'
+        }
+    }];
+}
+
+TotalDeferredItem.prototype = Object.create(DashboardItemTotal.prototype);
+TotalDeferredItem.prototype.constructor = TotalDeferredItem;
+
+function TotalBouncedItem(callback) {
+    DashboardItemTotal.call(this, callback);
+
+    this.totalSelector = $('#dashboard-overview-bounced');
+    this.totalText = 'Bounced';
+
+    this.query['fields'] = [{
+        'deliverystatus': {
+            'comparator': '=',
+            'value': 'bounced'
+        }
+    }];
+}
+
+TotalBouncedItem.prototype = Object.create(DashboardItemTotal.prototype);
+TotalBouncedItem.prototype.constructor = TotalBouncedItem;
+
+//endregion
+
 //region View Class
 
 function SearchView() { }
@@ -82,39 +397,6 @@ SearchView.prototype = {
 function DashboardView() {
     this.interval = null;
 }
-
-DashboardView.get_precentage = function (value) {
-    var total = parseInt($('#dashboard-overview-total').find('.dashboard-overview-list-item-right').html());
-    return ((value / total) * 100).toFixed(2)
-};
-
-DashboardView.precentageVisualizer = function (precentage, colorRange) {
-    var roundedPrecentage = Math.round(precentage);
-    return '<div class="dashboard-list-precentage-visualizer" style="background-color: ' + colorRange[roundedPrecentage % (colorRange.length - 1)] + '; width: ' + roundedPrecentage + '%;"></div>'
-};
-
-DashboardView.precentageHtml = function (total, total_text, addPercentage, colorRange) {
-    var totalPrecentage = DashboardView.get_precentage(total);
-    var final = '';
-
-    if(addPercentage) {
-        final += DashboardView.precentageVisualizer(totalPrecentage, colorRange);
-    }
-
-    final += '<div class="dashboard-overview-list-item-left inline">' +
-                total_text +
-            ': </div>' +
-            '<div class="dashboard-overview-list-item-right inline">' +
-            parseInt(total);
-
-    if(addPercentage) {
-        final += ' (' + totalPrecentage + '%)';
-    }
-
-    final += '</div>';
-
-    return final
-};
 
 DashboardView.go_to_field = function (fieldName, fieldValue, additionalFields) {
     change_view(new SearchView());
@@ -153,13 +435,6 @@ DashboardView.go_to_field = function (fieldName, fieldValue, additionalFields) {
 
     additionalFields['fields'].push(tmp);
 
-    /*add_expression_line();
-
-    expressionLines[0][0].find('.expression-input').val(field);
-    expressionLines[0][1].setValue('sender');
-
-    additionalFields = additionalFields['fields'];*/
-
     var counter = 0;
     for(var i in additionalFields['fields']) {
         add_expression_line();
@@ -197,178 +472,60 @@ DashboardView.go_to_field = function (fieldName, fieldValue, additionalFields) {
     on_search_button_click();
 };
 
-DashboardView.get_overview = function (callback) {
-    var dt = {
-        'datetime': {
-            'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
-        }
-    };
-
-    var totalMailsQuery = $.extend({}, dt);
-
-    var totalRejectQuery = $.extend({}, dt);
-    totalRejectQuery['fields'] = [{
-        'action': {
-            'comparator': '=',
-            'value': 'reject'
-        }
-    }];
-
-    var totalVirusQuery = $.extend({}, dt);
-    totalVirusQuery['fields'] = [{
-        'virusresult': {
-            'comparator': 're_i',
-            'value': 'INFECTED'
-        }
-    }];
-
-    function get_data(selector_arg, total_text, expression, addPrecentages, callback) {
-        var selector = selector_arg;
+DashboardView.get_overview_generic = function (cls, callback) {
+    (function () {
+        var inst = new cls(callback);
 
         $.ajax({
             url: api.count,
             type: methods.post,
-            data: JSON.stringify(expression),
+            data: JSON.stringify(inst.query),
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
         }).done(function (result) {
-            selector.html(
-                DashboardView.precentageHtml(result, total_text, addPrecentages, precentageBarFlow)
-            );
-            callback()
+            inst.process_data(result);
         });
-    }
+    })();
+};
 
-    get_data($('#dashboard-overview-total'), 'Total', totalMailsQuery, false, function () {
-        get_data($('#dashboard-overview-virus'), 'Virus', totalVirusQuery, true, function () {});
-        get_data($('#dashboard-overview-rejected'), 'Rejected', totalRejectQuery, true, function () {});
-        callback();
-    });
+DashboardView.get_overview = function (callback) {
+    DashboardView.get_overview_generic(TotalMailsItem, callback);
+
+    var lists = [
+        TotalVirusItem,
+        TotalDeferredItem,
+        TotalBouncedItem
+    ];
+
+    for(var i in lists) {
+        DashboardView.get_overview_generic(lists[i]);
+    }
+};
+
+DashboardView.get_lists_generic = function (lists) {
+    for(var i in lists) {
+        (function () {
+            var inst = new lists[i]();
+
+            $.ajax({
+                url: api.advcount + 10,
+                type: methods.post,
+                data: JSON.stringify(inst.query),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json'
+            }).done(function (result) {
+                inst.process_data(result);
+            });
+        })();
+    }
 };
 
 DashboardView.get_lists = function () {
-    var dt = {
-        'datetime': {
-            'start': moment().subtract(overviewHours, 'hours').format(datetimeFormat)
-        }
-    };
-
-    function makelist(field) {
-        var query = $.extend({}, dt);
-        query['advcount'] = {'field': 'sender'};
-
-        return query;
-    }
-
-    function makelistdomain(field) {
-        var query = makelist(field);
-        query['advcount']['sep'] = '@';
-
-        return query;
-    }
-
-    function get_data(selector_arg, total_selector_arg, total_text_arg, expression, field_arg, additionalSearchFields_arg) {
-        var selector = selector_arg;
-        var total_selector = total_selector_arg;
-        var total_text = total_text_arg;
-        var field = field_arg;
-        var additionalSearchFields = additionalSearchFields_arg;
-
-        $.ajax({
-            url: api.advcount + 10,
-            type: methods.post,
-            data: JSON.stringify(expression),
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json'
-        }).done(function (result) {
-            selector.empty();
-
-            function get_precentage(value) {
-                var total = parseInt(result['total']);
-                if(!isNaN(total)) {
-                    return ((value / total) * 100).toFixed(2)
-                }else{
-                    return 0;
-                }
-            }
-
-            if(total_selector !== null) {
-                total_selector.html(DashboardView.precentageHtml(result['total'], total_text, true, precentageBarFlow));
-            }
-
-            for(var k in result['items']) {
-                var localPrecentage = get_precentage(result['items'][k]['value']);
-                var v = result['items'][k]['key'];
-                var element = $('<div class="dashboard-list-item dashboard-list-overflow">' +
-                    DashboardView.precentageVisualizer(localPrecentage, precentageBarColors) +
-                    '<span class="dashboard-list-overflow">' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span title="' + v + '" class="dashboard-list-data dashboard-list-overflow">' + v + '</span>');
-                element.click(function () {
-                    DashboardView.go_to_field(field, $(this).find('.dashboard-list-data').html(), additionalSearchFields)
-
-                });
-                selector.append(element);
-            }
-        }.bind(this));
-    }
-
-    var sendersQuery = makelist('sender');
-    var senderDomainsQuery = makelistdomain('sender');
-    var sendersAdditionalFields = {'fields': [{
-        'deliverystatus': {
-            'comparator': '=',
-            'value': 'sent'
-        }
-    }]};
-
-    var greylistedQuery = makelist('sender');
-    var greylistedDomainsQuery = makelistdomain('sender');
-
-    var spamSendersQuery = makelist('sender');
-    var spamSendersDomainsQuery = makelistdomain('sender');
-
-    var rejectReasonsQuery = {};
-
-    $.extend(true, rejectReasonsQuery, dt);
-    rejectReasonsQuery['advcount'] = {'field': 'rejectreason'};
-
-    var greylistFields = {'fields': [{
-        'rejectreason': {
-            'comparator': 're_i',
-            'value': 'Recipient address rejected: Greylisted'
-        }
-    }]};
-
-    var spamSendersFields = {'fields': [{
-        'spamscore': {
-            'comparator': '>=',
-            'value': 5
-        }
-    }]};
-
-    var excludeGreylistingQuery = {};
-
-    $.extend(true, excludeGreylistingQuery, greylistFields);
-    excludeGreylistingQuery['fields'][0]['rejectreason']['comparator'] = '!=';
-
-    $.extend(true, greylistedQuery, greylistFields);
-    $.extend(true, greylistedDomainsQuery, greylistFields);
-
-    $.extend(true, sendersQuery, sendersAdditionalFields);
-    $.extend(true, senderDomainsQuery, sendersAdditionalFields);
-
-    $.extend(true, spamSendersQuery, spamSendersFields);
-    $.extend(true, spamSendersDomainsQuery, spamSendersFields);
-
-    get_data($('#list-top-senders'), $('#dashboard-overview-delivered'), 'Delivered', sendersQuery, 'sender', excludeGreylistingQuery);
-    get_data($('#list-top-senders-domain'), null, null, senderDomainsQuery, 'sender', excludeGreylistingQuery);
-
-    get_data($('#list-top-greylisted'), $('#dashboard-overview-greylisted'), 'Greylisted', greylistedQuery, 'sender', greylistFields);
-    get_data($('#list-top-greylisted-domain'), null, null, greylistedDomainsQuery, 'sender', greylistFields);
-
-    get_data($('#list-top-senders-spam'), $('#dashboard-overview-spam'), 'Spam', spamSendersQuery, 'sender', spamSendersFields);
-    get_data($('#list-top-senders-spam-domain'), null, null, spamSendersDomainsQuery, 'sender', spamSendersFields);
-
-    get_data($('#list-top-reject-resons'), null, null, rejectReasonsQuery, 'rejectreason', {});
+    DashboardView.get_lists_generic([
+        TopDeliveredSenders,
+        TopDeliveredSenderDomains,
+        TopRejectReasons
+    ]);
 };
 
 DashboardView.get_stats = function () {
