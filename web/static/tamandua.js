@@ -76,7 +76,67 @@ function DashboardItem() {
     this.totalSelector = null;
     this.totalText = null;
     this.precentageTotalSelector = $('#dashboard-overview-total');
+    this.fieldName = null;
 }
+
+DashboardItem.go_to_field = function (element, fieldName, query) {
+    change_view(new SearchView());
+
+    var value = element.find('.dashboard-list-data').html();
+
+    for(var i in expressionLines) {
+        expressionLines[i][0].remove();
+    }
+
+    expressionLines = [];
+
+    var queryFields = $.extend(true, [], query['fields']);
+
+    if(fieldName !== null) {
+        var tmp = {};
+        tmp[fieldName] = {'comparator': 're_i', 'value': value};
+        queryFields.push(tmp);
+    }
+
+    var counter = 0;
+    for(var i in queryFields) {
+        add_expression_line();
+
+        var key = Object.keys(queryFields[i])[0];
+
+        var c = queryFields[i][key]['comparator'];
+        if(c === 're_i' || c === 're') {
+            c = '='
+        }
+
+        expressionLines[counter][0].find('.expression-comparator-button').html(c);
+        expressionLines[counter][1].setValue(key);
+
+        var optionselect = expressionLines[counter][0].find('.search-field-selection-select');
+
+        if(optionselect.is(':visible')) {
+            optionselect[0].selectize.createItem(queryFields[i][key]['value']);
+        }else{
+            var v = queryFields[i][key]['value'];
+            if(typeof v === 'string' || v instanceof String) {
+                var v = v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+            expressionLines[counter][0].find('.expression-input').val(v);
+        }
+
+        counter++;
+    }
+
+    $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
+
+    on_add_dt_button_click(
+        $('#dt-from-picker').parent().parent().parent().parent().find('.add-dt-button')
+    );
+
+    $('#dt-from-picker').data("DateTimePicker").date(moment().subtract(overviewHours, 'hours'))
+
+    on_search_button_click();
+};
 
 DashboardItem.get_total_form_selector = function (selector) {
     return parseInt(selector.find('.dashboard-overview-list-item-right').html());
@@ -150,10 +210,12 @@ DashboardItem.prototype = {
                 var element = $('<div class="dashboard-list-item dashboard-list-overflow">' +
                     this.precentageVisualizer(localPrecentage, precentageBarColors) +
                     '<span class="dashboard-list-overflow">' + result['items'][k]['value'] + ' (' + localPrecentage + '%)</span> <span title="' + v + '" class="dashboard-list-data dashboard-list-overflow">' + v + '</span>');
-                element.click(function () {
-                    this.go_to_field(field, $(this).find('.dashboard-list-data').html(), additionalSearchFields)
 
-                });
+                element.click((function (e, f, q) {
+                    return (function () {
+                        DashboardItem.go_to_field(e, f, q);
+                    });
+                })(element, this.fieldName, this.query));
 
                 this.listSelector.append(element);
             }
@@ -181,6 +243,8 @@ function TopDeliveredSenders() {
             'value': 'sent'
         }
     }];
+
+    this.fieldName = 'sender';
 }
 
 TopDeliveredSenders.prototype = Object.create(DashboardItem.prototype);
@@ -221,6 +285,8 @@ function TopGreylisted() {
             'value': 'Recipient address rejected: Greylisted'
         }
     }];
+
+    this.fieldName = 'sender';
 }
 
 TopGreylisted.prototype = Object.create(DashboardItem.prototype);
@@ -256,6 +322,8 @@ function TopSpamSenders() {
             'value': 5
         }
     }];
+
+    this.fieldName = 'sender';
 }
 
 TopSpamSenders.prototype = Object.create(DashboardItem.prototype);
@@ -284,6 +352,8 @@ function TopRejectReasons() {
     this.totalText = 'Rejected';
 
     this.add_default_query('rejectreason');
+
+    this.fieldName = 'rejectreason';
 }
 
 TopRejectReasons.prototype = Object.create(DashboardItem.prototype);
@@ -397,80 +467,6 @@ SearchView.prototype = {
 function DashboardView() {
     this.interval = null;
 }
-
-DashboardView.go_to_field = function (fieldName, fieldValue, additionalFields) {
-    change_view(new SearchView());
-
-    for(var i in expressionLines) {
-        expressionLines[i][0].remove();
-    }
-
-    expressionLines = [];
-
-    if(additionalFields === undefined) {
-        additionalFields = {};
-    }
-
-    if(Object.keys(additionalFields).length === 0) {
-        additionalFields = {
-            'fields': []
-        }
-    }
-
-    var tmp = {};
-
-    var exists = false;
-    for(var i in additionalFields['fields']) {
-        if(Object.keys(additionalFields['fields'][i])[0] === fieldName) {
-            exists = true;
-        }
-    }
-
-    if(!exists) {
-        tmp[fieldName] = {
-            'comparator': '=',
-            'value': fieldValue
-        };
-    }
-
-    additionalFields['fields'].push(tmp);
-
-    var counter = 0;
-    for(var i in additionalFields['fields']) {
-        add_expression_line();
-
-        var key = Object.keys(additionalFields['fields'][i])[0];
-
-        var c = additionalFields['fields'][i][key]['comparator'];
-        if(c === 're_i' || c ==='re') {
-            c = '='
-        }
-
-        expressionLines[counter][0].find('.expression-comparator-button').html(c);
-        expressionLines[counter][1].setValue(key);
-
-        var optionselect = expressionLines[counter][0].find('.search-field-selection-select');
-
-        if(optionselect.is(':visible')) {
-            optionselect[0].selectize.createItem(additionalFields['fields'][i][key]['value']);
-        }else{
-            var v = additionalFields['fields'][i][key]['value'].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            expressionLines[counter][0].find('.expression-input').val(v);
-        }
-
-        counter++;
-    }
-
-    $('.remove-dt-button').each(function () { on_remove_dt_button_click($(this)) });
-
-    on_add_dt_button_click(
-        $('#dt-from-picker').parent().parent().parent().parent().find('.add-dt-button')
-    );
-
-    $('#dt-from-picker').data("DateTimePicker").date(moment().subtract(overviewHours, 'hours'))
-
-    on_search_button_click();
-};
 
 DashboardView.get_overview_generic = function (cls, callback) {
     (function () {
