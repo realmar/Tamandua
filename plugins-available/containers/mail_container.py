@@ -1,14 +1,11 @@
 """Module which contains the MailContainer class."""
 
 import copy
+import sys
 from datetime import datetime
 from typing import List, Dict
 from functools import partial
-# from pprint import pprint
-
-import colorama
-
-colorama.init(autoreset=True)
+from pprint import pprint
 
 from src.plugins.interfaces import IDataContainer, IRequiresPlugins, IRequiresRepository
 from src.repository.interfaces import IRepository
@@ -17,7 +14,8 @@ from src.plugins.bases.plugin_base import RegexFlags
 from src.plugins.bases.plugin_processor import ProcessorData, ProcessorAction
 from src.repository.misc import SearchScope
 from src.plugins.bases.mail_edge_case_processor import MailEdgeCaseProcessorData
-from src.expression.builder import ExpressionBuilder, ExpressionField, Expression, Comparator
+from src.expression.builder import ExpressionBuilder, ExpressionField, Comparator
+from src.config import Config
 
 
 class AlreadyInRepository(Exception):
@@ -34,6 +32,13 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 data of a mail from phd-mxin.
     """
 
+    __fieldsToIndex = [
+        constants.PHD_MXIN_QID,
+        constants.PHD_IMAP_QID,
+        constants.MESSAGEID,
+        'sender',
+        'recipient'
+    ]
 
     def __init__(self):
         self._map_qid_mxin = {}
@@ -224,7 +229,18 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         else:
             scope = SearchScope.COMPLETE
 
-        # pprint(mail)
+
+        if not Config().get('noprint'):
+            if not Config().get('onlyprintmsgs'):
+                pprint(mail)
+
+            if not isinstance(self.__build_final_metadata.get('aggregatedmails'), int):
+                self.__build_final_metadata['aggregatedmails'] = 1
+            else:
+                self.__build_final_metadata['aggregatedmails'] += 1
+
+            sys.stdout.write('\rAggregated %d mails' % self.__build_final_metadata['aggregatedmails'])
+            sys.stdout.flush()
 
         self._repository.insert_or_update(mail, scope)
 
@@ -445,19 +461,22 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
             # this list, as the actual fragments are in this list
             # This happens when multiple fragments have the same id
             # in the case of NOQUEUE (rejected mails)
-            try:
-                if isinstance(frag, list):
-                    for f in frag:
+            if isinstance(frag, list):
+                for f in frag:
+                    try:
                         process(agg_wrapp(f))
+                    except AlreadyInRepository as e:
+                        continue
 
-                else:
-                    # if the fragment is not a list, then it is
-                    # a dict, so we can just aggregate it
+            else:
+                # if the fragment is not a list, then it is
+                # a dict, so we can just aggregate it
+                try:
                     process(agg_wrapp(frag))
-            except AlreadyInRepository as e:
-                # if we already stored this fragment in the repo
-                # we will continue with the next
-                continue
+                except AlreadyInRepository as e:
+                    # if we already stored this fragment in the repo
+                    # we will continue with the next
+                    continue
 
         # all fragments have been aggregated now, we will therefore
         # clear the list of fragments
@@ -511,63 +530,8 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
 
         self._map_pickup.clear()
 
-    def represent(self) -> None:
-        """Print the contents of this container in a human readable format to stdout."""
+        # create indexes in repository
+        self._repository.create_indexes(self.__fieldsToIndex)
 
-        """
-        def print_title(**kv):
-            finalStr = '---- '
-            for k, v in kv.items():
-                finalStr += k + ': ' + colorama.Style.BRIGHT + str(v) + colorama.Style.NORMAL + ' '
-
-            finalStr += '----'
-
-            print(finalStr)
-
-        def print_list(key, value):
-            print('    ' + colorama.Style.BRIGHT + key)
-            for v in value:
-                print('        ' + str(v).strip())
-
-        print('\n========' + colorama.Style.BRIGHT + ' List of collected Mails ' +
-              colorama.Style.NORMAL + '========')
-
-        # begin printing mails
-
-        for mail in self._aggregated_mails:
-            print('\n')
-            print(colorama.Back.LIGHTMAGENTA_EX + '>>>>' * 4 + colorama.Style.BRIGHT + ' Mail ' +
-                  colorama.Style.NORMAL + '<<<<' * 4)
-
-            mxin_qid = mail.get(constants.PHD_MXIN_QID)
-            imap_qid = mail.get(constants.PHD_IMAP_QID)
-            msgid = mail.get(constants.MESSAGEID)
-
-            d = {}
-
-            if imap_qid is not None:
-                d['Queue-ID phd-imap'] = imap_qid
-
-            if mxin_qid is not None:
-                d['Queue-ID phd-mxin'] = mxin_qid
-
-            if msgid is not None:
-                d['Message-ID'] = msgid
-
-            print_title(**d)
-
-            for key, value in sorted(mail.items(), key=lambda x: x[0]):
-                if key == constants.LOGLINES:
-                    continue
-
-                if isinstance(value, list):
-                    print_list(key, value)
-                else:
-                    print('    ' + colorama.Style.BRIGHT + key + colorama.Style.NORMAL + ': ' + str(value))
-
-            loglines = mail.get(constants.LOGLINES)
-            if loglines is not None:
-                print_list(constants.LOGLINES, loglines)
-        """
-
-        pass
+        if not Config().get('noprint'):
+            print('')

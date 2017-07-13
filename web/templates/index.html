@@ -11,6 +11,10 @@
     <!-- IE: disable compatibility mode -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
+    <!-- favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
+
     <!-- jquery -->
     <script src="//code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 
@@ -251,11 +255,24 @@
                         <p class="inline">hours:</p>
                     </div>
                     <div>
-                        <div id="dashboard-overview-total" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-total" class="dashboard-list-item bold"></div>
+
+                        <hr class="dashboard-total-separator">
+
                         <div id="dashboard-overview-rejected" class="dashboard-list-item"></div>
-                        <div id="dashboard-overview-greylisted" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-greylisted" class="dashboard-list-item dashboard-indent-1 "></div>
+                        <div id="dashboard-overview-rejected-rest" class="dashboard-list-item dashboard-indent-1 "></div>
+
+                        <hr class="dashboard-total-separator">
+
                         <div id="dashboard-overview-delivered" class="dashboard-list-item"></div>
-                        <div id="dashboard-overview-spam" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-spam" class="dashboard-list-item dashboard-indent-1 "></div>
+                        <div id="dashboard-overview-no-spam" class="dashboard-list-item dashboard-indent-1 "></div>
+                        <div id="dashboard-overview-deferred" class="dashboard-list-item"></div>
+                        <div id="dashboard-overview-bounced" class="dashboard-list-item"></div>
+
+                        <hr class="dashboard-total-separator">
+
                         <div id="dashboard-overview-virus" class="dashboard-list-item"></div>
                     </div>
                 </div>

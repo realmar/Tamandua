@@ -1,0 +1,2 @@
+SHELL=/bin/sh
+* 2 * * * root /usr/bin/mongodump --db tamandua --out /root/mongo_backup

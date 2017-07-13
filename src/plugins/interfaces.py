@@ -99,8 +99,3 @@ class IDataContainer(IAbstractPlugin, metaclass=ABCMeta):
     def build_final(self) -> None:
         """Aggregate data into final lists and check the data integrity at the same time."""
         pass
-
-    @abstractmethod
-    def represent(self) -> None:
-        """Print container to STDOUT."""
-        pass

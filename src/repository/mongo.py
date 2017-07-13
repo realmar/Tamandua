@@ -2,7 +2,7 @@
 
 
 import itertools
-from pymongo import MongoClient
+from pymongo import MongoClient, IndexModel, ASCENDING, DESCENDING
 from pymongo.collection import Collection as PyMongoCollection
 import pymongo.errors as pymongo_errors
 import re
@@ -31,22 +31,19 @@ class MongoCountSpecificIterable(CountableIterator):
 
     def __init__(self, cursor):
         self.__cursor = cursor
-        self.__sum = -1
+        self.__sum = 0
 
     def __next__(self):
         x = next(self.__cursor)
         if x['details']['field'] is None or x['details']['field'] == '':
             x['details']['field'] = 'nothing_found'
 
-        if self.__sum == -1:
+        if self.__sum == 0:
             self.__sum = x['sum']
 
         return {'key': x['details']['field'], 'value': x['details']['value']}
 
     def __len__(self):
-        if self.__sum == -1:
-            raise KeyError()
-
         return self.__sum
 
 
@@ -430,3 +427,19 @@ class MongoRepository(IRepository):
     def save_time_of_last_run(self, dt: datetime):
         """"""
         self.__save_metadata(self.__lastRunDateTimeName, dt)
+
+    def create_indexes(self, indexes: List[str]) -> None:
+        """"""
+
+        indexModels = []
+
+        # build IndexModels
+        for index in indexes:
+            indexModels.append(
+                IndexModel(
+                    [(index, ASCENDING)]
+                )
+            )
+
+        for collection in (self._collection_complete, self._collection_incomplete):
+            collection.create_indexes(indexModels)

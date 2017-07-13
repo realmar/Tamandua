@@ -28,8 +28,9 @@ from src.repository.factory import RepositoryFactory
 
 
 class DefaultArgs():
-    logfile = 'mock_logs' + os.path.sep + 'extern-intern_to_intern.log'
+    logfile = os.path.join('mock_logs', 'extern-intern_to_intern.log')
     noprint = False
+    onlyprintmsgs = False
     configfile = os.path.join(BASEDIR, CONFIGFILE)
 
 
@@ -38,7 +39,8 @@ def main(args: DefaultArgs):
     try:
         Config().setup(
             args.configfile,
-            BASEDIR
+            BASEDIR,
+            vars(args)
         )
     except FileNotFoundError as e:
         print_exception(
@@ -76,11 +78,15 @@ def main(args: DefaultArgs):
     currByte = repository.get_position_of_last_read_byte()
 
     logfilehandle = open(args.logfile, 'r')
-    logfilehandle.seek(max(0, currByte - 1000))      # clamp byte: 0 - infinity
+    linecounter = 0
 
     try:
         for line in logfilehandle:
             pluginManager.process_line(line)
+            if not args.noprint:
+                    linecounter += 1
+                    sys.stdout.write('\rProcessed %d lines' % linecounter)
+                    sys.stdout.flush()
     except UnicodeDecodeError as e:
         print_exception(
             e,
@@ -94,14 +100,17 @@ def main(args: DefaultArgs):
             fatal=True)
         sys.exit(9)
 
+    if not args.noprint:
+        print('')
+
     # save the current byte position
 
-    repository.save_position_of_last_read_byte(logfilehandle.tell())
+    repository.save_position_of_last_read_byte(currByte + logfilehandle.tell())
 
-    # print data to stdout
+    # aggregate fragments to objects
     for container in pluginManager.dataReceiver.containers:
         try:
-            container.build_final()                 # build final data
+            container.build_final()
         except Exception as e:
             print_exception(
                 e,
@@ -109,19 +118,6 @@ def main(args: DefaultArgs):
                 'Discarding aggregation and exiting application',
                 fatal=True)
             sys.exit(10)
-
-        if not args.noprint:
-            try:
-                container.represent()                   # represent data
-
-                print('\n')
-                print('-' * 60)
-                print('\n')
-            except Exception as e:
-                print_exception(
-                    e,
-                    'Printing container to stdout: ' + container.__class__.__name__,
-                    'ignoring current container')
 
         
 """We only start with the executation if we are the main."""
@@ -146,6 +142,12 @@ if __name__ == '__main__':
         default=False,
         action='store_true',
         help='Do not print results to stdout')
+    parser.add_argument(
+        '--only-print-msgs',
+        dest='onlyprintmsgs',
+        default=False,
+        action='store_true',
+        help='Only print system messages')
 
     # https://docs.python.org/3/library/argparse.html#argparse.Namespace
     args = DefaultArgs()

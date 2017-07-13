@@ -188,11 +188,11 @@ button.hide-show-empty-fields-button {
 }
 
 .dashboard-overview-list-item-right {
-    width: 70%;
+    width: 75%;
 }
 
 .dashboard-overview-list-item-left {
-    width: 30%;
+    width: 25%;
 }
 
 .redbackground {
@@ -200,12 +200,24 @@ button.hide-show-empty-fields-button {
 }
 
 .dashboard-total-separator {
-    margin: 0.4em 0 0.2em 0;
+    margin: 0.4em 0 0.4em 0;
 }
 
 #overview-stats {
-    width: 24%;
+    width: 34%;
     margin-bottom: 0.4em;
+}
+
+.dashboard-list-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 24em;
+    white-space: nowrap;
+
+}
+
+.dashboard-indent-1 {
+    margin-left: 2em;
 }
 
 /* grid */

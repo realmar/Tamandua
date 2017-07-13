@@ -1,6 +1,5 @@
 """Here are the statistics composed and stored."""
 
-from pprint import pprint
 
 from src.exceptions import MultipleDataSetsUnknown
 from src.plugins.interfaces import IDataContainer
@@ -97,7 +96,3 @@ class Statistics(IDataContainer):
     def build_final(self) -> None:
         """Does nothing ATM, needed for interface."""
         pass
-
-    def represent(self) -> None:
-        """Output the statistics to STDOUT."""
-        pprint(self._data)

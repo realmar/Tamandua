@@ -93,3 +93,9 @@ class IRepository(metaclass=ABCMeta):
                               separatorResultPos: int = 0) -> Tuple[int, List[str]]:
         """"""
         pass
+
+
+    @abstractmethod
+    def create_indexes(self, indexes: List[str]) -> None:
+        """"""
+        pass
