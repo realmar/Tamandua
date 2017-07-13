@@ -29,8 +29,8 @@ from src.repository.factory import RepositoryFactory
 
 class DefaultArgs():
     logfile = os.path.join('mock_logs', 'extern-intern_to_intern.log')
-    noprint = False
-    onlyprintmsgs = False
+    printdata = False
+    printmsgs = False
     configfile = os.path.join(BASEDIR, CONFIGFILE)
 
 
@@ -83,7 +83,7 @@ def main(args: DefaultArgs):
     try:
         for line in logfilehandle:
             pluginManager.process_line(line)
-            if not args.noprint:
+            if args.printmsgs:
                     linecounter += 1
                     sys.stdout.write('\rProcessed %d lines' % linecounter)
                     sys.stdout.flush()
@@ -100,7 +100,7 @@ def main(args: DefaultArgs):
             fatal=True)
         sys.exit(9)
 
-    if not args.noprint:
+    if args.printmsgs:
         print('')
 
     # save the current byte position
@@ -137,17 +137,17 @@ if __name__ == '__main__':
         type=str,
         help='Path to the configfile')
     parser.add_argument(
-        '--no-print',
-        dest='noprint',
+        '--print-data',
+        dest='printdata',
         default=False,
         action='store_true',
-        help='Do not print results to stdout')
+        help='Print data after processing it, eg. print aggregated mail objects')
     parser.add_argument(
-        '--only-print-msgs',
-        dest='onlyprintmsgs',
+        '--print-msgs',
+        dest='printmsgs',
         default=False,
         action='store_true',
-        help='Only print system messages')
+        help='Print system messages, eg.: currently processed loglines, number of processed objects')
 
     # https://docs.python.org/3/library/argparse.html#argparse.Namespace
     args = DefaultArgs()

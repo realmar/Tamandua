@@ -229,11 +229,10 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         else:
             scope = SearchScope.COMPLETE
 
+        if Config().get('printdata'):
+            pprint(mail)
 
-        if not Config().get('noprint'):
-            if not Config().get('onlyprintmsgs'):
-                pprint(mail)
-
+        if Config().get('printmsgs'):
             if not isinstance(self.__build_final_metadata.get('aggregatedmails'), int):
                 self.__build_final_metadata['aggregatedmails'] = 1
             else:
@@ -533,5 +532,5 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         # create indexes in repository
         self._repository.create_indexes(self.__fieldsToIndex)
 
-        if not Config().get('noprint'):
+        if Config().get('printmsgs'):
             print('')

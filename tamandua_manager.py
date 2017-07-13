@@ -174,7 +174,6 @@ def run():
 
     args = DefaultArgs()
     args.logfile = logfilename
-    args.noprint = True
 
     print('\nStart reading the logfile')
 
