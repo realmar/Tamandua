@@ -85,7 +85,7 @@ def main(args: DefaultArgs):
             pluginManager.process_line(line)
             if not args.noprint:
                     linecounter += 1
-                    sys.stdout.write('\r\x1b[KProcessed %d lines' % linecounter)
+                    sys.stdout.write('\rProcessed %d lines' % linecounter)
                     sys.stdout.flush()
     except UnicodeDecodeError as e:
         print_exception(
