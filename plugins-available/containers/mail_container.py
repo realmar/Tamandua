@@ -32,6 +32,13 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 data of a mail from phd-mxin.
     """
 
+    __fieldsToIndex = [
+        constants.PHD_MXIN_QID,
+        constants.PHD_IMAP_QID,
+        constants.MESSAGEID,
+        'sender',
+        'recipient'
+    ]
 
     def __init__(self):
         self._map_qid_mxin = {}
@@ -522,6 +529,9 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                     self.__process_aggregated_mail(mail)
 
         self._map_pickup.clear()
+
+        # create indexes in repository
+        self._repository.create_indexes(self.__fieldsToIndex)
 
         if not Config().get('noprint'):
             print('')

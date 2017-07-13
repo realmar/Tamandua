@@ -2,7 +2,7 @@
 
 
 import itertools
-from pymongo import MongoClient
+from pymongo import MongoClient, IndexModel, ASCENDING, DESCENDING
 from pymongo.collection import Collection as PyMongoCollection
 import pymongo.errors as pymongo_errors
 import re
@@ -430,3 +430,19 @@ class MongoRepository(IRepository):
     def save_time_of_last_run(self, dt: datetime):
         """"""
         self.__save_metadata(self.__lastRunDateTimeName, dt)
+
+    def create_indexes(self, indexes: List[str]) -> None:
+        """"""
+
+        indexModels = []
+
+        # build IndexModels
+        for index in indexes:
+            indexModels.append(
+                IndexModel(
+                    [(index, ASCENDING)]
+                )
+            )
+
+        for collection in (self._collection_complete, self._collection_incomplete):
+            collection.create_indexes(indexModels)

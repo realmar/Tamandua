@@ -1,7 +1,6 @@
 """Misc classes for the repository."""
 
 
-import itertools
 from enum import Enum
 from typing import Iterable, Callable, Generic, TypeVar
 
