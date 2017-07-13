@@ -533,7 +533,7 @@ DashboardView.prototype = {
         $('#dashboard-nav-link').addClass('navbar-item-active');
         $('#dashboard-view').show();
 
-        // this.interval = setInterval(DashboardView.get_stats, 10000);
+        this.interval = setInterval(DashboardView.get_stats, 10000);
         DashboardView.get_stats();
     },
 
