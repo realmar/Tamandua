@@ -35,9 +35,17 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
     __fieldsToIndex = [
         constants.PHD_MXIN_QID,
         constants.PHD_IMAP_QID,
+        constants.PHD_MXIN_TIME,
+        constants.PHD_IMAP_TIME,
         constants.MESSAGEID,
         'sender',
-        'recipient'
+        'recipient',
+        'action',
+        'connectclient',
+        'connectip',
+        'rejectreason',
+        'rejectstage',
+        'statuscode'
     ]
 
     def __init__(self):
@@ -321,7 +329,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 builder2 = ExpressionBuilder()
 
                 for k, v in frag.items():
-                    builder2.add_field(ExpressionField(k, v, Comparator.regex_i))
+                    builder2.add_field(ExpressionField(k, v, Comparator.equal))
 
                 if len(self._repository.find(builder2.expression, SearchScope.ALL)) > 0:
                     raise AlreadyInRepository()
