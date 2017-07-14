@@ -23,11 +23,17 @@ from ..constants import get_all_times
 
 
 class TargetCollectionNotFound(Exception):
+    """Thrown when the requested collection was not found."""
+
     pass
 
 
 class MongoCountSpecificIterable(CountableIterator):
-    """"""
+    """
+    Iterable specific to the result set of the
+    count_specific_fields method. It behaves the same
+    way as a CountableIterator.
+    """
 
     def __init__(self, cursor):
         self.__cursor = cursor
@@ -185,6 +191,13 @@ class MongoRepository(IRepository):
             return self._collection_incomplete
         elif scope == SearchScope.ALL:
             class CollectionAggregate():
+                """
+                The purpose of this calls is to operate on
+                multiple collection the same way as on a single collection.
+
+                Although only the absolute required methods are implemented.
+                """
+
                 @staticmethod
                 def find(query: dict) -> CountableIterator[Dict]:
                     complete = self._collection_complete.find(query)
@@ -222,7 +235,6 @@ class MongoRepository(IRepository):
             raise TargetCollectionNotFound()
 
     def find(self, query: Expression, scope: SearchScope) -> CountableIterator[Dict]:
-        """"""
         try:
             searchCollection = self.__resolveScope(scope)
         except TargetCollectionNotFound as e:
@@ -233,7 +245,6 @@ class MongoRepository(IRepository):
         return CountableIterator(results, lambda x: x.count())
 
     def count_specific_fields(self, query: Expression) -> CountableIterator:
-        """"""
         fieldExp = '$' + query.advcount.field
 
         if query.advcount.sep is not None:
@@ -278,7 +289,6 @@ class MongoRepository(IRepository):
             return CountableIterator(iter([]), lambda x: 0)
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
-        """"""
         if scope == SearchScope.ALL:
             # we do not support inserting or updating multiple
             # collections at the same time
@@ -294,12 +304,10 @@ class MongoRepository(IRepository):
             collection.insert_one(data)
 
     def delete(self, query: Expression, scope: SearchScope) -> None:
-        """"""
         collection = self.__resolveScope(scope)
         collection.remove(self._parse_expression(query))
 
     def remove_metadata(self, data: dict) -> None:
-        """"""
         try:
             del data['_id']
         except KeyError as e:
@@ -327,24 +335,19 @@ class MongoRepository(IRepository):
             return data[field]
 
     def save_position_of_last_read_byte(self, pos: int) -> None:
-        """"""
         self.__save_metadata(self.__lastBytePosName, pos)
 
     def get_position_of_last_read_byte(self) -> int:
-        """"""
         return self.__get_metadata_wrapp(self.__lastBytePosName, 0)
 
 
     def save_size_of_last_logfile(self, size: int) -> None:
-        """"""
         self.__save_metadata(self.__lastLogfileSizeName, size)
 
     def get_size_of_last_logfile(self) -> int:
-        """"""
         return self.__get_metadata_wrapp(self.__lastLogfileSizeName, 0)
 
     def get_all_keys(self) -> List[str]:
-        """"""
         try:
             result = self._collection_complete.map_reduce(
                 Code(Loader.load_js('mongo_js.mapper')),
@@ -368,7 +371,6 @@ class MongoRepository(IRepository):
                              limit: int = 0,
                              separator: str = None,
                              separatorResultPos: int = 0) -> List[str]:
-        """"""
         if isinstance(separator, str):
             groupExp = {'$arrayElemAt':
                 [
@@ -401,7 +403,6 @@ class MongoRepository(IRepository):
                               limit: int,
                               separator: str = None,
                               separatorResultPos: int = 0) -> List[str]:
-        """"""
         query = partial(self.__group_field_values,
                         field=field,
                         limit=limit,
@@ -414,8 +415,6 @@ class MongoRepository(IRepository):
         return list(set().union(resultsComplete,resultsIncomplete))
 
     def get_all_tags(self) -> List[str]:
-        """"""
-
         query = partial(self.__group_field_values,
                         field='tags')
 
@@ -425,12 +424,9 @@ class MongoRepository(IRepository):
         return list(set().union(tagsComplete, tagsIncomplete))
 
     def save_time_of_last_run(self, dt: datetime):
-        """"""
         self.__save_metadata(self.__lastRunDateTimeName, dt)
 
     def create_indexes(self, indexes: List[str]) -> None:
-        """"""
-
         indexModels = []
 
         # build IndexModels
