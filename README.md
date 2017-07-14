@@ -1,7 +1,9 @@
 Tamandua
 ========
 
-Tamandua is a framework for logfile analysis and aggregation.
+Tamandua is a framework for logfile analysis and aggregation developed at and for the ISG D-Phys at the ETH Zurich.
+
+This implies that Tamandua contains domain specific parts and will probably not work out of the box in another environment. Although it can be easily adapted to operate in any environment.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -9,6 +11,7 @@ Tamandua is a framework for logfile analysis and aggregation.
 
   - [Setup](#setup)
   - [Usage](#usage)
+    - [Manager](#manager)
     - [Parser](#parser)
     - [Web](#web)
   - [Docs](#docs)
@@ -16,9 +19,9 @@ Tamandua is a framework for logfile analysis and aggregation.
 - [Extending Tamandua](#extending-tamandua)
   - [Directory Layout](#directory-layout)
   - [Code Style](#code-style)
-  - [Containers](#containers)
-    - [Serialization](#serialization)
-    - [Use Processor Plugins in a data container](#use-processor-plugins-in-a-data-container)
+  - [Components](#components)
+    - [Parser](#parser-1)
+    - [Web-App](#web-app)
   - [Plugins](#plugins)
     - [Data Collection](#data-collection)
       - [Mail-Aggregation](#mail-aggregation)
@@ -28,11 +31,22 @@ Tamandua is a framework for logfile analysis and aggregation.
       - [Processors are chained](#processors-are-chained)
       - [Order of execution](#order-of-execution)
       - [Using metadata with Processors](#using-metadata-with-processors)
+    - [Containers](#containers)
+      - [Use a repository within a container](#use-a-repository-within-a-container)
+      - [Use Processor Plugins in a data container](#use-processor-plugins-in-a-data-container)
     - [Introduce a new type of plugin](#introduce-a-new-type-of-plugin)
+  - [Expressions](#expressions)
+  - [Countable Iterables](#countable-iterables)
+  - [Repository](#repository)
+- [Authors](#authors)
+- [License](#license)
 - [Appendix](#appendix)
   - [Project Name](#project-name)
+  - [State of this documentation](#state-of-this-documentation)
+  - [Domain specific parts](#domain-specific-parts)
   - [System Requirements](#system-requirements)
   - [Windows support](#windows-support)
+  - [Concrete](#concrete)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -87,7 +101,7 @@ Docs
 ----
 Generate TOC:
 ```sh
-$ doctoc --title '## Table of contents' --github .\README.md
+$ doctoc --title '## Table of contents' --github README.md
 ```
 
 Although you first need to install `doctoc`:
@@ -111,6 +125,11 @@ $ <your-fav-editor> config.json
 
         # specify database type
         "database_type": "mongo",
+
+        #
+        # All options from this point on vary depending on the database_type
+        # This options here are for mongo
+        #
 
         # name of the database to store the data
         "database_name": "tamandua",
@@ -199,12 +218,6 @@ Modules and packages: (snake case)
 package_name/module_name.py
 ```
 
-Remember:
- - Add type hints
- - Add docstrings
- - Evaluate member visibility
-   - Do not make the public interface of a class more complex than needed
-
 Components
 ----------
 Tamandua consists of 2 main components: the parser which extracts and aggregates data from a given logfile and the web-app which represents this gathered data to the user. Each of those two components is further divided into internal components.
@@ -227,7 +240,7 @@ logfile --> logline --> pluginmanager --> data extraction --> containers --> pre
 ```
 
 ### Web-App
-The web-app follows the design principle of MVC:
+The web-app follows the design principle of [MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller):
 
  - Controller, Model runs on the server
  - View run in the browser of the user
@@ -237,103 +250,12 @@ User searches data:
 view search form --> controller --> repository --> get data from database --> controller --> return results to view
 ```
 
-Containers
-----------
-Data Collection classes are containers which handle the extracted data from the plugins. Those containers may use plugins called `Processors` to delegate processing of the data. Those containers are therefore called data containers.
-
-Each container has a `subscribedFolder` property, this property defines which data it receives. This string has to match to the folder name of the plugins which generate data for a given container. Eg.: a container whose `subscribedFolder` is equal to `example` will receive all data from plugins in following folder: `plugins-available/example/`.
-
-To implement a new data container you need to create a new class, inherit from `src.interfaces.IDataContainer`, implement the interface and register the container in `src.containers.data_receiver.DataReceiver`. The DataReceiver will now handle the delegation of the data from the plugins to the correct container.
-
-For Example:
-
-First we create a new container in `src.containers.example_container`:
-```python
-class ExampleContainer(IDataContainer):
-    @property
-    def subscribedFolder(self) -> str:
-        pass
-
-    def add_fragment(self, data: dict) -> None:
-        pass
-
-    def build_final(self) -> None:
-        pass
-
-    def represent(self) -> None:
-        pass
-```
-
-Then we register this container in `DataReceiver`:
-```python
-def __init__(self, pluginManager: 'PluginManager'):
-    self.containers = []
-
-    #                               Our new container
-    #                                       v
-    cs = [Statistics, MailContainer, ExampleContainer]
-```
-
-Now we are good to go! We just need to write some data collection plugins.
-
-
-### Serialization
-If you want to serialize your data container, you need to inherit from `src.interfaces.ISerializable` and implement the interface:
-
-```python
-class ExampleContainer(IDataContainer, ISerializable):
-    ( ... )
-
-    def get_serializable_data(self) -> object:
-    """Return a serializable object."""
-        pass
-
-    ( ... )
-```
-
-The framework will now serialize your data container!
-
-### Use Processor Plugins in a data container
-You may use processor plugins in your data container by inheriting from `src.interfaces.IRequiresPlugins` and implementing the interface:
-
-```python
-class ExampleContainer(IDataContainer, IRequiresPlugins):
-    ( ... )
-
-    def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
-        """Assign the pluginManager to a member field for later use."""
-        self._pluginManager = pluginManager
-
-    def build_final(self) -> None:
-        """
-        Then you may request some processors by their responsibility from the pluginManager.
-
-        This is discussed in more detail in the 'Plugins' section.
-        """
-
-        chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
-
-        # construct meta object
-        pd = ProcessorData(mail)
-
-        # give data to processors
-        chain.process(pd)
-
-        # evaluate action result
-        if pd.action == ProcessorAction.DELETE:
-            pass
-
-    ( ... )
-```
-
-The framework will now setup your data container with the plugin manager. (Dependency Injection)
-
 Plugins
 -------
-Tamandua differentiates between two types of plugins: data collection and processor plugins. As the name suggests the first ones are used to gather data from logfiles and the second ones are used for additional data processing. (eg. postprocessing)
+Available plugins are found in the `plugins-available` folder and enabled plugins are symlinked into the `plugins-enabled` folder.
 
 ### Data Collection
-Data collection plugins are located in folders in `plugins-available` without ending to `.d`. They may inherit from different base classes or directly from the `src.interfaces.IPlugin` interface: (It is recommended to inherit from a base class for generic plugin logic)
+Data collection plugins are located in folders in `plugins-available` without ending to `.d`. They may inherit from different base classes or directly from the `IPlugin` interface: (It is recommended to inherit from a base class for generic plugin logic)
 
 Lets create a new plugin:
 
@@ -365,7 +287,7 @@ class ExampleDataCollection(PluginBase):
 ```
 
 #### Generic data collection plugin
-If you do not want to reuse any functionality of any of those base classes, you may inherit directly from the `src.interfaces.IPlugin` interface and implements its members. The pluginManager will now know how to treat your "custom" plugin.
+If you do not want to reuse any functionality of any of those base classes, you may inherit directly from the `IPlugin` interface and implements its members. The pluginManager will now know how to treat your "custom" plugin.
 
 Eg.:
 ```python
@@ -378,7 +300,7 @@ class CustomPlugin(IPlugin):
 ```
 
 ### Processors
-The most basic Processor inherits from `src.interfaces.IProcessorPlugin`.
+The most basic Processor inherits from `IProcessorPlugin`.
 ```python
 class ExampleProcessor(IProcessorPlugin):
     def process(self, obj: object) -> None:
@@ -386,7 +308,7 @@ class ExampleProcessor(IProcessorPlugin):
 ```
 
 #### Processors are chained
-A given type of processors are put together to a chain of responsibility by the PluginManager. Then a responsibility (string) is assigned to this chain. Clients can then get those chains by their responsibility:
+A given type of processors are put together to a chain of responsibility by a concrete `IPluginCollection`. Then a responsibility (string) is assigned to this chain. Clients can then get those chains by their responsibility:
 
 Client code:
 ```python
@@ -432,8 +354,116 @@ class ExampleProcessor(IProcessorPlugin):
 
 The `Chain` will detect, that a given plugin has marked its data to be deleted. So it will stop iterating over its processor and give control back to the caller immediately. (Who then will do the actual deletion)
 
+### Containers
+Container plugins are plugins which process the data extracted using the data extraction plugins. Currently there are two container plugins: `Statistics` which is not used and `MailContainer` which aggregates loglines into mail objects.
+
+To implement a new container you need to implement the `IDataContainer` interface:
+
+First we create a new container in `src.containers.example_container`:
+```python
+class ExampleContainer(IDataContainer):
+    ( ... )
+```
+
+#### Use a repository within a container
+Implement the `IRequiresRepository` interface and you will be given a repository by the framework. (DI)
+
+```python
+class MailContainer(IDataContainer, IRequiresRepository):
+    def set_repository(self, repository: IRepository) -> None:
+        # called when constructing this contaier
+        # store the given repository in a member field
+        self._repository = repository
+```
+
+You may now use the repository to save/get data.
+
+#### Use Processor Plugins in a data container
+You may use processor plugins in your data container by inheriting from `IRequiresPlugins` and implementing the interface:
+
+```python
+class ExampleContainer(IDataContainer, IRequiresPlugins):
+    ( ... )
+
+    def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
+        """Assign the pluginManager to a member field for later use."""
+        self._pluginManager = pluginManager
+
+    def build_final(self) -> None:
+        """
+        Then you may request some processors by their responsibility from the pluginManager.
+
+        This is discussed in more detail in the 'Plugins' section.
+        """
+
+        chain = self._pluginManager.get_chain_with_responsibility('postprocessors')
+
+        # construct meta object
+        pd = ProcessorData(mail)
+
+        # give data to processors
+        chain.process(pd)
+
+        # evaluate action result
+        if pd.action == ProcessorAction.DELETE:
+            pass
+
+    ( ... )
+```
+
+The framework will now setup your data container with the plugin manager. (Dependency Injection)
+
 ### Introduce a new type of plugin
-If a new type of plugins are required, then the internals of `src.plugins.plugin_manager.PluginManager` have to be adapted. Every plugin has to inherit from the marker interface `src.interfaces.IAbstractPlugin`. Classes of this type are detected by the PluginManager as plugins. After all those plugins are loaded you have to decide what to do with them. Data collection plugins inherit from `IPlugin` and Processors inherit from `IProcessorPlugin`, so you need to create a new interface for the new plugin type, eg. `IExamplePlugin` and tell the PluginManager what to do with those plugins.
+You may add a new type of plugin:
+
+Every plugin has to inherit from the marker interface `IAbstractPlugin` in order to be detected as plugin by the plugin manager.
+
+A plugin is defined by its interface:
+
+```python
+from abc import ABCMeta
+
+class IMyNewPlugin(IAbstractPlugin):
+    """"""
+
+    @abstractmethod
+    def do_something(self):
+        """"""
+        pass
+```
+
+Then you need to implement a new plugin collection: (`src.plugins.plugin_collection`)
+
+```python
+class MyNewPluginCollection(BasePluginCollection):
+    """""""
+    @property
+    def subscribed_cls(self) -> type:
+        # subscribe to your new type of plugin
+        # in order to receive those plugins
+        # from the PluginAssociator
+        return IMyNewPlugin
+```
+
+And register this new plugin collection to the `PluginAssociator`: (`src.plugins.plugin_collection`)
+
+```python
+class PluginAssociator():
+    """Associate a given plugin with a plugin collection."""
+
+    def __init__(self, pluginManager: 'PluginManager'):
+        """Constructor of PluginAssociator."""
+
+        # List[IPluginCollection]
+        self._pluginCollections = [
+            ContainerPluginCollection(pluginManager),
+            DataCollectionPlugins(),
+            ProcessorPluginCollection(),
+
+            # add your new collection here
+            MyNewPluginCollection()
+        ]
+```
 
 Expressions
 -----------
@@ -460,7 +490,6 @@ See also [builder pattern](https://sourcemaking.com/design_patterns/builder).
 
 Countable Iterables
 -------------------
-
 Inspired by: [.NET's IEnumerable.Count](https://msdn.microsoft.com/en-us/library/bb338038(v=vs.110).aspx)
 
 Repository
@@ -513,20 +542,53 @@ Note, that the `database_type` field has to match the key in the `__repo_map`.
 
 See also [repository pattern](https://msdn.microsoft.com/en-us/library/ff649690.aspx), [factory method](https://sourcemaking.com/design_patterns/factory_method).
 
+Authors
+=======
+ - Anastassios Martakos
+
+License
+=======
+```
+Tamandua - Logfile aggregation framework
+Copyright (C) 2017  Anastassios Martakos
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+```
+
 Appendix
 ========
 ## Project Name
 [Tamandua](https://en.wikipedia.org/wiki/Tamandua) is a genus of anteaters with two species. The analogy is as follows: anteaters eat and digest a lot of small animals: ants and termites. This applications eats a lot of log file lines and aggregates them into statistics.
 
+## State of this documentation
+This readme still lacks a lot of explanations. (Especially the description of components that are domain specific and how to rewrite them to a more generic state or to your environment.) Although docstrings are provided through the whole source code. Please refer to them.
+
+The documentation will, by any chance, be completed someday.
+
+## Domain specific parts
+Tamandua is developed at ETH Zurich Department Physics in the ISG group. ([IT Services Group D-PHYS](https://nic.phys.ethz.ch/)) It's goal is to provide the system administrators there with an easy way to analise the mail traffic of their mail infrastructure. This means that Tamandua contains some domain specific parts like the hostnames of the mail servers. Although Tamandua can be easily rewritten to operate in a different environment.
+
 ## System Requirements
-Tamandua consumes a lot of RAM, so plan accordingly. (memusage: > 2x size of logfile)
+Refer to the [Perfromance Messurements (incomplete)](docs/perf_messurements.md)
+
+Generally speaking consumes the parser a bit more RAM than the size of the logfile:
 
 ```sh
--rw-r----- 1 amartako amartako 264M Jun 14 12:09 /ashscr1/jupyter/mail.log-20170613
-
-amartako@ash:~/Documents/Projects/IPA/Tamandua (master)$ /usr/bin/time -v ./tamandua_parser.py
-        # TODO
+130MB logfile --> 160 MB RAM usage
 ```
+
+Note that MongoDB can use up to several hundred MB RAM when it is building its indexes.
 
 ## Windows support
 Tamandua has full Windows support.
@@ -543,5 +605,5 @@ Although in order to make the actual symlinks you need to have admin rights.
 
 Git GUIs like GitKraken also seems to have problems working with symlinks on windows. (You may use the powershell instead)
 
-## Concrete?? You mean cement?
-[Not exactly](https://en.wikipedia.org/wiki/Class_(computer_programming)#Abstract_and_concrete)
+## Concrete
+[In this context not cement.](https://en.wikipedia.org/wiki/Class_(computer_programming)#Abstract_and_concrete)
