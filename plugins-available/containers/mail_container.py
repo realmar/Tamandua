@@ -32,6 +32,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                 data of a mail from phd-mxin.
     """
 
+    # create following indexes in the repository:
     __fieldsToIndex = [
         constants.PHD_MXIN_QID,
         constants.PHD_IMAP_QID,
@@ -67,7 +68,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         """Return the folder name from which we want the plugin data."""
         return "mail-aggregation"
 
-    def set_pluginmanager(self, pluginManager: 'PluginManager') -> None:
+    def set_pluginmanager(self, pluginManager: 'src.plugins.plugin_manager.PluginManager') -> None:
         self._pluginManager = pluginManager
 
     def set_repository(self, repository: IRepository) -> None:
@@ -280,13 +281,16 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         in the fragmentChain is mapped using one key in the keyChain
 
         eg.
-        fragmentChain = [ self._map_qid_imap,     self._map_msgid     ]
-        keyChain      = [ constants.PHD_IMAP_QID, constants.MESSAGEID ]
+        fragmentChain = [ self._map_mxin,         self._map_qid_imap,     self._map_msgid     ]
+        keyChain      = [ constants.PHD_MXIN_QID, constants.PHD_IMAP_QID, constants.MESSAGEID ]
 
         a given key is now used to find a given fragment in the fragmentChain:
 
         we will start with the first key:
         index = 1
+
+        fragments = fragmentChain[0]
+        initialID = keyChain[0]
 
         frags     = fragmentChain[index]
         key       = keyChain[index]
@@ -311,7 +315,6 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
 
 
             # create aggregate target
-            # all data is aggregated into this dict
             initialID = frag.get(keyChain[0])
 
             builder = ExpressionBuilder()
