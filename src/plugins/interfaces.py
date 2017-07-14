@@ -14,7 +14,7 @@ class IAbstractPlugin():
 
 
 class IPlugin(IAbstractPlugin, metaclass=ABCMeta):
-    """Public interface which every plugin has to implement."""
+    """Public interface which every data collection plugin has to implement."""
 
     @abstractmethod
     def check_subscription(self, line: str) -> bool:

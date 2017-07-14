@@ -11,7 +11,11 @@ from ..expression.builder import Expression
 
 
 class DataFinder():
-    """DataFinder searches given data by fields and/or time."""
+    """
+    DataFinder encapsulates the repository.
+
+    This is actually
+    """
 
     def __init__(self):
         self._repository = RepositoryFactory.create_repository()

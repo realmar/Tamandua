@@ -53,15 +53,18 @@ class MongoCountSpecificIterable(CountableIterator):
         return self.__sum
 
 
-
-
 class MongoRepository(IRepository):
-    """"""
+    """Concrete IRepository which uses MongoDB as storage backend."""
 
+    # definition of the document names
+    # in the metadata collection
     __lastBytePosName = 'lastbytepos'
     __lastLogfileSizeName = 'lastlogfilesize'
     __lastRunDateTimeName = 'lastrundatetime'
 
+
+    # map different comparators to the mongodb
+    # specific comparators
     __comparatorMap = {
         Comparator.equal: '$eq',
         Comparator.not_equal: '$not',
@@ -73,7 +76,7 @@ class MongoRepository(IRepository):
     }
 
     def __init__(self):
-        """"""
+        """Constructor of MongoRepository."""
         self._server = Config().get('dbserver')
         self._port = Config().get('dbport')
 
@@ -104,7 +107,7 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _make_regexp(cls, pattern: str, caseSensitive: True) -> object:
-        """"""
+        """Make a mongodb regex search value."""
         query = {'$regex': pattern}
         if caseSensitive:
             query['$options'] = '-i'
@@ -113,7 +116,15 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _make_comparison(cls, key: str, value: object, comparator: Comparator) -> object:
-        """"""
+        """
+        Make a mongodb comparator value.
+
+        For example:
+
+        obj1.key >= obj2.key
+        turn into:
+        {'key': {'$gte': 'value'}}
+        """
 
         if comparator.is_regex():
             if not isinstance(value, str):
@@ -135,7 +146,8 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _make_datetime_comparison(cls, start: datetime, end: datetime) -> object:
-        """"""
+        """Make a datetime comparison mongodb search value."""
+
         obj = {}
 
         if start is not None:
@@ -150,6 +162,8 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _parse_expression(cls, expression: Expression) -> dict:
+        """Compile a given intermediate expression into a mongodb specific query."""
+
         target = {}
         isDateTimeSearch = expression.datetime.start is not None or expression.datetime.end is not None
 
@@ -185,6 +199,8 @@ class MongoRepository(IRepository):
         return ['database_name', 'collection_complete', 'collection_incomplete', 'collection_metadata', 'dbserver', 'dbport']
 
     def __resolveScope(self, scope: SearchScope):
+        """Resolve a given scope to a target collection."""
+
         if scope == SearchScope.COMPLETE:
             return self._collection_complete
         elif scope == SearchScope.INCOMPLETE:
