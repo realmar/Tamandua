@@ -14,7 +14,10 @@ class DataFinder():
     """
     DataFinder encapsulates the repository.
 
-    This is actually
+    This is kind of a legacy component and should be refactored
+    directly into the different resourcees in rest_api.
+    That because DataFinder contains only very little logic
+    which is not enough to justify the existence of this class.
     """
 
     def __init__(self):
@@ -86,6 +89,8 @@ class DataFinder():
         return self._repository.count_specific_fields(expression)
 
     def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int):
+        """Filter a search result to match the pager."""
+
         results_list = []
 
         for i in range(0, page_start + page_size):

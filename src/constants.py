@@ -4,7 +4,7 @@ Contains globally used constants.
 Those constants represent domain specific elements in Tamandua, which 
 should be stored centrally to ensure consistency.
 
-If you are writing plugins: please use those constants when defining
+If you are writing plugins: use those constants when defining
 domain specific stuff. (eg. in regexps)
 """
 
