@@ -6,13 +6,24 @@ from  .repository import factory as repofactory
 from .singleton import Singleton
 
 class Config(metaclass=Singleton):
-    """Store and validate the tamandua config."""
+    """
+    Store and validate the tamandua config.
+
+    This class is a singleton, which means that only
+    one instance of this class may exists.
+
+    In order to use the Config you need to setup it once:
+    Config().setup( ... )
+
+    Access the instance:
+    Config().<member>
+    """
 
     def __init__(self):
         self.__config = {}
 
     def setup(self, configpath: str, basepath: str, overwrite: dict = None):
-        """Load config as YAML into memory."""
+        """Load JSON config into memory."""
         with open(configpath, 'r') as f:
             self.__config = json.load(f)
 

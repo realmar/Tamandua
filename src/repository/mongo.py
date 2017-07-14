@@ -23,11 +23,17 @@ from ..constants import get_all_times
 
 
 class TargetCollectionNotFound(Exception):
+    """Thrown when the requested collection was not found."""
+
     pass
 
 
 class MongoCountSpecificIterable(CountableIterator):
-    """"""
+    """
+    Iterable specific to the result set of the
+    count_specific_fields method. It behaves the same
+    way as a CountableIterator.
+    """
 
     def __init__(self, cursor):
         self.__cursor = cursor
@@ -47,15 +53,18 @@ class MongoCountSpecificIterable(CountableIterator):
         return self.__sum
 
 
-
-
 class MongoRepository(IRepository):
-    """"""
+    """Concrete IRepository which uses MongoDB as storage backend."""
 
+    # definition of the document names
+    # in the metadata collection
     __lastBytePosName = 'lastbytepos'
     __lastLogfileSizeName = 'lastlogfilesize'
     __lastRunDateTimeName = 'lastrundatetime'
 
+
+    # map different comparators to the mongodb
+    # specific comparators
     __comparatorMap = {
         Comparator.equal: '$eq',
         Comparator.not_equal: '$not',
@@ -67,7 +76,7 @@ class MongoRepository(IRepository):
     }
 
     def __init__(self):
-        """"""
+        """Constructor of MongoRepository."""
         self._server = Config().get('dbserver')
         self._port = Config().get('dbport')
 
@@ -98,7 +107,7 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _make_regexp(cls, pattern: str, caseSensitive: True) -> object:
-        """"""
+        """Make a mongodb regex search value."""
         query = {'$regex': pattern}
         if caseSensitive:
             query['$options'] = '-i'
@@ -107,7 +116,15 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _make_comparison(cls, key: str, value: object, comparator: Comparator) -> object:
-        """"""
+        """
+        Make a mongodb comparator value.
+
+        For example:
+
+        obj1.key >= obj2.key
+        turn into:
+        {'key': {'$gte': 'value'}}
+        """
 
         if comparator.is_regex():
             if not isinstance(value, str):
@@ -129,7 +146,8 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _make_datetime_comparison(cls, start: datetime, end: datetime) -> object:
-        """"""
+        """Make a datetime comparison mongodb search value."""
+
         obj = {}
 
         if start is not None:
@@ -144,6 +162,8 @@ class MongoRepository(IRepository):
 
     @classmethod
     def _parse_expression(cls, expression: Expression) -> dict:
+        """Compile a given intermediate expression into a mongodb specific query."""
+
         target = {}
         isDateTimeSearch = expression.datetime.start is not None or expression.datetime.end is not None
 
@@ -179,12 +199,21 @@ class MongoRepository(IRepository):
         return ['database_name', 'collection_complete', 'collection_incomplete', 'collection_metadata', 'dbserver', 'dbport']
 
     def __resolveScope(self, scope: SearchScope):
+        """Resolve a given scope to a target collection."""
+
         if scope == SearchScope.COMPLETE:
             return self._collection_complete
         elif scope == SearchScope.INCOMPLETE:
             return self._collection_incomplete
         elif scope == SearchScope.ALL:
             class CollectionAggregate():
+                """
+                The purpose of this calls is to operate on
+                multiple collection the same way as on a single collection.
+
+                Although only the absolute required methods are implemented.
+                """
+
                 @staticmethod
                 def find(query: dict) -> CountableIterator[Dict]:
                     complete = self._collection_complete.find(query)
@@ -222,7 +251,6 @@ class MongoRepository(IRepository):
             raise TargetCollectionNotFound()
 
     def find(self, query: Expression, scope: SearchScope) -> CountableIterator[Dict]:
-        """"""
         try:
             searchCollection = self.__resolveScope(scope)
         except TargetCollectionNotFound as e:
@@ -233,7 +261,6 @@ class MongoRepository(IRepository):
         return CountableIterator(results, lambda x: x.count())
 
     def count_specific_fields(self, query: Expression) -> CountableIterator:
-        """"""
         fieldExp = '$' + query.advcount.field
 
         if query.advcount.sep is not None:
@@ -278,7 +305,6 @@ class MongoRepository(IRepository):
             return CountableIterator(iter([]), lambda x: 0)
 
     def insert_or_update(self, data: dict, scope: SearchScope) -> None:
-        """"""
         if scope == SearchScope.ALL:
             # we do not support inserting or updating multiple
             # collections at the same time
@@ -294,12 +320,10 @@ class MongoRepository(IRepository):
             collection.insert_one(data)
 
     def delete(self, query: Expression, scope: SearchScope) -> None:
-        """"""
         collection = self.__resolveScope(scope)
         collection.remove(self._parse_expression(query))
 
     def remove_metadata(self, data: dict) -> None:
-        """"""
         try:
             del data['_id']
         except KeyError as e:
@@ -327,24 +351,19 @@ class MongoRepository(IRepository):
             return data[field]
 
     def save_position_of_last_read_byte(self, pos: int) -> None:
-        """"""
         self.__save_metadata(self.__lastBytePosName, pos)
 
     def get_position_of_last_read_byte(self) -> int:
-        """"""
         return self.__get_metadata_wrapp(self.__lastBytePosName, 0)
 
 
     def save_size_of_last_logfile(self, size: int) -> None:
-        """"""
         self.__save_metadata(self.__lastLogfileSizeName, size)
 
     def get_size_of_last_logfile(self) -> int:
-        """"""
         return self.__get_metadata_wrapp(self.__lastLogfileSizeName, 0)
 
     def get_all_keys(self) -> List[str]:
-        """"""
         try:
             result = self._collection_complete.map_reduce(
                 Code(Loader.load_js('mongo_js.mapper')),
@@ -368,7 +387,6 @@ class MongoRepository(IRepository):
                              limit: int = 0,
                              separator: str = None,
                              separatorResultPos: int = 0) -> List[str]:
-        """"""
         if isinstance(separator, str):
             groupExp = {'$arrayElemAt':
                 [
@@ -401,7 +419,6 @@ class MongoRepository(IRepository):
                               limit: int,
                               separator: str = None,
                               separatorResultPos: int = 0) -> List[str]:
-        """"""
         query = partial(self.__group_field_values,
                         field=field,
                         limit=limit,
@@ -414,8 +431,6 @@ class MongoRepository(IRepository):
         return list(set().union(resultsComplete,resultsIncomplete))
 
     def get_all_tags(self) -> List[str]:
-        """"""
-
         query = partial(self.__group_field_values,
                         field='tags')
 
@@ -425,12 +440,9 @@ class MongoRepository(IRepository):
         return list(set().union(tagsComplete, tagsIncomplete))
 
     def save_time_of_last_run(self, dt: datetime):
-        """"""
         self.__save_metadata(self.__lastRunDateTimeName, dt)
 
     def create_indexes(self, indexes: List[str]) -> None:
-        """"""
-
         indexModels = []
 
         # build IndexModels

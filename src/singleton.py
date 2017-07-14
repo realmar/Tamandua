@@ -3,6 +3,18 @@
 
 class Singleton(type):
     """
+    Singleton metaclass.
+
+    Assign this class as metaclass to any class which should be a singleton.
+
+    For example:
+
+    class MySingleton(metaclass=Singleton):
+        pass
+
+    Access the instance:
+
+    MySingleton().<member>
 
     Sidenote: if you dont know what this is, read here: https://sourcemaking.com/design_patterns/singleton
 

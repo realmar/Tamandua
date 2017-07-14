@@ -10,6 +10,7 @@ class DataReceiver():
     """Distribute extracted data from the loglines between data containers."""
 
     def __init__(self, containers: List[IDataContainer]):
+        """Constructor of DataReceiver"""
         self.containers = containers
 
     def get_conainers_of_type(self, t: type) -> list:

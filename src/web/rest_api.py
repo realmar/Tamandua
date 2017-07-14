@@ -11,6 +11,8 @@ from ..repository.factory import RepositoryFactory
 
 
 class BaseResource(Resource):
+    """Base class of all resources."""
+
     def __init__(self, dataFinder: DataFinder):
         self._dataFinder = dataFinder
 
@@ -23,7 +25,7 @@ class Columns(BaseResource):
 
 
 class Tags(BaseResource):
-    """"""
+    """Resource represents available tags."""
 
     def get(self) -> list:
         return self._dataFinder.availableTags
@@ -69,7 +71,7 @@ class Search(BaseResource):
 
 
 class Count(BaseResource):
-    """"""
+    """Count the returned objected of a given search query."""
 
     def post(self) -> int:
         expression = Expression(request.get_json())
@@ -79,7 +81,12 @@ class Count(BaseResource):
 
 
 class AdvancedCount(BaseResource):
-    """"""
+    """
+    Count occurences of values in a given field.
+
+    This resource is used by the View::Dashboard for the
+    top n lists.
+    """
 
     def post(self, length: int) -> dict:
         expression = Expression(request.get_json())
@@ -99,7 +106,7 @@ class AdvancedCount(BaseResource):
 
 
 class FieldChoices(BaseResource):
-    """"""
+    """Distinct choices of a given field."""
 
     def __init__(self, dataFinder: DataFinder):
         super().__init__(dataFinder)
