@@ -580,7 +580,7 @@ The documentation will, by any chance, be completed someday.
 Tamandua is developed at ETH Zurich Department Physics in the ISG group. ([IT Services Group D-PHYS](https://nic.phys.ethz.ch/)) It's goal is to provide the system administrators there with an easy way to analise the mail traffic of their mail infrastructure. This means that Tamandua contains some domain specific parts like the hostnames of the mail servers. Although Tamandua can be easily rewritten to operate in a different environment.
 
 ## System Requirements
-Refer to the [Perfromance Messurements (incomplete)](docs/perf_messurements.md)
+Refer to the [Performance Measurements (incomplete)](docs/perf_messurements.md)
 
 Generally speaking consumes the parser a bit more RAM than the size of the logfile:
 
