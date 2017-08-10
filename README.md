@@ -255,7 +255,7 @@ Plugins
 Available plugins are found in the `plugins-available` folder and enabled plugins are symlinked into the `plugins-enabled` folder.
 
 ### Data Collection
-Data collection plugins are located in folders in `plugins-available` without ending to `.d`. They may inherit from different base classes or directly from the `IPlugin` interface: (It is recommended to inherit from a base class for generic plugin logic)
+Data collection plugins are located in folders in `plugins-available`. They may inherit from different base classes or directly from the `IPlugin` interface: (It is recommended to inherit from a base class for generic plugin logic)
 
 Lets create a new plugin:
 
@@ -321,7 +321,7 @@ A client can then give an object to the chain which will in turn give this objec
 chain.process(object)
 ```
 
-Processor plugins are located in plugin folders ending to `.d`. (eg. `postprocessors.d`) The name of their responsibility is this foldername minus the `.d` at the end. (eg. folder: `postprocessors.d` --> responsibility: `postprocessors`)
+Processor plugins are located in plugin folders under `plugins-available`. (eg. `postprocessors.d`) The name of their responsibility is this foldername minus the `.d` at the end. (eg. folder: `postprocessors.d` --> responsibility: `postprocessors`) Although the `.d` is not required.
 
 For each of this responsibilities a `Chain` is created.
 
