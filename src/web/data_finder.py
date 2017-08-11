@@ -88,7 +88,7 @@ class DataFinder():
 
         return self._repository.count_specific_fields(expression)
 
-    def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int):
+    def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int) -> CountableIterator[Dict]:
         """Filter a search result to match the pager."""
 
         results_list = []
