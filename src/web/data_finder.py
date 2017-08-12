@@ -46,6 +46,7 @@ class FieldChoicesData():
     def get_data(self, maxChoices: int):
         """Return choices for a given field."""
         if maxChoices != self._maxChoices:
+            self._maxChoices = maxChoices
             self._data = DataCache(self.__make_data_func(), self.CACHE_INTERVAL)
 
         return self._data.data
