@@ -19,12 +19,12 @@ GLOB_CACHE_INTERVAL = 60 * 60 * 12
 
 
 class FieldChoicesData():
-    """"""
+    """Encapsulate getting, storing and caching choices for a given field."""
 
     CACHE_INTERVAL = GLOB_CACHE_INTERVAL
 
     def __init__(self, field: str, maxChoices: int):
-        """"""
+        """Constructor of FieldChoicesData."""
         self._repository = RepositoryFactory.create_repository()
 
         self._field = field
@@ -33,7 +33,7 @@ class FieldChoicesData():
         self._data = DataCache(self.__make_data_func(), self.CACHE_INTERVAL)
 
     def __make_data_func(self) -> Callable[[], FieldChoicesResults]:
-        """"""
+        """Construct the caching function."""
         separator = None
         if self._field == 'virusresult':
             separator = '('
@@ -44,7 +44,7 @@ class FieldChoicesData():
                        separator=separator)
 
     def get_data(self, maxChoices: int):
-        """"""
+        """Return choices for a given field."""
         if maxChoices != self._maxChoices:
             self._data = DataCache(self.__make_data_func(), self.CACHE_INTERVAL)
 
@@ -116,7 +116,7 @@ class DataFinder():
         return self._repository.find(expression, SearchScope.ALL)
 
     def get_choices_for_field(self, field: str, maxChoices: int) -> FieldChoicesResults:
-        """"""
+        """Get available choices for a given field and cache them."""
         try:
             return self._choices_for_fields[field].get_data(maxChoices)
         except KeyError as e:
