@@ -219,8 +219,6 @@ class MongoRepository(IRepository):
                     complete = self._collection_complete.find(query)
                     incomplete = self._collection_incomplete.find(query)
 
-                    count = complete.count() + incomplete.count()
-
                     # ultra dirty monkey patching ....
                     # TODO: Do not use reflection to add a method ...
                     # The goal of CollectionAggregate is to provide a
@@ -234,10 +232,10 @@ class MongoRepository(IRepository):
                             complete,
                             incomplete
                         ),
-                        lambda x: count
+                        lambda x: complete.count() + incomplete.count()
                     )
 
-                    setattr(c, 'count', lambda: count)
+                    setattr(c, 'count', lambda: complete.count() + incomplete.count())
 
                     return c
 
