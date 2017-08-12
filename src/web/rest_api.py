@@ -3,11 +3,8 @@
 from flask import request
 from flask_restful import Resource
 
-from typing import List
-
-from .data_finder import DataFinder
+from .data_finder import DataFinder, FieldChoicesResults
 from ..expression.builder import Expression
-from ..repository.factory import RepositoryFactory
 
 
 class BaseResource(Resource):
@@ -82,7 +79,7 @@ class Count(BaseResource):
 
 class AdvancedCount(BaseResource):
     """
-    Count occurences of values in a given field.
+    Count occurrences of values in a given field.
 
     This resource is used by the View::Dashboard for the
     top n lists.
@@ -110,13 +107,6 @@ class FieldChoices(BaseResource):
 
     def __init__(self, dataFinder: DataFinder):
         super().__init__(dataFinder)
-        self._repository = RepositoryFactory.create_repository()
 
-    def get(self, field: str, maxChoices: int) -> List[str]:
-        separator = None
-        if field == 'virusresult':
-            separator = '('
-
-        return self._repository.get_choices_for_field(field,
-                                                               maxChoices,
-                                                               separator=separator)
+    def get(self, field: str, maxChoices: int) -> FieldChoicesResults:
+        return self._dataFinder.get_choices_for_field(field, maxChoices)

@@ -1618,12 +1618,14 @@ function register_event_handlers() {
 function main() {
     init_global_variables();
     register_event_handlers();
-    init_expression_template();
     init_overview_dashboard();
     setup_datetimepicker($('#dt-from-picker'));
     setup_datetimepicker($('#dt-to-picker'));
     setup_selectizer($(".pagesize"));
+
     change_view(new DashboardView());
+
+    setTimeout(init_expression_template, 1500);
 }
 
 $(document).ready(main);
