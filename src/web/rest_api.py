@@ -62,7 +62,9 @@ class Search(BaseResource):
         )
 
         return {
-            'total_rows': len(results),
+            # we do not want to count the results as this will
+            # double the request time
+            'total_rows': 0, # len(results),
             'rows': list(results),
         }
 
