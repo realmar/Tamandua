@@ -1,6 +1,5 @@
 """Module which contains the repository implementation for mongodb."""
 
-
 import itertools
 from pymongo import MongoClient, IndexModel, ASCENDING, DESCENDING
 from pymongo.collection import Collection as PyMongoCollection
@@ -61,7 +60,6 @@ class MongoRepository(IRepository):
     __lastBytePosName = 'lastbytepos'
     __lastLogfileSizeName = 'lastlogfilesize'
     __lastRunDateTimeName = 'lastrundatetime'
-
 
     # map different comparators to the mongodb
     # specific comparators
@@ -134,7 +132,8 @@ class MongoRepository(IRepository):
                     key: cls._make_regexp(value, comparator.is_regex_case_insensitive())
                 }
 
-        if comparator.comparator == Comparator.not_equal and isinstance(value, str):                        tmp = re.compile(value, re.I)
+        if comparator.comparator == Comparator.not_equal and isinstance(value, str):
+            tmp = re.compile(value, re.I)
         else:
             tmp = value
 
@@ -196,7 +195,8 @@ class MongoRepository(IRepository):
 
     @staticmethod
     def get_config_fields() -> List[str]:
-        return ['database_name', 'collection_complete', 'collection_incomplete', 'collection_metadata', 'dbserver', 'dbport']
+        return ['database_name', 'collection_complete', 'collection_incomplete', 'collection_metadata', 'dbserver',
+                'dbport']
 
     def __resolveScope(self, scope: SearchScope):
         """Resolve a given scope to a target collection."""
@@ -263,12 +263,12 @@ class MongoRepository(IRepository):
 
         if query.advcount.sep is not None:
             groupExp = {'$arrayElemAt':
-                             [
-                                 {'$split':
-                                      [fieldExp, '@']
-                                 }, 1
-                             ]
-                        }
+                [
+                    {'$split':
+                         [fieldExp, '@']
+                     }, 1
+                ]
+            }
         else:
             groupExp = fieldExp
 
@@ -281,14 +281,14 @@ class MongoRepository(IRepository):
             {'$group':
                  {'_id': groupExp,
                   'value': {'$sum': 1}}
-                 },
+             },
             {'$group':
                  {'_id': None,
                   'sum': {'$sum': '$value'},
                   'details': {
                       '$push': {'field': '$_id',
                                 'value': '$value'}
-                                }
+                  }
                   }
              },
             {'$unwind': '$details'},
@@ -297,8 +297,8 @@ class MongoRepository(IRepository):
 
         try:
             return MongoCountSpecificIterable(
-                    self._collection_complete.aggregate(pipline)
-                )
+                self._collection_complete.aggregate(pipline)
+            )
         except pymongo_errors.OperationFailure as e:
             return CountableIterator(iter([]), lambda x: 0)
 
@@ -307,7 +307,7 @@ class MongoRepository(IRepository):
             # we do not support inserting or updating multiple
             # collections at the same time
             raise NotImplementedError()
-        
+
         collection = self.__resolveScope(scope)
 
         if data.get('_id') is not None:
@@ -327,10 +327,8 @@ class MongoRepository(IRepository):
         except KeyError as e:
             pass
 
-
     def __get_metadata(self, field: str) -> dict:
         return self._collection_metadata.find_one({field: {'$exists': True}})
-
 
     def __save_metadata(self, field: str, value: object) -> None:
         data = self.__get_metadata(field)
@@ -353,7 +351,6 @@ class MongoRepository(IRepository):
 
     def get_position_of_last_read_byte(self) -> int:
         return self.__get_metadata_wrapp(self.__lastBytePosName, 0)
-
 
     def save_size_of_last_logfile(self, size: int) -> None:
         self.__save_metadata(self.__lastLogfileSizeName, size)
@@ -400,8 +397,8 @@ class MongoRepository(IRepository):
             {'$project': {'field': '$' + field}},
             {'$unwind': '$field'},
             {'$group':
-                {'_id': groupExp}
-            },
+                 {'_id': groupExp}
+             },
             {'$project': {'field': '$_id'}},
             {'$unwind': '$field'},
         ]
@@ -410,7 +407,6 @@ class MongoRepository(IRepository):
             pipeline.append({'$limit': limit})
 
         return [x['field'] for x in collection.aggregate(pipeline)]
-
 
     def get_choices_for_field(self,
                               field: str,
@@ -426,7 +422,7 @@ class MongoRepository(IRepository):
         resultsComplete = query(collection=self._collection_complete)
         resultsIncomplete = query(collection=self._collection_incomplete)
 
-        return list(set().union(resultsComplete,resultsIncomplete))
+        return list(set().union(resultsComplete, resultsIncomplete))
 
     def get_all_tags(self) -> List[str]:
         query = partial(self.__group_field_values,
