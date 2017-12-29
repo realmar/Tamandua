@@ -46,7 +46,8 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
         'connectip',
         'rejectreason',
         'rejectstage',
-        'statuscode'
+        'statuscode',
+        'virusresult'
     ]
 
     def __init__(self):
