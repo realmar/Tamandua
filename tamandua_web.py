@@ -44,12 +44,35 @@ def home():
     return render_template('index.html', fieldnames=dataFinder.availableFields)
 
 
-api.add_resource(rest_api.Columns, '/api/columns', resource_class_args=[dataFinder])
-api.add_resource(rest_api.Tags, '/api/tags', resource_class_args=[dataFinder])
-api.add_resource(rest_api.Search, '/api/search/<int:page>/<int:size>', resource_class_args=[dataFinder])
-api.add_resource(rest_api.Count, '/api/count', resource_class_args=[dataFinder])
-api.add_resource(rest_api.AdvancedCount, '/api/advcount/<int:length>', resource_class_args=[dataFinder])
-api.add_resource(rest_api.FieldChoices, '/api/fieldchoices/<field>/<int:maxChoices>', resource_class_args=[dataFinder])
+api.add_resource(rest_api.Columns,
+                 '/api/columns',
+                 resource_class_args=[dataFinder])
+
+api.add_resource(rest_api.Tags,
+                 '/api/tags',
+                 resource_class_args=[dataFinder])
+
+api.add_resource(rest_api.Search,
+                 '/api/search/<int:page>/<int:size>',
+                 resource_class_args=[dataFinder])
+
+api.add_resource(rest_api.Count,
+                 '/api/count',
+                 resource_class_args=[dataFinder])
+
+api.add_resource(rest_api.AdvancedCount,
+                 '/api/advcount/<field>/<int:length>',
+                 resource_class_args=[dataFinder])
+
+api.add_resource(rest_api.AdvancedCount,
+                 '/api/advcount/<field>/<int:length>/<separator>',
+                 resource_class_args=[dataFinder],
+                 endpoint='advcount_with_separator')
+
+api.add_resource(rest_api.FieldChoices,
+                 '/api/fieldchoices/<field>/<int:maxChoices>',
+                 resource_class_args=[dataFinder],
+                 endpoint='advcount')
 
 if __name__ == "__main__":
     app.run(host='localhost', port=8080, debug=True)

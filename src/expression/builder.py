@@ -135,20 +135,6 @@ class Expression():
             except Exception as e:
                 raise ExpressionInvalid("To datetime format is invalid: " + str(endTimeRaw))
 
-        """
-        Validation advcount
-        """
-
-        try:
-            self.advcount.field = expression['advcount']['field']
-        except KeyError as e:
-            pass
-        else:
-            try:
-                self.advcount.sep = expression['advcount']['sep']
-            except KeyError as e:
-                pass
-
     def make_portable(self) -> dict:
         """Transform the current expression in a portable format."""
 
@@ -167,12 +153,6 @@ class Expression():
 
             if self.datetime.end is not None:
                 exp['datetime']['end'] = self.datetime.end.stftime(TIME_FORMAT)
-
-        if self.advcount.field is not None:
-            exp['advcount'] = {'field': self.advcount.field}
-
-            if self.advcount.sep is not None:
-                exp['advcount']['sep'] = self.advcount.sep
 
         return exp
 
@@ -215,16 +195,6 @@ class ExpressionBuilder():
     def add_field(self, field: ExpressionField) -> 'ExpressionBuilder':
         """Add a field to the expression."""
         self.expression.fields.append(field)
-        return self
-
-    def set_count_field(self, field: str) -> 'ExpressionBuilder':
-        """Set the field of advcount."""
-        self.expression.advcount.field = field
-        return self
-
-    def set_count_sep(self, sep: str) -> 'ExpressionBuilder':
-        """Set the sep of advcount."""
-        self.expression.advcount.sep = sep
         return self
 
     def set_start_datetime(self, dt: datetime) -> 'ExpressionBuilder':

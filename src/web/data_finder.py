@@ -126,27 +126,10 @@ class DataFinder():
 
             return fd.get_data(maxChoices)
 
-    def mapreduce(self, expression: Expression) -> CountableIterator:
+    def count_specific_fields(self, expression: Expression, field: str, separator: str = None) -> CountableIterator:
         """"""
 
-        """
-        This specific expression has to have additional attributes:
-        
-        {
-            ...
-            
-            "countfield": "<field>",
-            "sep": "<separator>"
-            
-            ...
-        }
-        
-        """
-
-        if expression.advcount.field is None:
-            raise ExpressionInvalid('advcount.field is required. Provide it in your expression.')
-
-        return self._repository.count_specific_fields(expression)
+        return self._repository.count_specific_fields(expression, field, separator)
 
     def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int) -> CountableIterator[Dict]:
         """Filter a search result to match the pager."""

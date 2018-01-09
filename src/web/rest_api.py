@@ -87,9 +87,9 @@ class AdvancedCount(BaseResource):
     top n lists.
     """
 
-    def post(self, length: int) -> dict:
+    def post(self, field: str, length: int, separator: str = None) -> dict:
         expression = Expression(request.get_json())
-        results = self._dataFinder.mapreduce(expression)
+        results = self._dataFinder.count_specific_fields(expression, field, separator)
 
         final = []
         for i in range(0, length):

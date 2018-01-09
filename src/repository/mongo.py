@@ -258,14 +258,14 @@ class MongoRepository(IRepository):
         results = searchCollection.find(q)
         return CountableIterator(results, lambda x: x.count())
 
-    def count_specific_fields(self, query: Expression) -> CountableIterator:
-        fieldExp = '$' + query.advcount.field
+    def count_specific_fields(self, expression: Expression, field: str, separator: str = None) -> CountableIterator:
+        fieldExp = '$' + field
 
-        if query.advcount.sep is not None:
+        if separator is not None:
             groupExp = {'$arrayElemAt':
                 [
                     {'$split':
-                         [fieldExp, '@']
+                         [fieldExp, separator]
                      }, 1
                 ]
             }
@@ -273,9 +273,9 @@ class MongoRepository(IRepository):
             groupExp = fieldExp
 
         pipline = [
-            {'$match': self._parse_expression(query)},
+            {'$match': self._parse_expression(expression)},
             {'$project':
-                 {query.advcount.field: fieldExp}
+                 {field: fieldExp}
              },
             {'$unwind': fieldExp},
             {'$group':
