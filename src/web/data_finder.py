@@ -6,7 +6,6 @@ from datetime import datetime
 from functools import partial
 
 from .. import constants
-from ..expression.exceptions import ExpressionInvalid
 from ..repository.factory import RepositoryFactory
 from ..repository.misc import SearchScope, CountableIterator
 from ..expression.builder import Expression
@@ -32,24 +31,41 @@ class FieldChoicesData():
 
         self._data = DataCache(self.__make_data_func(), self.CACHE_INTERVAL)
 
+    @staticmethod
+    def __transform_datetime_to_string(fields: FieldChoicesResults) -> FieldChoicesResults:
+        transformed = []
+
+        for field in fields:
+            if isinstance(field, datetime):
+                transformed.append(datetime.strftime(field, constants.TIME_FORMAT))
+            else:
+                transformed.append(field)
+
+        return transformed
+
     def __make_data_func(self) -> Callable[[], FieldChoicesResults]:
         """Construct the caching function."""
         separator = None
         if self._field == 'virusresult':
             separator = '('
 
-        return partial(self._repository.get_choices_for_field,
+        dataFunc = partial(self._repository.get_choices_for_field,
                        field=self._field,
                        limit=self._maxChoices,
                        separator=separator)
+
+        return lambda *args: FieldChoicesData.__transform_datetime_to_string(dataFunc(*args))
 
     def get_data(self, maxChoices: int):
         """Return choices for a given field."""
         if maxChoices != self._maxChoices:
             self._maxChoices = maxChoices
-            self._data = DataCache(self.__make_data_func(), self.CACHE_INTERVAL)
+            self._data = DataCache(
+                self.__make_data_func(),
+                self.CACHE_INTERVAL)
 
         return self._data.data
+
 
 
 class DataFinder():
