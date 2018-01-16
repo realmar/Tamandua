@@ -74,5 +74,9 @@ api.add_resource(rest_api.FieldChoices,
                  resource_class_args=[dataFinder],
                  endpoint='advcount')
 
+api.add_resource(rest_api.SupportedFieldChoices,
+                 '/api/supported_fieldchoices',
+                 resource_class_args=[dataFinder])
+
 if __name__ == "__main__":
     app.run(host='localhost', port=8080, debug=True)

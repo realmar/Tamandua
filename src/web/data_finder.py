@@ -11,7 +11,6 @@ from ..repository.misc import SearchScope, CountableIterator
 from ..expression.builder import Expression
 from .cache import DataCache
 
-
 FieldChoicesResults = List[str]
 
 GLOB_CACHE_INTERVAL = 60 * 60 * 12
@@ -50,9 +49,9 @@ class FieldChoicesData():
             separator = '('
 
         dataFunc = partial(self._repository.get_choices_for_field,
-                       field=self._field,
-                       limit=self._maxChoices,
-                       separator=separator)
+                           field=self._field,
+                           limit=self._maxChoices,
+                           separator=separator)
 
         return lambda *args: FieldChoicesData.__transform_datetime_to_string(dataFunc(*args))
 
@@ -67,7 +66,6 @@ class FieldChoicesData():
         return self._data.data
 
 
-
 class DataFinder():
     """
     DataFinder encapsulates the repository.
@@ -76,6 +74,18 @@ class DataFinder():
     """
 
     CACHE_INTERVAL = GLOB_CACHE_INTERVAL
+
+    SUPPORTED_FIELD_CHOICES = [
+        'action',
+        'deliverystatus',
+        'rejectreason',
+        'rejectstage',
+        'saslmethod',
+        'statuscode',
+        'tags',
+        'virusaction',
+        'virusresult'
+    ]
 
     def __init__(self):
         self._repository = RepositoryFactory.create_repository()
@@ -147,7 +157,8 @@ class DataFinder():
 
         return self._repository.count_specific_fields(expression, field, separator)
 
-    def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int) -> CountableIterator[Dict]:
+    def filter_page_size(self, results: CountableIterator[Dict], page_start: int, page_size: int) -> CountableIterator[
+        Dict]:
         """Filter a search result to match the pager."""
 
         results_list = []
@@ -182,4 +193,3 @@ class DataFinder():
             results_list.append(currResult)
 
         return CountableIterator(iter(results_list), lambda x: len(results))
-

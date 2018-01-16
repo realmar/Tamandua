@@ -1,5 +1,7 @@
 """This module contains all resource classes used by the REST interface."""
 
+from typing import List
+
 from flask import request
 from flask_restful import Resource
 
@@ -112,3 +114,14 @@ class FieldChoices(BaseResource):
 
     def get(self, field: str, maxChoices: int) -> FieldChoicesResults:
         return self._dataFinder.get_choices_for_field(field, maxChoices)
+
+
+class SupportedFieldChoices(BaseResource):
+    """List of supported field choices."""
+
+    def __init__(self, dataFinder: DataFinder):
+        super().__init__(dataFinder)
+
+    def get(self) -> List[str]:
+        """Return a list of the field names where the fieldchoices endpoint is applicable."""
+        return DataFinder.SUPPORTED_FIELD_CHOICES
