@@ -403,10 +403,15 @@ class MongoRepository(IRepository):
             {'$unwind': '$field'},
         ]
 
+        # Allow filtering of huge datasets (eg. loglines column)
+        options = {
+            'allowDiskUse': True
+        }
+
         if limit > 0:
             pipeline.append({'$limit': limit})
 
-        return [x['field'] for x in collection.aggregate(pipeline)]
+        return [x['field'] for x in collection.aggregate(pipeline, **options)]
 
     def get_choices_for_field(self,
                               field: str,
