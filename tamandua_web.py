@@ -13,7 +13,7 @@ import sys
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
 
-from flask import Flask, render_template
+from flask import Flask
 from flask_restful import Api
 
 from src.web.data_finder import DataFinder
@@ -37,12 +37,6 @@ try:
 except Exception as e:
     print_exception(e, "Trying to create an instance of DataFinder", "Exiting application", fatal=True)
     sys.exit(1)
-
-
-@app.route('/')
-def home():
-    return render_template('index.html', fieldnames=dataFinder.availableFields)
-
 
 api.add_resource(rest_api.Columns,
                  '/api/columns',
