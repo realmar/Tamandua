@@ -179,13 +179,14 @@ class IRepository(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_all_keys(self) -> List[str]:
+    def get_all_keys(self, force=False) -> List[str]:
         """
-        Return a list of all distinct keys in all stored objects.
+        Returns a list of all distinct keys in the stored objects.
 
-        In the search form in the view, you may search all available fields
-        in the objects. This method supplies the view with that data. (Which
-        keys exists)
+        This list is used in the search mask of the view.
+
+        Args:
+            force (bool): Force collect data from collection and not use cached data
         """
         pass
 

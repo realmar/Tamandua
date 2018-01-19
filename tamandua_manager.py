@@ -110,6 +110,16 @@ def all():
     logfile_size()
 
 
+@manager.command(namespace='cache')
+def document_keys():
+    """Build cache with all distinct keys of documents."""
+    RepositoryFactory                   \
+        .create_repository()            \
+        .get_all_keys(True)
+
+    print('Successfully built cache of unique document keys.')
+
+
 @manager.arg('days', help='Number of days to keep')
 @manager.command
 def cleanup(days=30):

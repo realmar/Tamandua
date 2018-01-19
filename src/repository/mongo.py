@@ -358,12 +358,19 @@ class MongoRepository(IRepository):
     def get_size_of_last_logfile(self) -> int:
         return self.__get_metadata_wrapp(self.__lastLogfileSizeName, 0)
 
-    def get_all_keys(self) -> List[str]:
+    def get_all_keys(self, force=False) -> List[str]:
+        resultCollectionName = 'all_keys'
+
+        if not force:
+            data = self._database[resultCollectionName].find().distinct('_id')
+            if len(data) > 0:
+                return [x for x in data if x != '_id']
+
         try:
             result = self._collection_complete.map_reduce(
                 Code(Loader.load_js('mongo_js.mapper')),
                 Code(Loader.load_js('mongo_js.reducer')),
-                "results"
+                resultCollectionName
             )
         except pymongo_errors.OperationFailure as e:
             return []
@@ -371,7 +378,7 @@ class MongoRepository(IRepository):
         res = result.distinct('_id')
         try:
             res.remove('_id')
-        except Exception as e:
+        except Exception:
             pass
 
         return res
