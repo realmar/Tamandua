@@ -1,0 +1,2 @@
+SHELL=/bin/sh
+0 0 1 * * tamandua {{ tamandua_dir }}/tamandua_manager.py cache.document_keys > /dev/null
