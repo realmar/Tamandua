@@ -39,37 +39,37 @@ except Exception as e:
     sys.exit(1)
 
 api.add_resource(rest_api.Columns,
-                 '/api/columns',
+                 '/columns',
                  resource_class_args=[dataFinder])
 
 api.add_resource(rest_api.Tags,
-                 '/api/tags',
+                 '/tags',
                  resource_class_args=[dataFinder])
 
 api.add_resource(rest_api.Search,
-                 '/api/search/<int:page>/<int:size>',
+                 '/search/<int:page>/<int:size>',
                  resource_class_args=[dataFinder])
 
 api.add_resource(rest_api.Count,
-                 '/api/count',
+                 '/count',
                  resource_class_args=[dataFinder])
 
 api.add_resource(rest_api.AdvancedCount,
-                 '/api/advcount/<field>/<int:length>',
+                 '/advcount/<field>/<int:length>',
                  resource_class_args=[dataFinder])
 
 api.add_resource(rest_api.AdvancedCount,
-                 '/api/advcount/<field>/<int:length>/<separator>',
+                 '/advcount/<field>/<int:length>/<separator>',
                  resource_class_args=[dataFinder],
                  endpoint='advcount_with_separator')
 
 api.add_resource(rest_api.FieldChoices,
-                 '/api/fieldchoices/<field>/<int:maxChoices>',
+                 '/fieldchoices/<field>/<int:maxChoices>',
                  resource_class_args=[dataFinder],
                  endpoint='advcount')
 
 api.add_resource(rest_api.SupportedFieldChoices,
-                 '/api/supported_fieldchoices',
+                 '/supported_fieldchoices',
                  resource_class_args=[dataFinder])
 
 if __name__ == "__main__":
