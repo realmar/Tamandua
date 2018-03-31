@@ -77,7 +77,7 @@ def main(args: DefaultArgs):
     repository = RepositoryFactory.create_repository()
     currByte = repository.get_position_of_last_read_byte()
 
-    logfilehandle = open(args.logfile, 'r')
+    logfilehandle = open(args.logfile, 'r', errors='replace')
     linecounter = 0
 
     try:
@@ -105,7 +105,7 @@ def main(args: DefaultArgs):
 
     # save the current byte position
 
-    repository.save_position_of_last_read_byte(currByte + logfilehandle.tell())
+    repository.save_position_of_last_read_byte(currByte + os.fstat(logfilehandle.fileno()).st_size)
 
     # aggregate fragments to objects
     for container in pluginManager.dataReceiver.containers:
