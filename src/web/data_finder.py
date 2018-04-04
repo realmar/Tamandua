@@ -77,6 +77,7 @@ class DataFinder():
 
     SUPPORTED_FIELD_CHOICES = [
         'action',
+        'actionreason',
         'deliverystatus',
         'rejectreason',
         'rejectstage',
