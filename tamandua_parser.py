@@ -103,9 +103,10 @@ def main(args: DefaultArgs):
     if args.printmsgs:
         print('')
 
-    # save the current byte position
-
-    repository.save_position_of_last_read_byte(currByte + os.fstat(logfilehandle.fileno()).st_size)
+    # save the byte position for the next run
+    diffByte = os.fstat(logfilehandle.fileno()).st_size
+    newByte = max(0, currByte + diffByte - 1000)
+    repository.save_position_of_last_read_byte(newByte)
 
     # aggregate fragments to objects
     for container in pluginManager.dataReceiver.containers:

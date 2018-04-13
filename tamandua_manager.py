@@ -164,9 +164,14 @@ def run():
 
     print('Position of last read byte: %d' % currByte)
 
+    if currlogfilesize < currByte:
+        print('Logfile is smaller than last position, reading from beginning.')
+        logfile_pos()
+        currByte = 0
+
     with open(logfilename, 'wb') as f:
         print('Start transferring logfile diff to local machine\n')
-        process = run_remotesshwrapper_command('tamandua', args=[str(max(0, currByte - 1000))], stdout=f)
+        process = run_remotesshwrapper_command('tamandua', args=[str(currByte)], stdout=f)
         process.wait()
 
     from tamandua_parser import main as tamandua_main
