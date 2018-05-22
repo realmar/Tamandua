@@ -72,5 +72,9 @@ api.add_resource(rest_api.SupportedFieldChoices,
                  '/supported_fieldchoices',
                  resource_class_args=[dataFinder])
 
+api.add_resource(rest_api.Trend,
+                 '/trend/<field>',
+                 resource_class_args=[dataFinder])
+
 if __name__ == "__main__":
     app.run(host='localhost', port=8080, debug=True)

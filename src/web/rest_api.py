@@ -1,12 +1,15 @@
 """This module contains all resource classes used by the REST interface."""
 
-from typing import List
+from typing import List, Any
 
+from datetime import datetime, timedelta
 from flask import request
 from flask_restful import Resource
 
+from .exceptions import InvalidFieldValues, MissingFields
 from .data_finder import DataFinder, FieldChoicesResults
 from ..expression.builder import Expression
+from ..constants import TIME_FORMAT
 
 
 class BaseResource(Resource):
@@ -125,3 +128,59 @@ class SupportedFieldChoices(BaseResource):
     def get(self) -> List[str]:
         """Return a list of the field names where the fieldchoices endpoint is applicable."""
         return DataFinder.SUPPORTED_FIELD_CHOICES
+
+
+class Trend(BaseResource):
+    """Trend over time of a given expression"""
+
+    def __init__(self, dataFinder: DataFinder):
+        super().__init__(dataFinder)
+
+    def post(self, field: str):
+        json = request.get_json()
+        dataCount = json.get('dataCount')
+        totalHours = json.get('totalHours')
+        sampleDuration = json.get('sampleDuration')
+        sampleCount = json.get('sampleCount')
+        expression = Expression(json)
+
+        self.__ensure_fields(dataCount, totalHours, sampleDuration, sampleCount)
+        self.__ensure_type(int, dataCount, totalHours, sampleDuration, sampleCount)
+
+        interval = totalHours / sampleCount
+        dt = datetime.now() - timedelta(hours=totalHours)
+
+        data = []
+
+        for i in range(0, sampleCount):
+            expression.datetime.start = dt - timedelta(minutes=sampleDuration)
+            expression.datetime.end = dt
+
+            results = self._dataFinder.count_specific_fields(expression, field)
+            evalResults = []
+            for i in range(0, dataCount):
+                try:
+                    evalResults.append(next(results))
+                except StopIteration:
+                    break
+
+            if len(evalResults) > 0:
+                for r in evalResults:
+                    r['datetime'] = expression.datetime.start.strftime(TIME_FORMAT)
+                data.append(evalResults)
+
+            dt = dt + timedelta(hours=interval)
+
+        return data
+
+    @staticmethod
+    def __ensure_fields(*fields: Any) -> None:
+        for field in fields:
+            if field is None:
+                raise MissingFields('WIP')
+
+    @staticmethod
+    def __ensure_type(type: Any, *fields: Any) -> None:
+        for field in fields:
+            if not isinstance(field, type):
+                raise InvalidFieldValues('WIP')
