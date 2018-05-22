@@ -147,7 +147,7 @@ class Trend(BaseResource):
         self.__ensure_type(int, totalHours, sampleDuration, sampleCount)
 
         interval = totalHours / sampleCount
-        dt = datetime.now() - timedelta(hours=totalHours)
+        dt = datetime.now() - timedelta(hours=totalHours) + timedelta(hours=interval)
 
         data = []
 
