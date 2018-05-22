@@ -136,16 +136,15 @@ class Trend(BaseResource):
     def __init__(self, dataFinder: DataFinder):
         super().__init__(dataFinder)
 
-    def post(self, field: str):
+    def post(self, field: str, dataCount: int, separator: str = None):
         json = request.get_json()
-        dataCount = json.get('dataCount')
         totalHours = json.get('totalHours')
         sampleDuration = json.get('sampleDuration')
         sampleCount = json.get('sampleCount')
         expression = Expression(json)
 
-        self.__ensure_fields(dataCount, totalHours, sampleDuration, sampleCount)
-        self.__ensure_type(int, dataCount, totalHours, sampleDuration, sampleCount)
+        self.__ensure_fields(totalHours, sampleDuration, sampleCount)
+        self.__ensure_type(int, totalHours, sampleDuration, sampleCount)
 
         interval = totalHours / sampleCount
         dt = datetime.now() - timedelta(hours=totalHours)
@@ -156,7 +155,7 @@ class Trend(BaseResource):
             expression.datetime.start = dt - timedelta(minutes=sampleDuration)
             expression.datetime.end = dt
 
-            results = self._dataFinder.count_specific_fields(expression, field)
+            results = self._dataFinder.count_specific_fields(expression, field, separator)
             evalResults = []
             for i in range(0, dataCount):
                 try:

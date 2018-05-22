@@ -73,8 +73,13 @@ api.add_resource(rest_api.SupportedFieldChoices,
                  resource_class_args=[dataFinder])
 
 api.add_resource(rest_api.Trend,
-                 '/trend/<field>',
+                 '/trend/<field>/<int:dataCount>',
                  resource_class_args=[dataFinder])
+
+api.add_resource(rest_api.Trend,
+                 '/trend/<field>/<int:dataCount>/<separator>',
+                 resource_class_args=[dataFinder],
+                 endpoint='trend_with_separator')
 
 if __name__ == "__main__":
     app.run(host='localhost', port=8080, debug=True)
