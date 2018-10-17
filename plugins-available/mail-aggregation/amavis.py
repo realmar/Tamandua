@@ -17,7 +17,7 @@ class Amavis(SimplePlugin):
             # Passed CLEAN
 
             re.compile(r'''\)\s(?P<virusresult>[^\{]*){
-                           (?P<virusaction>[^\}]*).+?\]\s<
+                           (?P<virusaction>[^\}]*)[^<]*<
                            (?P<sender>[^>]*)>\s->\s<
                            (?P<recipient>[^>]*)>.+?Queue-ID:\s
                            (?P<''' + constants.PHD_MXIN_QID + r'''>[^,]*),\sMessage-ID:\s<
