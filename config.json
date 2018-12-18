@@ -5,7 +5,7 @@
     "phd-mailscan",
     "phd-maildb"
   ],
-  "preregex": "^(?P<month>[^\\s]*?)\\s{1,2}(?P<day>[^\\s]*?)\\s(?P<time>[^\\s]*?)\\s(?P<hostname>[^\/\\s]*?)[^\\w-]+?",
+  "preregex": "^(?P<year>\\d{4})-(?P<month>\\d{2})-(?P<day>\\d{2})T(?P<time>\\d{2}:\\d{2}:\\d{2})[^+]*?\\+(?P<timezone>\\d{2}:\\d{2})\\s(?P<hostname>[^\/\\s]*?)[^\\w-]+?",
 
   "database_type": "mongo",
   "database_name": "tamandua",

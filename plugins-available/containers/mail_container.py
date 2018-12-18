@@ -181,7 +181,7 @@ class MailContainer(IDataContainer, IRequiresPlugins, IRequiresRepository):
                     day = '0' + day
 
                 dtStr = '{month} {day} {time}'.format(month=month, day=day, time=time)
-                dt = datetime.strptime(dtStr, '%b %d %H:%M:%S')
+                dt = datetime.strptime(dtStr, '%m %d %H:%M:%S')
 
                 # set year to year today (This information is not visible on the logline)
                 dt = dt.replace(year=datetime.today().year)
