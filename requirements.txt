@@ -1,4 +1,4 @@
-manage.py
+click
 colorama
 pymongo
 Flask

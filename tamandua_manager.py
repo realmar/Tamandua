@@ -10,19 +10,16 @@ import atexit
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BASEDIR)
 
-"""
-source:   https://github.com/Birdback/manage.py
-see also: requirements_manager.txt
-"""
-from manager import Manager
-from datetime import datetime, timedelta
-import subprocess
+if True: # noqa: E402
+    import click
+    from datetime import datetime, timedelta
+    import subprocess
 
-from src.repository.factory import RepositoryFactory
-from src.repository.misc import SearchScope
-from src.config import Config
-from src.constants import CONFIGFILE
-from src.expression.builder import ExpressionBuilder
+    from src.repository.factory import RepositoryFactory
+    from src.repository.misc import SearchScope
+    from src.config import Config
+    from src.constants import CONFIGFILE
+    from src.expression.builder import ExpressionBuilder
 
 
 Config().setup(
@@ -31,8 +28,6 @@ Config().setup(
 )
 
 pidfile = os.path.join(BASEDIR, 'tamandua.pid')
-
-manager = Manager()
 
 global cleanupPID
 cleanupPID = True
@@ -49,92 +44,9 @@ def exit_if_already_running():
         f.write(str(os.getpid()))
 
 
-@atexit.register
-def remove_pid():
-    global cleanupPID
-    if cleanupPID:
-        os.remove(pidfile)
-
-    try:
-        os.remove(os.path.join(BASEDIR, 'logfile'))
-    except FileNotFoundError as e:
-        pass
-
-
-@manager.command(namespace='reset')
-def logfile_pos():
-    """Reset the reader position of the logfile to 0."""
-    RepositoryFactory                       \
-        .create_repository()                \
-        .save_position_of_last_read_byte(0)
-
-    print('Reset last logfile position to 0 successful.')
-
-
-@manager.command(namespace='reset')
-def logfile_size():
-    """Reset the last size of the logfile to 0."""
-    RepositoryFactory                       \
-        .create_repository()                \
-        .save_size_of_last_logfile(0)
-
-    print('Reset last logfile size to 0 successful.')
-
-
-@manager.command(namespace='remove')
-def incomplete():
-    """Delete all incomplete data."""
-    RepositoryFactory                       \
-        .create_repository()                \
-        .delete({}, SearchScope.INCOMPLETE)
-
-    print('Successfully deleted all incomplete data.')
-
-
-@manager.command(namespace='remove')
-def complete():
-    """Delete all complete data."""
-    RepositoryFactory                       \
-        .create_repository()                \
-        .delete({}, SearchScope.COMPLETE)
-
-    print('Successfully deleted all complete data.')
-
-
-@manager.command(namespace='remove')
-def all():
-    """Delete all data from the database and reset the reader position."""
-    complete()
-    incomplete()
-    logfile_pos()
-    logfile_size()
-
-
-@manager.command(namespace='cache')
-def document_keys():
-    """Build cache with all distinct keys of documents."""
-    RepositoryFactory                   \
-        .create_repository()            \
-        .get_all_keys(True)
-
-    print('Successfully built cache of unique document keys.')
-
-
-@manager.arg('days', help='Number of days to keep')
-@manager.command
-def cleanup(days=30):
-    """Deletes entries which are older than n days."""
-    repository = RepositoryFactory.create_repository()
-    keepDate = datetime.today() - timedelta(days=days)
-
-    builder = ExpressionBuilder().set_end_datetime(keepDate)
-
-    repository.delete(builder.expression, SearchScope.ALL)
-
-    print('Deleted all data older than ' + str(days) + ' days successful.')
-
-
-def run_remotesshwrapper_command(command: str, args: list=[], stdout: object=subprocess.PIPE) -> subprocess.Popen:
+def run_remotesshwrapper_command(
+    command: str, args: list = [], stdout: object = subprocess.PIPE
+) -> subprocess.Popen:
     return subprocess.Popen(
         [
             'ssh',
@@ -151,8 +63,101 @@ def run_remotesshwrapper_command(command: str, args: list=[], stdout: object=sub
     )
 
 
-@manager.command
-def run():
+@atexit.register
+def remove_pid():
+    global cleanupPID
+    if cleanupPID:
+        os.remove(pidfile)
+
+    try:
+        os.remove(os.path.join(BASEDIR, 'logfile'))
+    except FileNotFoundError:
+        pass
+
+
+@click.group()
+def cli():
+    """Tamandua manager with admin tools."""
+    pass
+
+
+@cli.command()
+def reset_logfile_pos():
+    """Reset the reader position of the logfile to 0."""
+    RepositoryFactory                       \
+        .create_repository()                \
+        .save_position_of_last_read_byte(0)
+
+    print('Reset last logfile position to 0 successful.')
+
+
+@cli.command()
+def reset_logfile_size():
+    """Reset the last size of the logfile to 0."""
+    RepositoryFactory                       \
+        .create_repository()                \
+        .save_size_of_last_logfile(0)
+
+    print('Reset last logfile size to 0 successful.')
+
+
+@cli.command()
+def remove_incomplete():
+    """Delete all incomplete data."""
+    RepositoryFactory                       \
+        .create_repository()                \
+        .delete({}, SearchScope.INCOMPLETE)
+
+    print('Successfully deleted all incomplete data.')
+
+
+@cli.command()
+def remove_complete():
+    """Delete all complete data."""
+    RepositoryFactory                       \
+        .create_repository()                \
+        .delete({}, SearchScope.COMPLETE)
+
+    print('Successfully deleted all complete data.')
+
+
+@cli.command()
+@click.pass_context
+def remove_all(ctx):
+    """Delete all data and reset the reader position."""
+    ctx.invoke(remove_complete)
+    ctx.invoke(remove_incomplete)
+    ctx.invoke(reset_logfile_pos)
+    ctx.invoke(reset_logfile_size)
+
+
+@cli.command()
+def cache_document_keys():
+    """Build cache with all distinct keys of documents."""
+    RepositoryFactory                   \
+        .create_repository()            \
+        .get_all_keys(True)
+
+    print('Successfully built cache of unique document keys.')
+
+
+@cli.command()
+@click.option('--days', help='Number of days to keep', default=30, show_default=True)
+def cleanup(days):
+    """Deletes entries which are older than n days."""
+    repository = RepositoryFactory.create_repository()
+    keepDate = datetime.today() - timedelta(days=days)
+
+    builder = ExpressionBuilder().set_end_datetime(keepDate)
+
+    repository.delete(builder.expression, SearchScope.ALL)
+
+    print('Deleted all data older than ' + str(days) + ' days successful.')
+
+
+@cli.command()
+@click.pass_context
+def run(ctx):
     """Get logfile and run the parser. This can be used within cronjobs."""
     repository = RepositoryFactory.create_repository()
 
@@ -167,7 +172,7 @@ def run():
 
     if currlogfilesize < lastlogfilesize:
         print('New logfile detected, reading from beginning.')
-        logfile_pos()
+        ctx.invoke(reset_logfile_pos)
 
     repository.save_size_of_last_logfile(currlogfilesize)
     currByte = repository.get_position_of_last_read_byte()
@@ -176,7 +181,7 @@ def run():
 
     if currlogfilesize < currByte:
         print('Logfile is smaller than last position, reading from beginning.')
-        logfile_pos()
+        ctx.invoke(reset_logfile_pos)
         currByte = 0
 
     with open(logfilename, 'wb') as f:
@@ -194,7 +199,7 @@ def run():
     print('\nStart reading the logfile')
 
     tamandua_main(args)
-    cleanup()
+    ctx.invoke(cleanup)
 
     repository.save_time_of_last_run(datetime.now())
 
@@ -203,4 +208,4 @@ def run():
 
 if __name__ == '__main__':
     exit_if_already_running()
-    manager.main()
+    cli()

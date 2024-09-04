@@ -11,14 +11,6 @@
     - python3-pymongo
     - python3-setuptools
 
-- name: install tamandua pip dependencies
-  pip:
-    name: "{{ item }}"
-    state: latest
-    executable: pip3
-  with_items:
-    - manage.py
-
 - name: clone tamandua git repository into opt
   git:
     repo: git@gitlab.phys.ethz.ch:mailserver/Tamandua.git
